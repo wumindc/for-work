@@ -31,6 +31,10 @@ flowchart TD
   I --> J[Trace with task_id and correlation_id]
 ```
 
+图 1：A2A/ACP 类跨 Agent 协议的最小运行链路。
+
+图中 Requesting Agent 不是直接把完整对话发给目标 Agent，而是先通过 capability discovery 读取公开能力，再把任务包装成 message envelope，经 Protocol Gateway 做认证、限流、schema 和策略校验，最后进入 Target Agent Runtime。`task_id` 负责生命周期，`correlation_id` 负责跨系统追踪，`auth_scope` 和 `context_refs` 负责最小权限和最小上下文。这个边界能防止 Agent 协作退化成不可审计的自然语言转发。
+
 | 层次 | 解决的问题 | 关键字段 | 边界 |
 | :--- | :--- | :--- | :--- |
 | MCP | 应用接入工具和上下文 | tools、resources、prompts | Host 到 Server |
@@ -43,6 +47,8 @@ flowchart TD
 跨 Agent 协议至少需要三类能力。第一是 capability discovery，调用方能知道目标 Agent 支持什么任务、输入输出 schema、权限要求和 SLA。第二是 message envelope，所有消息携带 sender、receiver、task_id、correlation_id、intent、payload、context_refs、auth_scope 和 deadline。第三是 task lifecycle，任务要有 created、accepted、running、blocked、completed、failed、cancelled 等状态。
 
 protocol boundary 不能泄漏内部实现。调用方不应该知道目标 Agent 的私有 prompt、内部工具或完整 workspace，只应看到公开 capability 和必要 schema。
+
+如果把这个协议放到生产系统里，最容易出问题的是三个边界。第一是 capability 过度暴露：Agent card 或 manifest 不应暴露内部 prompt、私有工具名、密钥路径和租户数据。第二是上下文过度复制：长对话、完整仓库、用户隐私不应直接进入 envelope，应该用 `context_refs` 和权限检查读取。第三是状态不明确：任务如果没有 accepted/running/blocked/completed/failed 这些显式状态，调用方就无法安全取消、重试、转人工或追责。
 
 ## 运行机制
 
@@ -81,6 +87,8 @@ protocol boundary 不能泄漏内部实现。调用方不应该知道目标 Agen
 跨 Agent 故障常见于 schema 不兼容、auth 过期、上下文引用失效、任务状态卡住和重复提交。排障先根据 correlation_id 查全链路，再检查 envelope、gateway verdict、目标 Agent trace 和 artifact 权限。
 
 如果发现数据泄漏，要立刻缩小 capability discovery 暴露字段，收紧 context_refs 权限，并审计是否有不该进入 envelope 的敏感内容。
+
+协议升级也是常见故障源。新 Agent 增加 required 字段时，旧 Agent 可能直接拒绝任务；新状态码如果没有兼容映射，调用方可能把 blocked 误判为 failed。生产上要用 `protocol_version`、optional 字段、schema negotiation、灰度路由和 trace replay 验证升级影响。协议层的目标不是让所有 Agent 都“自由交流”，而是让它们在可版本化、可追踪、可拒绝的边界内协作。
 
 ## 常见误区与排障
 
@@ -129,7 +137,8 @@ Task lifecycle 必须显式。created 表示任务创建，accepted 表示目标
 
 ## 来源与延伸阅读
 
-- [Model Context Protocol 文档](https://modelcontextprotocol.io/docs)
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Agent2Agent 项目](https://github.com/a2aproject/A2A)
-- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io/docs)：用于确认 MCP 面向 Host 接入 tools、resources、prompts 的边界，而不是跨 Agent 任务协议本身。
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)：用于支撑工具、资源和提示模板的 schema 化实现示例。
+- [Agent2Agent Project](https://github.com/a2aproject/A2A)：用于支持 agent card、task、message、artifact 等跨 Agent 协作对象的讨论。
+- [Agent Communication Protocol](https://agentcommunicationprotocol.dev/introduction/welcome)：用于说明 ACP 关注 Agent 间消息、任务和状态交互的协议边界。
+- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)：用于连接单运行时内 handoff 与跨 Agent 协议在能力转交、上下文传递上的相似点和差异。

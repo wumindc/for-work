@@ -174,6 +174,8 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 
 AI Agent / RAG topic backlog:
 
+- [x] `a2a-acp`
+- [x] `agent-definition`
 - [x] `agent-core-modules`
 - [x] `agent-failure-modes`
 - [x] `agentic-rag`
@@ -248,6 +250,10 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-jvm-gc-troubleshooting`
 - [ ] System-design blocked documents.
   - [x] `q-distributed-idempotency-retry-timeout`
+  - [x] `q-distributed-transaction-saga-outbox`
+- [ ] Web engineering low-score questions.
+  - [x] `q-web-api-contract-idempotency-security`
+  - [x] `q-web-http-cache-session-auth`
 - [ ] AI engineering trend documents.
   - [x] `local-ai-inference-stack`
 

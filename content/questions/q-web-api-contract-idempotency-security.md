@@ -75,6 +75,28 @@ flowchart LR
 
 上线后还要看指标，如 validation_error、permission_denied、rate_limited、idempotency_conflict 和 api_error_rate。
 
+## 多轮追问模拟
+
+1. 追问：错误码应该怎么设计，为什么不能全返回 500？
+   - 回答要点：HTTP status 表示协议层大类，业务 `error_code` 表示可行动语义，响应里还应有 `message`、`request_id`、`retryable` 和必要的字段级错误。参数错误、权限拒绝、资源不存在、限流、幂等冲突、下游超时要能区分，否则客户端无法决定修参、登录、重试、降级还是联系人工。
+   - 考察点：是否把 API 契约当成客户端可执行协议，而不是字符串提示。
+   - 常见坑：所有异常都包装成 200 或 500。
+
+2. 追问：同一个 `Idempotency-Key` 携带了不同请求体怎么办？
+   - 回答要点：服务端要保存 `request_hash` 或 fingerprint；同 key 不同 hash 应返回冲突，而不是复用旧结果或重新执行。状态为 processing 时可以返回处理中或查询地址；succeeded 时返回原结果摘要；failed 要区分确定失败和可重试失败。
+   - 考察点：幂等键防误用能力。
+   - 常见坑：只按 key 去重，不校验请求体，导致客户端误复用时拿到错误业务结果。
+
+3. 追问：版本演进怎么做才不破坏旧客户端？
+   - 回答要点：新增字段默认兼容，旧客户端要能忽略未知字段；枚举新增要有 unknown/default 分支；删除字段要经过 deprecated、灰度、监控旧客户端、迁移文档和最终下线；OpenAPI/schema 契约测试要进 CI。对于 Agent tool schema，还要避免模型看到旧 schema 却调用新参数。
+   - 考察点：契约治理和兼容思维。
+   - 常见坑：服务端直接删字段或改枚举含义。
+
+4. 追问：为什么前端隐藏按钮不算授权？
+   - 回答要点：前端控制只影响展示，攻击者可以直接调用 API。服务端必须校验认证身份、资源归属、角色/策略、租户边界和高风险动作审计；对象级授权和属性级授权都要覆盖。Agent 工具调用同理，模型生成参数后仍要通过服务端 policy gate。
+   - 考察点：是否理解真实安全边界在服务端。
+   - 常见坑：把 UI 状态、CORS 或菜单权限当成后端授权。
+
 ## 深问准备
 
 1. 错误码如何设计？
@@ -85,6 +107,8 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- RFC 9110 HTTP Semantics：用于确认 HTTP 方法和响应语义。
-- OWASP API Security：用于确认 API 安全风险。
-- Model Context Protocol：用于连接工具 schema。
+- [RFC 9110 HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)：用于确认 HTTP 方法、状态码和响应语义与业务错误码的边界。
+- [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)：用于支撑 request/response schema、版本化契约和契约测试。
+- [IETF Idempotency-Key Draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)：用于说明幂等键、请求 fingerprint 和服务端生命周期管理。
+- [OWASP API Security Top 10](https://owasp.org/API-Security/editions/2023/en/0x00-header/)：用于支撑对象级授权、认证、资源消耗和安全配置风险。
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io/docs)：用于连接 tool schema 与 API 契约的共同边界：schema、权限、审计和工具执行。

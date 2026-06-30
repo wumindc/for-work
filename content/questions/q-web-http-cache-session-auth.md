@@ -70,6 +70,28 @@ CORS 不是鉴权。非浏览器客户端不受 CORS 限制，服务端仍要校
 
 再补一句：认证是你是谁，授权是你能访问什么，审计是你做过什么。三者都要在服务端成立。
 
+## 多轮追问模拟
+
+1. 追问：`no-store` 和 `private` 有什么区别？
+   - 回答要点：`no-store` 表示任何缓存都不应存储请求或响应，适合高敏感用户数据、权限接口、支付和后台管理；`private` 表示响应只允许用户代理等私有缓存存储，不允许共享缓存存储，适合可被浏览器缓存但不能进入 CDN 的用户态数据。敏感响应通常更保守地用 `no-store`。
+   - 考察点：是否能按数据敏感度设置缓存头。
+   - 常见坑：用户资料接口误设 `public, max-age`，导致共享缓存泄漏。
+
+2. 追问：JWT 和 Session 怎么取舍？
+   - 回答要点：Session 服务端存储，撤销和权限变化更直接，但依赖 Redis/DB；JWT 无状态，横向扩展好，但撤销、权限更新和泄露后的控制更复杂。高风险后台常用短有效期 token、refresh token、session_version、黑名单或服务端会话组合，不会只发一个长期 JWT。
+   - 考察点：能否把扩展性、撤销性和安全性一起考虑。
+   - 常见坑：说 JWT 一定更安全，或者退出登录只删除前端 token。
+
+3. 追问：CORS 为什么不是权限控制？
+   - 回答要点：CORS 是浏览器是否允许前端读取跨域响应的策略，非浏览器客户端不受限制；服务端仍要校验认证、授权、资源归属和租户边界。CORS 配错会造成浏览器侧数据暴露风险，但即使配对了，也不能替代后端鉴权。
+   - 考察点：是否区分浏览器安全策略和服务端权限边界。
+   - 常见坑：看到跨域报错就以为接口安全了。
+
+4. 追问：CSRF 怎么防，SameSite 够不够？
+   - 回答要点：SameSite 能降低跨站携带 Cookie 的风险，但要结合 CSRF token、Origin/Referer 校验、高风险操作二次确认和服务端授权；如果业务需要跨站嵌入或第三方登录，还要小心 SameSite=None; Secure 的场景。CSRF 防的是“用户浏览器带着合法 Cookie 被诱导发请求”。
+   - 考察点：是否理解 Cookie 登录态下的跨站请求风险。
+   - 常见坑：只设 CORS 或只靠前端校验。
+
 ## 深问准备
 
 1. no-store 和 private 区别？
@@ -80,6 +102,9 @@ CORS 不是鉴权。非浏览器客户端不受 CORS 限制，服务端仍要校
 
 ## 来源与延伸阅读
 
-- RFC 9110 HTTP Semantics：用于确认 HTTP 语义。
-- MDN HTTP Caching：用于确认缓存行为。
-- OWASP API Security：用于支持 API 安全边界。
+- [RFC 9110 HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)：用于确认认证、请求方法、状态码和通用 HTTP 语义。
+- [RFC 9111 HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111)：用于支撑 `Cache-Control`、共享缓存、私有缓存、`no-store` 和缓存失效语义。
+- [MDN HTTP Caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching)：用于说明浏览器/CDN 缓存行为、协商缓存和缓存头使用方式。
+- [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie)：用于确认 `HttpOnly`、`Secure`、`SameSite` 等 Cookie 安全属性。
+- [OWASP Cross-Site Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)：用于支持 SameSite、CSRF token、Origin/Referer 校验的组合防护。
+- [OWASP API Security Top 10](https://owasp.org/API-Security/editions/2023/en/0x00-header/)：用于说明 API 认证、授权和资源访问控制的安全边界。

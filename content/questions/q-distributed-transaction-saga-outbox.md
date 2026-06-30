@@ -79,6 +79,28 @@ Saga 每一步都要有状态、重试、补偿和审计。补偿不是万能，
 
 这也是面试里最需要避免的空话。
 
+## 多轮追问模拟
+
+1. 追问：Outbox 为什么不能只保证“消息发出去”？
+   - 回答要点：Outbox 解决的是本地状态变化和待发布事件原子写入，Relay 发布到 MQ 只是下一步；Relay 可能发布成功但标记 sent 失败，也可能标记失败后重试。因此消费者必须基于 `event_id` 幂等，发布链路还要看 `outbox_pending_count`、`event_publish_lag` 和重复投递。
+   - 考察点：是否理解 Outbox 是“本地事务 + 异步投递 + 幂等消费”组合，而不是单张表魔法。
+   - 常见坑：认为 outbox 表里有记录就等于下游一定处理成功。
+
+2. 追问：Saga 补偿失败怎么办？
+   - 回答要点：补偿本身也要幂等、有状态、有重试、有审计；补偿失败要进入人工处理或对账队列，而不是无限重试。不可逆动作要尽量后置，例如短信、外部转账、实物履约；无法真正回滚时要用冲正、退款、撤销权益或用户可见的处理中状态。
+   - 考察点：能否承认补偿不是万能，并设计失败兜底。
+   - 常见坑：把 Saga 说成“失败就自动回滚”，忽略不可逆副作用。
+
+3. 追问：RocketMQ 事务消息和 Outbox 怎么选？
+   - 回答要点：事务消息依赖 MQ 的半消息、提交/回滚和事务回查，适合团队已经深度使用该 MQ 且回查接口能根据本地事务事实返回结果的场景；Outbox 更通用，可配合 CDC 或 Relay，但要维护 outbox 表、扫描、重试和去重。关键不是谁更高级，而是本地事务边界、MQ 能力、运维成熟度和消费者幂等是否成立。
+   - 考察点：能否做工程选型，而不是背方案优劣。
+   - 常见坑：把事务消息理解成跨服务 ACID 事务。
+
+4. 追问：一致性对账怎么做？
+   - 回答要点：从事实源出发建立不变量，例如 paid 订单必须有支付成功事件，sent 事件必须有消费者处理记录，Saga completed 必须有所有关键步骤终态。对账任务要限速、幂等、可审计，发现差异后进入补发、补偿、人工审核或用户通知流程。
+   - 考察点：是否能把最终一致性落到可运营机制。
+   - 常见坑：只靠日志查问题，没有周期性 checker 和指标。
+
 ## 深问准备
 
 1. Outbox 为什么需要消费者幂等？
@@ -89,6 +111,8 @@ Saga 每一步都要有状态、重试、补偿和审计。补偿不是万能，
 
 ## 来源与延伸阅读
 
-- RocketMQ Transaction Message 官方文档：用于说明事务消息。
-- Kafka 官方文档：用于说明事件发布边界。
-- PostgreSQL MVCC 官方文档：用于区分本地事务。
+- [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)：用于支持“业务状态和待发布事件放在同一本地事务中，再由独立进程投递”的核心机制。
+- [Saga Pattern](https://microservices.io/patterns/data/saga.html)：用于说明 Saga 由多个本地事务和补偿动作组成，而不是跨服务 ACID 回滚。
+- [Apache RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：用于确认事务消息的半消息、事务状态和回查语义。
+- [Apache Kafka Delivery Semantics](https://kafka.apache.org/documentation/#semantics)：用于支撑重复处理、至少一次语义和消费者幂等的边界说明。
+- [PostgreSQL Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)：用于区分本地数据库事务隔离和跨服务最终一致性。
