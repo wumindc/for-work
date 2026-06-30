@@ -35,6 +35,10 @@ sequenceDiagram
   X-->>W: rebase / replan / stop
 ```
 
+图 1：高并发短期记忆的一致性写入链路。Request Router 先用 tenant、user、session 和 run 定位 State Store，Context Builder 只读取当前版本的投影，Worker 写入时通过 compare-and-swap 提交 state diff，冲突再交给 Conflict Resolver 判定 rebase、replan 或停止。
+
+这张图的核心不是“多存几段上下文”，而是让每一轮模型输入都绑定明确的 scope 和 state_version。旧 observation、跨 run scratchpad、缓存投影和并发 reducer 都可能污染下一轮决策，所以一致性控制要发生在上下文构造和状态提交两个位置。
+
 ## 系统设计案例
 
 客服 Agent 和财务 Agent 同时处理同一退款单。客服只能读订单和创建 preview，财务才能确认退款。两者的 working memory 可以引用同一个订单 artifact，但 run state、权限和 scratchpad 必须分开。退款状态变化后，旧 preview 失效，Context Builder 不能继续给模型旧确认上下文。
@@ -48,6 +52,17 @@ sequenceDiagram
 - 多 worker 同时更新怎么办？用 state version 和 compare-and-swap。
 - 缓存 context projection 安全吗？可以，但必须绑定权限、state version 和 evidence hash。
 - 冲突都自动合并吗？不是，高风险状态冲突要停止或转人工。
+
+## 多轮追问模拟
+
+追问 1：如果两个 worker 都基于 version 10 执行动作，一个成功写入 version 11，另一个怎么办？
+答：第二个 worker 的 diff 不能覆盖 version 11，要重新读取最新 State，把自己的观察和新状态做 rebase。如果动作是只读摘要，可以重新投影后继续；如果动作涉及退款、发信、删除或权限变更，要停止并重新请求确认。考察点是乐观并发控制；陷阱是把“后写覆盖前写”当成简单冲突解决。
+
+追问 2：为什么 context projection cache 不能只用 session_id 做 key？
+答：session_id 不能表达租户、用户、run、权限、state_version、policy_version 和 evidence hash。只用 session_id 会让旧权限、旧观察或其他用户的上下文被复用，严重时造成串线。考察点是缓存隔离；陷阱是把性能优化放在权限边界之前。
+
+追问 3：哪些冲突可以自动合并，哪些必须人工或停止？
+答：可自动合并的是低风险、可交换、无外部副作用的字段，例如两个独立检索摘要；不能自动合并的是支付、退款、删除、对外发送、权限变更和用户硬约束冲突。考察点是副作用分级；陷阱是用通用 CRDT 或 append-only 日志掩盖业务风险。
 
 ## 项目化回答
 
@@ -83,6 +98,6 @@ sequenceDiagram
 
 ## 来源与延伸阅读
 
-- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)：用于支持短期记忆应作为 thread-scoped state 管理，而不是把历史消息无限追加进模型输入。
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：用于支持 checkpoint、state version 和可恢复执行是多轮 Agent 状态一致性的基础。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持每步输入、工具调用和结果都应进入 trace，方便定位 stale context、串线和冲突回放。

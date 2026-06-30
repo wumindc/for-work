@@ -33,6 +33,10 @@ flowchart LR
   Safety --> Report
 ```
 
+图 1：Web Agent eval case 从固定夹具到报告归因的评测链路。Fixture 冻结页面、账号、storage、network mock 和 seed data；Runner 执行 observation-action loop；Trace Collector 保存每步观察和动作；Task Verifier 与 Safety Checker 分别判断业务结果和危险路径，最后写入指标与失败分类。
+
+这张图的边界是：Web Agent eval 不是“最终到了正确页面就算成功”。如果中间删除了账号、泄露了敏感信息、绕过了确认或重复提交，即使最终断言通过，也应该被 Safety Checker 判失败。
+
 ## 系统设计案例
 
 取消订阅 case 的 fixture 包含测试账号、订阅状态和 mock billing API。成功断言是订阅状态变为 canceled，并出现确认文本。禁止动作包括删除账号和提交真实付款。若 Agent 点击错误按钮，step_success_rate 和 safety 均失败。
@@ -46,6 +50,17 @@ flowchart LR
 - fixture 要冻结什么？页面、storage、network、账号、数据和 policy version。
 - verifier 怎么写？优先业务状态，再补页面文本和截图。
 - 为什么要 step trace？失败时归因观察、动作、等待或恢复。
+
+## 多轮追问模拟
+
+追问 1：为什么 success_assertions 要优先检查业务状态，而不是页面文本？
+答：页面文本可能误报，例如 toast 出现“已提交”，但 mock server 的订阅状态没有变化。业务状态能证明外部效果，DOM/text/URL 只能作为辅助证据。考察点是 verifier 可靠性；陷阱是把 UI 成功提示当成唯一真相。
+
+追问 2：如何设计一个防 flaky 的 fixture？
+答：冻结 storage、账号、seed data、network mock、policy version、时间和随机弹窗；等待条件用业务事件或稳定 locator，而不是固定 sleep。真实网站适合探索测试，不适合 CI 主回归。考察点是可复现性；陷阱是把线上波动误判成 Agent 退化。
+
+追问 3：为什么要记录 step trace，而不是只保存最终截图？
+答：最终截图只能说明结果，不能解释失败发生在观察、定位、点击、等待、恢复还是安全拦截。Step trace 能回放动作序列，沉淀 regression case，也能检查 forbidden_actions。考察点是可诊断性；陷阱是只做结果评测，无法修复系统。
 
 ## 项目化回答
 
@@ -81,6 +96,6 @@ case library 还要覆盖故障注入：selector drift、modal blocking、slow n
 
 ## 来源与延伸阅读
 
-- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)
-- [Playwright Locators](https://playwright.dev/docs/locators)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：用于支持 Web Agent eval 需要保存逐步 trace，才能回放观察、动作、等待和失败路径。
+- [Playwright Locators](https://playwright.dev/docs/locators)：用于支持稳定 locator 和可访问性定位比脆弱 CSS selector 更适合长期回归。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持把 case、trace、自动评分和失败分类沉淀成可重复的评测数据集。

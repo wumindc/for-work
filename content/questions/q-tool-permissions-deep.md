@@ -35,6 +35,10 @@ sequenceDiagram
   E->>L: result + rollback state
 ```
 
+图 1：human-in-the-loop 从策略确认到执行审计的状态链路。Policy Engine 判定需要确认后，Preview Service 固化参数、影响范围和 `args_hash`，Approval Service 保存用户 decision，Executor 执行前再次校验，最后把结果、错误码和补偿状态写入 Audit Ledger。
+
+这张图的边界是：human-in-the-loop 不是一个前端按钮，而是一条可追责的状态机。只有把 preview、decision、execution 和 rollback 串到同一个 `run_id`/`approval_id`，事故后才能回答“谁在什么证据下批准了什么，最终系统执行了什么”。
+
 ## 系统设计案例
 
 客服退款系统中，approval record 保存退款金额、订单号、退款原因、操作者、角色、确认时间、args_hash、过期时间和 rollback plan。若执行失败，audit ledger 记录 error_code 和 compensation status。事故复盘时可以追到完整链路。
@@ -48,6 +52,17 @@ sequenceDiagram
 - 为什么要 args_hash？防止确认参数和执行参数不一致。
 - preview 要保存原文吗？保存必要快照和引用，敏感字段脱敏。
 - approval 可以复用吗？低风险可短期复用，高风险应每次确认。
+
+## 多轮追问模拟
+
+追问 1：approval record 最少要能回答哪几个问题？
+答：谁确认、在什么租户和角色下确认、看到的 preview 是什么、确认的是哪组参数、何时过期、执行结果是什么、失败后如何补偿。字段可以多，但不能缺这条追责链。考察点是审计闭环；陷阱是只保存 `approved=true`。
+
+追问 2：为什么 approval 过期时间很重要？
+答：工具参数依赖上下文，订单状态、权限、价格、收件人和页面内容都可能变化。过期时间能防止旧确认在新上下文中被复用。Executor 还要校验 policy_version 和 resource version。考察点是时间一致性；陷阱是把确认当成永久授权。
+
+追问 3：敏感 preview 脱敏后还怎么审计？
+答：脱敏展示不等于丢证据。可以保存受控访问的 encrypted snapshot、字段 hash、evidence refs 和 resource version，普通日志只显示脱敏摘要。事故复盘由有权限的人解密或查引用。考察点是隐私与可追溯的平衡；陷阱是为了合规把审计证据全部删掉。
 
 ## 项目化回答
 
@@ -83,6 +98,6 @@ Approval 不是一次性弹窗，而是一条状态机。`pending -> approved/de
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm06-excessive-agency/)
+- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)：用于支持人工接管和流程切换需要保留上下文，而不是只在 UI 层弹出确认。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持 approval、tool call、execution result 与错误状态应统一写入 trace，方便复盘。
+- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)：用于支持过度代理能力会放大误执行风险，因此高影响动作需要限制权限、确认、审计和回滚。

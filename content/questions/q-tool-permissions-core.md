@@ -31,6 +31,10 @@ flowchart LR
   Executor --> Audit[audit + rollback]
 ```
 
+图 1：高风险工具从模型调用到执行审计的权限链路。Tool Registry 提供工具风险元数据，Policy Engine 结合 actor、resource 和 session scope 做裁决；需要确认的动作先生成 preview，再由 Approval Service 绑定 args_hash，最终 Executor 执行并写入 audit 与 rollback 状态。
+
+这张图的边界是：模型只提出 `tool_call`，不能自己决定“我有权限”“这很低风险”或“可以跳过确认”。真正的放行逻辑在宿主系统，且确认的是具体参数和影响范围，不是一句抽象的“是否允许 Agent 操作”。
+
 ## 系统设计案例
 
 退款 Agent 查询订单是低风险读，创建退款预览是中风险，确认退款是高风险财务动作。确认退款必须展示金额、订单、原因、操作者、过期时间和 rollback plan。执行时校验 args_hash，避免确认内容和执行内容不一致。
@@ -44,6 +48,17 @@ flowchart LR
 - 哪些工具可以自动执行？低敏只读、可审计、无外部副作用。
 - 确认记录包含什么？actor、tool、args_hash、preview、decision、timestamp、rollback。
 - 多 Agent 共用工具怎么办？统一 Registry 和 Policy Engine。
+
+## 多轮追问模拟
+
+追问 1：如何判断一个工具属于高风险？
+答：看它是否有外部副作用、是否不可逆、是否涉及财务/法律/隐私、是否跨租户、是否会发送消息或改变权限。风险等级来自 Tool Registry 和业务策略，不来自模型自评。考察点是风险分类；陷阱是只用 read/write 粗分，忽略敏感读和不可逆写。
+
+追问 2：preview 和 approval 为什么必须绑定 `args_hash`？
+答：用户确认的是某一组具体参数及其影响范围。确认后如果金额、收件人、资源 id 或删除范围变化，Executor 必须阻断。`args_hash` 能防止 TOCTOU 和参数替换。考察点是确认语义；陷阱是 UI 弹窗确认一次，执行层就不再复核。
+
+追问 3：短期授权能不能减少确认摩擦？
+答：可以，但只能用于低风险、同 scope、短 TTL 的动作，比如同一会话内多次只读查询。高风险动作不能靠“用户刚才好像同意过”复用确认，必须重新展示 preview 和影响范围。考察点是安全与体验取舍；陷阱是为了效率把 approval 变成长期万能授权。
 
 ## 项目化回答
 
@@ -79,6 +94,6 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
-- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：用于支持 Agent 的外部能力通过工具暴露，因此工具 schema、调用边界和宿主执行权必须分离。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于支持在输入、输出和工具执行前后加入策略检查，而不是让模型自我约束高风险动作。
+- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)：用于支持权限裁决、approval、executor 结果和 rollback 应进入可追踪链路，方便事故复盘。
