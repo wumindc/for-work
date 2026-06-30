@@ -12,7 +12,7 @@ It is advisory by default: it identifies the next content-review backlog without
 - Needs revision: 0
 - Blocked: 0
 - Average score: 99
-- Issues: blocker 0, major 0, minor 79
+- Issues: blocker 0, major 0, minor 71
 
 ## Domain Readiness
 
@@ -34,62 +34,62 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 79 |
+| thin_depth | 71 |
 
 ## First 50 Revision Targets
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | topic | ai-agent-rag | `sandbox` | 96 | publishable | minor:thin_depth |
-| 2 | topic | ai-agent-rag | `short-term-memory` | 96 | publishable | minor:thin_depth |
-| 3 | topic | ai-agent-rag | `skills` | 96 | publishable | minor:thin_depth |
-| 4 | topic | ai-agent-rag | `swe-bench` | 96 | publishable | minor:thin_depth |
-| 5 | topic | ai-agent-rag | `tool-error-recovery` | 96 | publishable | minor:thin_depth |
-| 6 | topic | ai-agent-rag | `tool-permissions` | 96 | publishable | minor:thin_depth |
-| 7 | topic | ai-agent-rag | `tool-registry` | 96 | publishable | minor:thin_depth |
-| 8 | topic | ai-agent-rag | `tool-schema` | 96 | publishable | minor:thin_depth |
-| 9 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
-| 10 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
-| 11 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
-| 12 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
-| 13 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
-| 14 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
-| 15 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
-| 16 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
-| 17 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
-| 18 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
-| 19 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 96 | publishable | minor:thin_depth |
-| 20 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 96 | publishable | minor:thin_depth |
-| 21 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 96 | publishable | minor:thin_depth |
-| 22 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 96 | publishable | minor:thin_depth |
-| 23 | topic | ai-engineering-trends | `skill-packaging-workflow` | 96 | publishable | minor:thin_depth |
-| 24 | topic | database | `db-backup-recovery-migration` | 96 | publishable | minor:thin_depth |
-| 25 | topic | database | `db-index-execution-plan` | 96 | publishable | minor:thin_depth |
-| 26 | topic | database | `db-lock-deadlock-troubleshooting` | 96 | publishable | minor:thin_depth |
-| 27 | topic | database | `db-online-ddl-schema-change` | 96 | publishable | minor:thin_depth |
-| 28 | topic | database | `db-replication-read-write-splitting` | 96 | publishable | minor:thin_depth |
-| 29 | topic | database | `db-sharding-partitioning` | 96 | publishable | minor:thin_depth |
-| 30 | topic | database | `db-sql-join-optimization` | 96 | publishable | minor:thin_depth |
-| 31 | topic | elasticsearch | `es-query-aggregation-optimization` | 96 | publishable | minor:thin_depth |
-| 32 | topic | elasticsearch | `es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
-| 33 | topic | elasticsearch | `es-shards-write-path` | 96 | publishable | minor:thin_depth |
-| 34 | topic | elasticsearch | `es-use-cases-boundary` | 96 | publishable | minor:thin_depth |
-| 35 | question | elasticsearch | `q-es-query-optimization` | 96 | publishable | minor:thin_depth |
-| 36 | question | elasticsearch | `q-es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
-| 37 | topic | java-jvm | `java-classloading-spi` | 96 | publishable | minor:thin_depth |
-| 38 | topic | java-jvm | `java-completablefuture-async-timeout` | 96 | publishable | minor:thin_depth |
-| 39 | topic | java-jvm | `java-concurrent-collections-cas` | 96 | publishable | minor:thin_depth |
-| 40 | topic | java-jvm | `java-locks-aqs-synchronized-reentrantlock` | 96 | publishable | minor:thin_depth |
-| 41 | topic | java-jvm | `java-memory-model-volatile-happens-before` | 96 | publishable | minor:thin_depth |
-| 42 | topic | java-jvm | `java-thread-pool-governance` | 96 | publishable | minor:thin_depth |
-| 43 | topic | java-jvm | `jvm-gc-troubleshooting` | 96 | publishable | minor:thin_depth |
-| 44 | topic | mq | `mq-consumer-governance` | 96 | publishable | minor:thin_depth |
-| 45 | topic | mq | `mq-ordering-partitioning` | 96 | publishable | minor:thin_depth |
-| 46 | topic | mq | `mq-reliable-delivery-idempotency` | 96 | publishable | minor:thin_depth |
-| 47 | topic | mq | `mq-transactional-messaging` | 96 | publishable | minor:thin_depth |
-| 48 | topic | mq | `mq-use-cases-boundary` | 96 | publishable | minor:thin_depth |
-| 49 | question | mq | `q-mq-ordering` | 96 | publishable | minor:thin_depth |
-| 50 | question | mq | `q-mq-transaction-message` | 96 | publishable | minor:thin_depth |
+| 1 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
+| 2 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
+| 3 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
+| 4 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
+| 5 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
+| 6 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
+| 7 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
+| 8 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
+| 9 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
+| 10 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
+| 11 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 96 | publishable | minor:thin_depth |
+| 12 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 96 | publishable | minor:thin_depth |
+| 13 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 96 | publishable | minor:thin_depth |
+| 14 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 96 | publishable | minor:thin_depth |
+| 15 | topic | ai-engineering-trends | `skill-packaging-workflow` | 96 | publishable | minor:thin_depth |
+| 16 | topic | database | `db-backup-recovery-migration` | 96 | publishable | minor:thin_depth |
+| 17 | topic | database | `db-index-execution-plan` | 96 | publishable | minor:thin_depth |
+| 18 | topic | database | `db-lock-deadlock-troubleshooting` | 96 | publishable | minor:thin_depth |
+| 19 | topic | database | `db-online-ddl-schema-change` | 96 | publishable | minor:thin_depth |
+| 20 | topic | database | `db-replication-read-write-splitting` | 96 | publishable | minor:thin_depth |
+| 21 | topic | database | `db-sharding-partitioning` | 96 | publishable | minor:thin_depth |
+| 22 | topic | database | `db-sql-join-optimization` | 96 | publishable | minor:thin_depth |
+| 23 | topic | elasticsearch | `es-query-aggregation-optimization` | 96 | publishable | minor:thin_depth |
+| 24 | topic | elasticsearch | `es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
+| 25 | topic | elasticsearch | `es-shards-write-path` | 96 | publishable | minor:thin_depth |
+| 26 | topic | elasticsearch | `es-use-cases-boundary` | 96 | publishable | minor:thin_depth |
+| 27 | question | elasticsearch | `q-es-query-optimization` | 96 | publishable | minor:thin_depth |
+| 28 | question | elasticsearch | `q-es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
+| 29 | topic | java-jvm | `java-classloading-spi` | 96 | publishable | minor:thin_depth |
+| 30 | topic | java-jvm | `java-completablefuture-async-timeout` | 96 | publishable | minor:thin_depth |
+| 31 | topic | java-jvm | `java-concurrent-collections-cas` | 96 | publishable | minor:thin_depth |
+| 32 | topic | java-jvm | `java-locks-aqs-synchronized-reentrantlock` | 96 | publishable | minor:thin_depth |
+| 33 | topic | java-jvm | `java-memory-model-volatile-happens-before` | 96 | publishable | minor:thin_depth |
+| 34 | topic | java-jvm | `java-thread-pool-governance` | 96 | publishable | minor:thin_depth |
+| 35 | topic | java-jvm | `jvm-gc-troubleshooting` | 96 | publishable | minor:thin_depth |
+| 36 | topic | mq | `mq-consumer-governance` | 96 | publishable | minor:thin_depth |
+| 37 | topic | mq | `mq-ordering-partitioning` | 96 | publishable | minor:thin_depth |
+| 38 | topic | mq | `mq-reliable-delivery-idempotency` | 96 | publishable | minor:thin_depth |
+| 39 | topic | mq | `mq-transactional-messaging` | 96 | publishable | minor:thin_depth |
+| 40 | topic | mq | `mq-use-cases-boundary` | 96 | publishable | minor:thin_depth |
+| 41 | question | mq | `q-mq-ordering` | 96 | publishable | minor:thin_depth |
+| 42 | question | mq | `q-mq-transaction-message` | 96 | publishable | minor:thin_depth |
+| 43 | topic | prometheus-observability | `observability-alerting-slo-burn-rate` | 96 | publishable | minor:thin_depth |
+| 44 | topic | prometheus-observability | `observability-cardinality-capacity-cost` | 96 | publishable | minor:thin_depth |
+| 45 | topic | prometheus-observability | `observability-dashboard-runbook-incident` | 96 | publishable | minor:thin_depth |
+| 46 | topic | prometheus-observability | `observability-incident-tracing` | 96 | publishable | minor:thin_depth |
+| 47 | topic | prometheus-observability | `observability-structured-logging-correlation` | 96 | publishable | minor:thin_depth |
+| 48 | topic | prometheus-observability | `prometheus-metrics-promql` | 96 | publishable | minor:thin_depth |
+| 49 | question | prometheus-observability | `q-observability-incident-tracing` | 96 | publishable | minor:thin_depth |
+| 50 | topic | redis | `redis-expiration-eviction-memory` | 96 | publishable | minor:thin_depth |
 
 ## How To Use
 

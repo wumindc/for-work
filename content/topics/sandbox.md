@@ -140,6 +140,16 @@ Sandbox 要围绕 action request 建模，而不是只选 Docker 还是 VM。Act
 
 被问“依赖安装怎么办”时，要用缓存、镜像、域名 allowlist 和包源审计，而不是放开全网。网络放行应按能力和域名最小化，并记录 egress。
 
+## 公开阅读校验
+
+公开读者看 sandbox，最容易误以为“用了容器就安全”。这篇文章要强调 sandbox 是一套运行时治理链路：动作声明、策略判定、隔离执行、凭据代理、审计、验证和回滚缺一环都会留下风险。容器、microVM、只读挂载只是实现手段，不等于权限、凭据和副作用都被治理。
+
+可上线的 sandbox 设计至少要能回答三类问题。第一，模型想做的动作有哪些资源需求：路径、网络、进程、凭据、预期 artifact 和风险等级。第二，宿主实际允许了什么：policy verdict、workspace id、network policy、credential scope 和 timeout。第三，失败后如何恢复：rollback ref、artifact quarantine、structured error 和用户可见说明。如果这些字段没有进入 trace，出事后只能凭日志片段猜测责任边界。
+
+还要把 sandbox 和工具权限分开讲。Sandbox 负责“动作在什么隔离环境里执行”，Permission Gate 负责“当前用户、租户和任务是否允许这个动作”。一个工具即使在 sandbox 里运行，也不意味着它可以读取敏感文件或访问任意网络；反过来，一个权限允许的读操作也应被 sandbox 约束路径和输出大小。这个边界讲清楚，文章才不会停在安全名词堆叠。
+
+最后要说明不同任务的隔离强度。阅读代码、生成 diff、运行单测、安装依赖、执行用户上传脚本、连接生产 API，这些动作的风险不同，不应共用同一 sandbox profile。成熟设计会把 profile 写成策略：read-only、workspace-write、network-limited、secret-required、untrusted-code、production-touch。每个 profile 都有默认拒绝项、资源限制和审计字段，避免临时为某个 Agent 放开一整类权限。
+
 ## 来源与延伸阅读
 
 - [Anthropic: Claude Code security](https://code.claude.com/docs/en/security)：支撑本地 coding agent 需要权限、目录和执行风险治理的讨论。

@@ -126,6 +126,14 @@ Coding Agent 的 `apply_patch` 要有路径、diff、预期影响和权限。Web
 
 被问“如何调优 schema”，看样本：工具误选就改命名、description 和候选裁剪；参数错误就补 required、enum 和 examples；输出误读就加强 `status`、`evidence_ref` 和 `next_action_hint`；越权多就回到 permission scope 和可见性过滤。
 
+## 公开阅读校验
+
+公开读者需要理解工具 schema 是 Agent-computer interface，不是后端 API 文档的复制。后端 API 面向确定程序，Agent schema 面向模型决策和宿主治理，因此要同时服务“模型选得对”“参数填得对”“宿主拒得住”“结果读得懂”。只把已有 REST 参数贴给模型，通常会放大误选、越权和无效参数。
+
+一份可上线的 schema 至少应覆盖四层契约。输入契约定义 name、description、required、enum、format 和 examples；业务契约定义 resource ownership、状态前置条件和金额/数量边界；权限契约定义 risk_level、permission_scope、requires_confirmation 和 side_effect；输出契约定义 status、data、evidence_ref、error_code、retryable、next_action_hint 和 raw_ref。JSON Schema 只能覆盖第一层，不能替代后面三层。
+
+文章还应提醒读者用样本驱动调优。invalid args 多，优先看 required、enum 和 examples；工具误选多，优先看命名、description 和候选裁剪；输出误读多，优先看 status 与 evidence_ref；权限拒绝多，则回到资源 scope 和工具可见性。这样 schema 设计就从“写接口说明”变成了可以用指标迭代的工程能力。
+
 ## 来源与延伸阅读
 
 - [OpenAI Function Calling](https://developers.openai.com/api/docs/guides/function-calling)：用于支持工具调用需要结构化参数、schema 约束和宿主侧校验，而不是让模型输出任意文本。

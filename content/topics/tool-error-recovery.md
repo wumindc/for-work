@@ -132,6 +132,14 @@ Coding Agent 的测试失败不能当工具崩溃，要作为 observation。Web 
 
 还可以补一句治理边界：所有恢复动作都要写入 trace，并进入离线回放集。否则线上看似自动恢复，实际可能在悄悄吞掉错误、扩大延迟或把成本转移到人工处理。成熟系统会按错误类型设置 error budget，超过阈值后自动降级或暂停高风险工具。
 
+## 公开阅读校验
+
+公开文章讲工具失败恢复，重点不是列一堆 error code，而是让读者看到“错误事实”和“恢复决策”被拆开治理。Tool Runtime 只负责报告发生了什么，Recovery Policy 才决定是否重试、降级、补偿、追问或停机。这个分层能避免模型把所有失败都当成“再试一次”的机会。
+
+一个可上线的恢复设计要有三类边界。第一是幂等边界：写操作超时后先查状态，不把未知状态当成未执行。第二是预算边界：重试次数、总耗时、同类错误连续次数和错误预算都要受控。第三是用户边界：当副作用状态未知、权限缺失或需要业务判断时，系统应给出可解释失败和下一步选择，而不是继续自动动作。
+
+事故复盘时，读者应该能按字段定位问题：`tool_id`、`tool_version`、`error_code`、`retry_count`、`side_effect_status`、`fallback_tool_id`、`final_verdict` 和 `user_visible_message`。如果这些字段缺失，恢复逻辑看起来聪明，实际很难证明它没有吞错、重复提交或制造隐藏成本。
+
 ## 来源与延伸阅读
 
 - [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow、tool use 和 agent loop 的边界，以及为什么恢复策略应放在宿主流程中治理。
