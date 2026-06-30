@@ -115,17 +115,33 @@ flowchart LR
 
 ## 面试官追问
 
+下面这些追问可以按多轮面试展开。回答时不要只背结论，要主动补“考察点”和“陷阱”，让面试官看到你理解模型协议、宿主执行和生产安全边界。
+
+## 多轮追问模拟
+
 ### 追问 1：Function Calling 和普通 JSON 输出有什么区别？
 
 普通 JSON 只是文本格式，Function Calling 会进入受控执行链路。宿主会识别工具名、校验 arguments、执行工具并把 observation 写回模型上下文。
+
+考察点是你是否能区分“结构化文本”和“受控动作协议”。陷阱是只说 Function Calling 输出更稳定，却忽略工具名、schema、executor、observation 和 trace 这些运行时约束。
 
 ### 追问 2：模型参数已经满足 schema，还需要后端校验吗？
 
 必须需要。schema 只能验证格式，不能验证用户权限、对象归属、业务状态、金额上限和动作风险。生产系统必须把模型输出当成不可信输入。
 
+考察点是安全边界和业务校验。陷阱是把 JSON schema 当成权限系统，或者把模型输出当成可信后端参数。更好的补充是举退款、发券、文件写入、SQL 查询这类有副作用或数据权限的例子。
+
 ### 追问 3：工具调用失败后模型应该怎么办？
 
 工具应返回 structured error，例如 code、retryable、message、hint 和 partial data。模型基于这个 observation 决定重试、换工具、追问用户、降级或停止。
+
+考察点是错误恢复和状态机。陷阱是让模型在没有 observation 的情况下继续编答案。生产回答要补 `retryable=false` 时停止、`permission_denied` 时解释边界、`rate_limited` 时返回 retry_after、`timeout` 时按幂等键重试或降级。
+
+### 追问 4：工具 schema 应该设计得粗一点还是细一点？
+
+要看风险、任务粒度和可观测性。只读查询工具可以相对聚合，但写操作应该拆成 preview、confirmation 和 commit；高风险工具要有更窄的参数、枚举、权限 scope 和审计字段。工具太粗，模型容易把多个意图混在一次调用里；工具太细，调用轮次、延迟和成本会上升。
+
+考察点是工具设计取舍。陷阱是为了减少调用次数暴露 `execute_anything` 这类万能工具，最后权限、审计和错误恢复都不可控。
 
 ## 项目化回答
 

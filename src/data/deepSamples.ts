@@ -7509,7 +7509,7 @@ export const redisTopics = [
     commonPitfalls: ["认为开启 AOF 就绝对不丢数据", "忽略 fork 和 rewrite 对延迟的影响", "把 Redis 当唯一事实源"],
     questionIds: ["q-redis-persistence-aof-rdb", "q-redis-replication-sentinel-cluster"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs"],
+    sourceIds: ["redis-docs", "redis-replication"],
     deepDive: redisDeepDive({
       hooks: [
         "用会话缓存、限流状态、排行榜和配置缓存讲不同业务对丢失窗口的容忍度。",
@@ -7573,7 +7573,7 @@ export const redisTopics = [
     commonPitfalls: ["以为主从复制是强一致", "客户端不处理拓扑变化", "Cluster key 设计导致热点 slot"],
     questionIds: ["q-redis-replication-sentinel-cluster", "q-redis-persistence-aof-rdb"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs"],
+    sourceIds: ["redis-docs", "redis-replication", "redis-sentinel", "redis-cluster-spec", "redis-cluster-scaling"],
     deepDive: redisDeepDive({
       hooks: [
         "用缓存集群扩容、活动热点 key、会话缓存和配置中心讲复制延迟和故障切换。",
@@ -7766,7 +7766,7 @@ export const redisTopics = [
     commonPitfalls: ["把穿透、击穿、雪崩混为一谈", "只加分布式锁不设置超时和降级", "没有热 key 发现和回源 QPS 告警"],
     questionIds: ["q-redis-hotkey-breakdown-avalanche", "q-redis-cache-consistency"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs", "redis-distributed-locks", "prometheus-docs", "opentelemetry-docs"],
+    sourceIds: ["redis-docs", "redis-slowlog", "redis-distributed-locks", "prometheus-docs", "opentelemetry-docs"],
     deepDive: redisDeepDive({
       hooks: [
         "用秒杀商品、热点活动页、AI 模型配置和 RAG 热门知识库讲高并发读链路治理。",

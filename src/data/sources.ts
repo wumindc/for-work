@@ -237,6 +237,36 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "redis-replication",
+    title: "Redis Documentation: Replication",
+    url: "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/",
+    kind: "official",
+  },
+  {
+    id: "redis-sentinel",
+    title: "Redis Documentation: Sentinel",
+    url: "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/",
+    kind: "official",
+  },
+  {
+    id: "redis-cluster-spec",
+    title: "Redis Documentation: Cluster specification",
+    url: "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/",
+    kind: "official",
+  },
+  {
+    id: "redis-cluster-scaling",
+    title: "Redis Documentation: Scale with Redis Cluster",
+    url: "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/",
+    kind: "official",
+  },
+  {
+    id: "redis-slowlog",
+    title: "Redis Documentation: SLOWLOG",
+    url: "https://redis.io/docs/latest/commands/slowlog/",
+    kind: "official",
+  },
+  {
     id: "mysql-innodb-indexes",
     title: "MySQL 8.4 Reference Manual: InnoDB Index Types",
     url: "https://dev.mysql.com/doc/refman/8.4/en/innodb-index-types.html",
