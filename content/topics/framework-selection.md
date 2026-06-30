@@ -30,6 +30,10 @@ flowchart LR
   Adapter --> Eval[Eval + Trace Gate]
 ```
 
+图 1：Agent 框架选型先从 Requirement Profiler 和 Native API baseline 开始，再通过 Framework Matrix 选择 Native Loop、StateGraph、Agents SDK 或 RAG Stack，并统一接入 Adapter Layer 与 Eval/Trace Gate。
+
+图中 `Native API baseline` 是判断框架是否值得引入的对照组；`Framework Matrix` 是选型决策边界，把状态复杂度、工具数量、handoff、guardrails、tracing、部署和团队能力放在一起评估；`Adapter Layer` 是 lock-in 边界，业务代码依赖内部接口而不是直接散落框架 API；`Eval + Trace Gate` 是上线边界，只有 golden case、trace 覆盖和成本延迟指标达标，框架实现才应保留。
+
 Adapter Layer 让业务代码依赖内部 AgentRuntime 接口，而不是到处直接调用框架 API。
 
 ## 架构与运行机制
@@ -113,6 +117,6 @@ Adapter Layer 的 contract 可以包含 `run(input, options)`、`dispatchTool(to
 
 ## 来源与延伸阅读
 
-- [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api)：理解 StateGraph 的基本组件。
-- [OpenAI Agents SDK](https://developers.openai.com/api/docs/guides/agents)：理解 agents、tools、handoffs、guardrails 与 tracing。
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：理解框架内建 trace。
+- [LangGraph Graph API 官方文档](https://docs.langchain.com/oss/python/langgraph/graph-api)：用于说明 StateGraph、节点、边和 checkpoint 等机制，支撑“复杂状态恢复适合显式图”的判断。
+- [OpenAI Agents SDK 官方文档](https://developers.openai.com/api/docs/guides/agents)：用于说明 agents、tools、handoffs、guardrails 与 tracing 的集成边界。
+- [OpenAI Agents SDK Tracing 官方文档](https://openai.github.io/openai-agents-python/tracing/)：用于确认框架内建 trace 能记录运行轨迹，但仍需要业务侧 eval 和成本指标闭环。

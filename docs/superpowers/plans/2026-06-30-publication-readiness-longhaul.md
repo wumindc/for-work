@@ -160,6 +160,9 @@ AI Agent / RAG topic backlog:
 - [x] `tool-schema`
 - [x] `web-agent-eval`
 - [x] `web-agent-project`
+- [x] `framework-selection`
+- [x] `handoff-pattern`
+- [x] `multi-agent-roles`
 
 For each question:
 
@@ -183,6 +186,8 @@ Work after the first AI Agent / RAG batch:
   - [x] `mq-transactional-messaging`
   - [x] `mq-consumer-governance`
   - [x] `mq-ordering-partitioning`
+  - [x] `mq-use-cases-boundary`
+  - [x] `q-mq-consumer-lag`
 - [ ] Database low-score questions.
   - [x] `q-db-index-execution-plan`
 - [ ] Redis questions with missing sources.

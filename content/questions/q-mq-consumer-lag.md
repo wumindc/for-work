@@ -37,6 +37,10 @@ flowchart LR
   Metrics --> Downstream
 ```
 
+图 1：MQ 积压排障要同时观察 Producer、Broker、Consumer、Downstream、Retry 和 DLQ，不能只盯 consumer 实例数量。
+
+图中 `Producer TPS` 是生产侧边界，判断是不是上游流量突增；`Broker / Partitions` 是队列水位和分区热点边界；`Consumer Group` 是执行能力边界；`DB / API` 是下游瓶颈边界；`Retry` 和 `DLQ` 则决定失败消息会被退避、隔离还是反复打回主链路。Metrics 必须覆盖每一段，才能判断该扩容、限流、隔离还是回滚。
+
 ## 系统设计案例
 
 RAG embedding 队列突然积压，可能是文档同步突增，也可能是 embedding API 限流。先看生产速率和消费耗时。如果下游限流，盲目扩容 consumer 会加剧失败，应该限流、退避和分批处理。
@@ -60,6 +64,20 @@ RAG embedding 队列突然积压，可能是文档同步突增，也可能是 em
 ### 追问 3：如何防止复发？
 
 容量水位告警、重试退避、DLQ 治理、限流、批处理优化和压测。
+
+## 多轮追问模拟
+
+**追问 1：你怎么判断是生产突增还是消费变慢？**
+回答要点：把 produce_tps、consume_tps、oldest_message_age、consumer_lag 和 processing_p95 放到同一时间线看。生产突增时 produce_tps 先升，消费能力可能不变；消费变慢时 processing_p95、downstream_latency 或 error_rate 先升。考察点是分段定位能力。陷阱是只看 lag 数值，不看消息年龄和生产速率。
+
+**追问 2：什么时候可以扩容 consumer？**
+回答要点：分区数足够、瓶颈在 consumer CPU 或本地计算、下游仍有余量时可以扩容；如果瓶颈是 DB 锁等待、外部 API 429、单分区热点或顺序消息，扩容可能无效甚至放大故障。考察点是吞吐模型和下游保护。陷阱是把扩容当万能止血。
+
+**追问 3：毒丸消息如何不影响正常消息？**
+回答要点：按 error_code、attempt、schema_version 和 message_id 识别反复失败样本，超过阈值进入 DLQ，并保留 payload、trace_id、handler_version 和重放原因。临时错误走指数退避，永久错误隔离。考察点是错误分类和 DLQ 治理。陷阱是无限 retry 或直接丢弃。
+
+**追问 4：如何确认恢复是真的？**
+回答要点：看 lag 下降斜率、oldest_message_age 回到 SLA、processing_p95 和业务 error_rate 回到基线，同时确认没有错误 ack、消息丢弃或暂停生产制造的假恢复。考察点是验证闭环。陷阱是只看 lag 清零。
 
 ## 项目化回答
 
@@ -92,5 +110,7 @@ RAG embedding 队列突然积压，可能是文档同步突增，也可能是 em
 
 ## 来源与延伸阅读
 
-- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
-- [RabbitMQ DLX](https://www.rabbitmq.com/docs/dlx)
+- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)：用于确认 consumer group、partition、offset 和 broker 语义，是分析 Kafka 积压的官方基础。
+- [Kafka Consumer configs 官方文档](https://kafka.apache.org/documentation/#consumerconfigs)：用于说明 poll、fetch、commit 和 consumer 配置如何影响消费进度与恢复策略。
+- [RabbitMQ Dead Letter Exchanges 官方文档](https://www.rabbitmq.com/docs/dlx)：用于支持 DLQ 隔离毒丸消息和永久失败消息的排障方案。
+- [RabbitMQ Consumer acknowledgements 官方文档](https://www.rabbitmq.com/docs/confirms)：用于说明 ack 时机、重投递和消费可靠性，支撑“不能错误 ack 制造假恢复”的结论。

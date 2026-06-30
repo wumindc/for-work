@@ -33,6 +33,10 @@ sequenceDiagram
   O-->>A: return_policy result
 ```
 
+图 1：Handoff 链路由当前 Agent 发起转交请求，Orchestrator 校验 Agent Registry 和权限，写入 Shared State，再把结构化 payload 交给目标 Agent，最后按 return_policy 回流结果。
+
+图中 `Agent Registry` 是能力和权限边界，避免把任务错派给没有工具或权限的 Agent；`Shared State` 是 ownership 和 evidence 边界，保存 state_summary、artifact_refs、verdict 和写锁；`Target Agent` 可以 accept、reject 或 ask clarification，不能被动接收所有任务；`return_policy` 是流程恢复边界，定义完成、失败、拒绝和超时后原 Agent 是否等待或退出。
+
 | 模式 | 控制权 | 优点 | 风险 |
 | :--- | :--- | :--- | :--- |
 | Tool call | 原 Agent 保持控制 | 简单、可验证 | 不适合开放子任务 |
@@ -131,7 +135,7 @@ state_summary 要是最小可执行状态，而不是完整聊天历史。完整
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
-- [OpenAI Agents SDK Multi-agent patterns](https://openai.github.io/openai-agents-python/multi_agent/)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [Google Agent2Agent 项目](https://github.com/google/A2A)
+- [OpenAI Agents SDK Handoffs 官方文档](https://openai.github.io/openai-agents-python/handoffs/)：用于说明 handoff 是受控的任务交接机制，不是简单 prompt 转发。
+- [OpenAI Agents SDK Multi-agent patterns 官方文档](https://openai.github.io/openai-agents-python/multi_agent/)：用于对照 manager pattern、handoff 和多 Agent 编排模式的语义边界。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持“优先使用简单可组合 workflow，只有需要时再扩大自治”的工程取舍。
+- [Google Agent2Agent 项目](https://github.com/google/A2A)：用于补充跨 Agent 协作协议化的行业实践，尤其是任务交接、能力发现和状态传递。
