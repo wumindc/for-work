@@ -335,11 +335,11 @@ Post-publish thin-depth deepening:
 
 For each question:
 
-- [ ] Make the 30-second answer precise and bounded.
-- [ ] Add `## 多轮追问模拟` if missing.
-- [ ] Make each follow-up include answer points, what it tests, and a trap.
-- [ ] Add source intent and at least two credible references when the topic needs factual support.
-- [ ] Remove risky absolute wording or explain the condition under which it is true.
+- [x] Make the 30-second answer precise and bounded.
+- [x] Add `## 多轮追问模拟` if missing.
+- [x] Make each follow-up include answer points, what it tests, and a trap.
+- [x] Add source intent and at least two credible references when the topic needs factual support.
+- [x] Remove risky absolute wording or explain the condition under which it is true.
 
 ### Task 4: Upgrade Traditional Engineering Backlog
 
@@ -365,7 +365,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `mq-reliable-delivery-idempotency`
   - [x] `q-mq-consumer-lag`
   - [x] `q-mq-reliable-delivery`
-- [ ] Database low-score questions.
+- [x] Database low-score questions.
   - [x] `q-db-index-execution-plan`
   - [x] `q-db-mvcc-transaction-isolation`
   - [x] `db-index-execution-plan`
