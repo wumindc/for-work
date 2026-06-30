@@ -66,6 +66,13 @@ export const domains = [
     priority: "important",
   },
   {
+    id: "ai-engineering-trends",
+    title: "AI 工程趋势与实战方案",
+    description: "Loop Engineering、Coding Agent、RAG 基础设施、Agent Memory、本地 AI、Skill 化和企业 Agent 方案。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
     id: "engineering-quality",
     title: "工程质量与故障治理",
     description: "发布、回滚、压测、可观测性、故障复盘、质量门禁和工程效率。",

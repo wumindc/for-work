@@ -309,4 +309,31 @@ export const learningPaths: LearningPath[] = [
       "能把 Web API 契约迁移到 Agent tool schema、工具权限和可审计执行链路。",
     ],
   },
+  {
+    id: "ai-engineering-trends-review",
+    title: "AI 工程趋势与实战方案复习",
+    mode: "intensive",
+    description:
+      "把 Loop Engineering、Coding Agent、RAG 数据基建、Agent Memory、Skill 化、本地 AI 和企业方案串成能面试也能动手的趋势主线。",
+    focusWindow: "趋势补强",
+    nodeIds: [
+      "loop-engineering-agent-runtime",
+      "agent-state-file-verifier",
+      "codex-claude-context-workflow",
+      "ai-code-review-pipeline",
+      "rag-document-ingestion-stack",
+      "self-growing-knowledge-base",
+      "agent-memory-layering-compression",
+      "skill-packaging-workflow",
+      "design-assets-for-ai-coding",
+      "computer-use-agent-benchmark",
+      "local-ai-inference-stack",
+      "enterprise-agent-solution-map",
+    ],
+    exitCriteria: [
+      "能把 2026 AI 工程趋势归纳为 loop、context、memory、RAG data、skill、local-first 和 enterprise solution 七条线。",
+      "能从至少 6 个开源项目中抽象出可复用架构、指标、失败模式和项目表达。",
+      "能把趋势内容连接回现有 Agent/RAG/Coding Agent/后端工程知识点。",
+    ],
+  },
 ];

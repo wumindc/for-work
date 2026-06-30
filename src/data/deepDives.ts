@@ -1394,4 +1394,364 @@ export const topicDeepDives: Record<string, TopicDeepDive> = {
       "项目可串起 Browser Observation、Playwright Actions、Web Eval 和 Tool Permissions。",
     ],
   },
+  "loop-engineering-agent-runtime": {
+    mentalModel: [
+      "Loop Engineering 的核心是把一次模型调用变成可持续运行的软件循环。",
+      "prompt 只是输入，真正的系统边界在 state、verifier、scheduler、tool runtime 和 artifact store。",
+      "面试要从状态机、恢复点、停止条件和评测证据解释为什么它不是简单自动化脚本。",
+    ],
+    interviewAngles: [
+      "Loop Engineering 和 Prompt Engineering 的区别。",
+      "长任务 Agent 如何设计 state、verifier、budget 和 schedule。",
+      "如何避免 Agent 无限循环、越跑越偏或自我判定成功。",
+    ],
+    implementationChecklist: [
+      "定义 run state：goal、constraints、plan、completed_steps、open_risks、artifact_refs 和 next_actions。",
+      "每个 step 保存 tool call、observation、cost、duration、error 和 verifier verdict。",
+      "调度层设置 max steps、timeout、budget、pause/resume、human gate 和 rollback。",
+      "用 trajectory eval 和 artifact verifier 判断循环是否真的推进目标。",
+    ],
+    metrics: [
+      "task_success_rate",
+      "loop_completion_rate",
+      "verifier_reject_rate",
+      "resume_success_rate",
+      "cost_per_success",
+    ],
+    projectHooks: [
+      "Coding Agent：把 issue 修复拆成搜索、patch、测试、review 的可恢复循环。",
+      "Web Agent：每步 observe、act、verify 都写入 trace，失败时重规划。",
+      "企业 Agent：用 schedule 管控长任务、预算和人工确认。",
+    ],
+  },
+  "agent-state-file-verifier": {
+    mentalModel: [
+      "state file 是长任务 Agent 的任务账本，不是聊天摘要。",
+      "verifier 要读取外部证据，不能接受模型一句“已经完成”。",
+      "schedule 负责何时继续、暂停、重试、升级给人或终止。",
+    ],
+    interviewAngles: [
+      "Agent state file 应该存哪些字段。",
+      "如何设计不会被模型自我说服的 verifier。",
+      "state 版本、artifact 引用和恢复机制如何避免重复工作。",
+    ],
+    implementationChecklist: [
+      "state file 至少包含 state_version、goal、hard_constraints、plan、completed_steps、open_risks、artifact_refs。",
+      "verifier 输入必须包含测试结果、截图、citation、diff 或工具 observation。",
+      "每次状态更新带 before_version 和 after_version，避免旧摘要覆盖新状态。",
+      "恢复前先校验 hard constraints、artifact 可访问性和 next_actions 是否仍有效。",
+    ],
+    metrics: [
+      "state_conflict_rate",
+      "lost_constraint_rate",
+      "verifier_false_accept_rate",
+      "duplicate_work_rate",
+      "artifact_ref_missing_rate",
+    ],
+    projectHooks: [
+      "Coding Agent 的 state file 保存 changed_files、commands_run、test_results 和 rollback_ref。",
+      "RAG 调研 Agent 的 verifier 检查每个 claim 是否有 evidence span。",
+      "Browser Agent 的 verifier 对比动作前后 URL、DOM 摘要和截图。",
+    ],
+  },
+  "codex-claude-context-workflow": {
+    mentalModel: [
+      "Coding Agent 的能力来自仓库上下文、工具反馈和验证闭环，不只是模型会写代码。",
+      "上下文工作流要控制读什么、保留什么、压缩什么、何时交给 subagent 或 skill。",
+      "测试、diff、trace 和用户约束是事实，聊天历史只是交互外壳。",
+    ],
+    interviewAngles: [
+      "为什么 Coding Agent 需要 context workflow。",
+      "Codex/Claude Code 类工具如何组织搜索、读取、patch、测试和 review。",
+      "长任务中如何避免丢失用户约束和失败测试证据。",
+    ],
+    implementationChecklist: [
+      "先用代码搜索定位相关模块，再读取最小必要文件和测试。",
+      "把上下文拆成 task、constraints、repo facts、diff、test output、decisions 和 open risks。",
+      "触发压缩时保存 evidence refs，而不是只写自然语言总结。",
+      "每次完成前必须以真实命令、diff 和 reviewer verdict 做验证。",
+    ],
+    metrics: [
+      "issue_resolution_rate",
+      "test_pass_rate",
+      "context_reuse_rate",
+      "lost_constraint_rate",
+      "review_findings_per_patch",
+    ],
+    projectHooks: [
+      "把本项目内容扩展过程讲成 Codex 读取数据模型、生成 Markdown、跑校验、修失败的闭环。",
+      "面试可以展示一次失败校验如何引导补 deepDive 或修 source kind。",
+      "可连接 Coding Harness、Context Compaction、Skills 和 Trace Replay。",
+    ],
+  },
+  "ai-code-review-pipeline": {
+    mentalModel: [
+      "AI Code Review 不是把整个仓库塞进模型，而是围绕 diff 和风险信号构建审查流水线。",
+      "确定性规则负责可证明问题，LLM 负责语义风险、上下文解释和可读建议。",
+      "评论质量要用误报、漏报、采纳率和回归效果评估。",
+    ],
+    interviewAngles: [
+      "AI Code Review pipeline 如何设计。",
+      "如何让评论可定位、可复核、低噪声。",
+      "规则、静态分析、测试和 LLM review 如何组合。",
+    ],
+    implementationChecklist: [
+      "解析 PR diff，提取 changed files、changed ranges、依赖影响和测试证据。",
+      "先跑 lint、typecheck、security rules、secret scan 等确定性检查。",
+      "为 LLM reviewer 构造最小上下文：diff、相关代码、规则结果、项目约束。",
+      "输出 finding schema：file、line、severity、evidence、confidence、fix_hint、model_version。",
+    ],
+    metrics: [
+      "false_positive_rate",
+      "false_negative_rate",
+      "comment_action_rate",
+      "review_latency_p95",
+      "defect_escape_rate",
+    ],
+    projectHooks: [
+      "Coding Agent 项目可把 reviewer 作为 patch verifier。",
+      "企业方案可讲 PR Review、CI 门禁和安全扫描如何接入 Agent。",
+      "面试可展示一条 noisy comment 如何通过 confidence 和 rule evidence 降噪。",
+    ],
+  },
+  "rag-document-ingestion-stack": {
+    mentalModel: [
+      "RAG 的质量上限经常由文档入库决定，而不是最终生成模型决定。",
+      "PDF、表格、图片和多栏排版必须保留结构、页码、章节和定位信息。",
+      "Markdown/JSON/HTML 是面向 AI 的中间结构，metadata 是排障和引用的证据层。",
+    ],
+    interviewAngles: [
+      "为什么 PDF 解析会影响 RAG 准确率。",
+      "如何设计可回归、可追溯的文档入库链路。",
+      "解析器版本、chunk metadata 和 citation span 如何支持排障。",
+    ],
+    implementationChecklist: [
+      "解析时保留 doc_id、page、section_path、bbox、table_id、image_ref、content_hash 和 parser_version。",
+      "按标题、段落、表格和代码块保留语义边界，避免纯固定长度切块。",
+      "入库时同时生成 Markdown/JSON/HTML 结构和 BM25/vector 索引。",
+      "用解析 golden set 回归 reading order、table accuracy、citation span 和 OCR 错误。",
+    ],
+    metrics: [
+      "parse_success_rate",
+      "table_accuracy",
+      "reading_order_score",
+      "citation_span_hit_rate",
+      "retrieval_recall_at_k",
+    ],
+    projectHooks: [
+      "Paper Agent 可以把 PDF 解析和引用页码作为核心亮点。",
+      "企业知识库可以讲文档权限、版本、parser 回归和 stale document。",
+      "面试可展示表格解析丢结构导致 RAG 答错的事故复盘。",
+    ],
+  },
+  "self-growing-knowledge-base": {
+    mentalModel: [
+      "自生长知识库不是让模型随便改 Wiki，而是让文档、证据、claim 和审核形成闭环。",
+      "RAG 回答、Reasoning Agent 和 Wiki 维护需要共同的来源追踪和版本治理。",
+      "自动生长越强，越需要 review_status、owner、staleness 和回滚能力。",
+    ],
+    interviewAngles: [
+      "自生长知识库和普通 RAG 的区别。",
+      "如何防止错误知识被自动固化。",
+      "企业 Wiki 如何处理权限、过期内容和知识冲突。",
+    ],
+    implementationChecklist: [
+      "把文档解析为 source_docs、claims、citations、topics 和 ownership。",
+      "每条知识保存版本、来源、置信度、更新时间、review_status 和适用范围。",
+      "自动更新先进入 proposed 状态，经过 verifier 或 human review 后发布。",
+      "回答时暴露 citation 和 staleness，冲突证据触发澄清或人工复核。",
+    ],
+    metrics: [
+      "knowledge_freshness",
+      "claim_support_rate",
+      "review_pass_rate",
+      "stale_answer_rate",
+      "rollback_count",
+    ],
+    projectHooks: [
+      "Paper Agent 可扩展成论文主题 Wiki。",
+      "企业知识库可讲制度文档自动入库、冲突检测和审核发布。",
+      "面试可把 WeKnora 类项目拆成 RAG、Agent、Wiki 和治理四层。",
+    ],
+  },
+  "agent-memory-layering-compression": {
+    mentalModel: [
+      "Agent Memory 是分层状态系统，不是无限聊天历史。",
+      "短期状态、长期偏好、外部知识和经验总结的生命周期完全不同。",
+      "压缩的目标是省 token，同时保留约束、证据和恢复能力。",
+    ],
+    interviewAngles: [
+      "Agent Memory 如何分层。",
+      "长期记忆、RAG 和 context compaction 的边界。",
+      "如何证明压缩没有丢掉关键约束。",
+    ],
+    implementationChecklist: [
+      "把 memory 分成 working state、episodic memory、semantic memory、external evidence 和 user preference。",
+      "每条 memory 保存 scope、ttl、confidence、source_trace、privacy_level 和 last_used_at。",
+      "写入前做重要性评分、去重、敏感信息过滤和用户授权。",
+      "压缩后用 lost constraint eval、resume case 和 artifact refs 验证质量。",
+    ],
+    metrics: [
+      "token_saving_ratio",
+      "resume_success_rate",
+      "lost_constraint_rate",
+      "memory_precision",
+      "privacy_violation_count",
+    ],
+    projectHooks: [
+      "Coding Agent 保存项目约定、失败测试和用户偏好。",
+      "长期研究 Agent 保存论文主题、引用关系和已验证结论。",
+      "面试可连接 Context Compression、Long-term Memory 和 Trace Replay。",
+    ],
+  },
+  "skill-packaging-workflow": {
+    mentalModel: [
+      "Skill 是可加载的过程资产，不是更长的 prompt。",
+      "它把 trigger、scope、instruction、references、templates、scripts 和 eval 绑定在一起。",
+      "Skill 的价值要通过任务成功率和返工率证明。",
+    ],
+    interviewAngles: [
+      "Skill、Tool 和 Workflow 的区别。",
+      "如何设计可版本化、可评测的 Skill。",
+      "多个 Skill 命中时如何处理冲突和渐进加载。",
+    ],
+    implementationChecklist: [
+      "为 Skill 定义触发条件、反例、适用文件类型和风险等级。",
+      "入口 instruction 只放流程和验证点，长参考放 references，模板放 templates。",
+      "工具调用受 tool contract、权限、超时和 side effect 约束。",
+      "用 golden tasks 对比启用前后的 eval_pass_rate 和 user_revision_rate。",
+    ],
+    metrics: [
+      "task_success_rate",
+      "eval_pass_rate",
+      "user_revision_rate",
+      "skill_misfire_rate",
+      "latency_overhead",
+    ],
+    projectHooks: [
+      "把技术文章改写、前端审美、架构图生成和代码审查都可以沉淀成 Skill。",
+      "面试可用本项目 AGENTS/skills 机制举例说明过程资产。",
+      "企业方案可讲团队如何把重复工作封装成可复用 Agent 能力。",
+    ],
+  },
+  "design-assets-for-ai-coding": {
+    mentalModel: [
+      "AI 生成 UI 的瓶颈常常不是代码能力，而是缺少可读的设计约束。",
+      "DESIGN.md 把品牌、布局、组件状态、间距、交互和负例变成模型可加载资产。",
+      "设计资产必须可验证：截图、响应式、溢出、状态和视觉回归都要检查。",
+    ],
+    interviewAngles: [
+      "为什么 AI 编程需要 DESIGN.md。",
+      "如何把审美要求转成可执行约束。",
+      "如何用视觉 QA 验证 AI 生成的界面质量。",
+    ],
+    implementationChecklist: [
+      "记录颜色、字体、间距、栅格、组件状态、交互规则和禁用模式。",
+      "提供正例截图、负例说明、常见误区和页面级验收清单。",
+      "让 Agent 修改前先读取 DESIGN.md，再生成或调整组件。",
+      "用 Playwright 截图、移动端宽度、文本溢出和交互状态做 QA。",
+    ],
+    metrics: [
+      "visual_regression_count",
+      "mobile_overflow_count",
+      "design_token_violation_count",
+      "revision_rounds",
+      "qa_pass_rate",
+    ],
+    projectHooks: [
+      "Web Agent 控制台、知识站 UI 和管理后台都可以用 DESIGN.md 约束。",
+      "面试可讲如何避免 AI 默认模板味和不一致组件。",
+      "与 taste-skill、awesome-design-md 和前端 UX 规范直接相关。",
+    ],
+  },
+  "computer-use-agent-benchmark": {
+    mentalModel: [
+      "Computer Use Agent 把动作空间从网页扩展到真实桌面，风险和不确定性都更高。",
+      "OSWorld 类 benchmark 评估跨应用任务，但分数不等于生产安全可用。",
+      "桌面 Agent 必须把观察、动作、验证、安全确认和回放做成闭环。",
+    ],
+    interviewAngles: [
+      "Computer Use Agent 和 Browser Agent 的区别。",
+      "如何评测真实电脑操作 Agent 的可靠性和安全性。",
+      "为什么桌面任务需要更强权限、隔离和人工确认。",
+    ],
+    implementationChecklist: [
+      "观察层保存 screenshot、active_app、window_title、ocr_text 和可操作区域。",
+      "动作层限制 click/type/hotkey/file 操作，并对高风险动作加 confirmation。",
+      "每步后用 verifier 检查 UI 状态、文件变化或任务产物。",
+      "评测集覆盖跨应用、文件处理、网络失败、弹窗和权限拦截。",
+    ],
+    metrics: [
+      "task_success_rate",
+      "step_error_rate",
+      "recovery_rate",
+      "unsafe_action_block_rate",
+      "trace_replay_success_rate",
+    ],
+    projectHooks: [
+      "Web Agent 项目可升级到 Browser + Computer Use 对比。",
+      "面试可把 Agent S 和 OSWorld 作为 benchmark 线索，再回到安全边界。",
+      "企业场景适合先做只读、低风险和沙箱化任务。",
+    ],
+  },
+  "local-ai-inference-stack": {
+    mentalModel: [
+      "Local-first AI 的价值是隐私、成本、延迟和离线能力，但不是所有任务都适合本地模型。",
+      "OpenAI-compatible API 可以把本地和云端后端藏在统一网关后面。",
+      "本地推理也需要质量评测、监控、限流、fallback 和模型能力探测。",
+    ],
+    interviewAngles: [
+      "什么场景适合 Local-first AI。",
+      "如何设计本地模型和云模型混合的 API 网关。",
+      "本地小模型、ASR、向量索引和隐私部署如何取舍。",
+    ],
+    implementationChecklist: [
+      "按任务风险和能力需求把请求分成 local_only、cloud_allowed、cloud_required。",
+      "网关记录 model_id、backend、latency、tokens、memory、quality_verdict 和 fallback_reason。",
+      "本地服务加并发限制、队列、健康检查和冷启动预热。",
+      "用同一批 eval case 比较本地模型和云模型的质量、延迟和成本。",
+    ],
+    metrics: [
+      "local_hit_rate",
+      "fallback_rate",
+      "latency_p95",
+      "cost_per_task",
+      "quality_delta",
+    ],
+    projectHooks: [
+      "Coding Agent 可用本地 coder 模型处理低风险补全和重构草稿。",
+      "RAG 可把本地向量检索和隐私文档处理留在端侧或私有环境。",
+      "面试可讲 Rapid-MLX 类 OpenAI-compatible server 的价值和限制。",
+    ],
+  },
+  "enterprise-agent-solution-map": {
+    mentalModel: [
+      "企业 Agent 方案要先按场景分类，再选架构，不能所有业务都套 autonomous agent。",
+      "数据、权限、评测、回滚和人工审核决定方案能不能生产落地。",
+      "项目表达要从业务问题、数据源、工具、指标和失败模式展开。",
+    ],
+    interviewAngles: [
+      "企业 Agent 方案如何分类和选型。",
+      "DataAgent、知识库问答、AI Code Review 和自动化测试有什么不同。",
+      "如何定义一个 Agent 项目的边界、数据和成功指标。",
+    ],
+    implementationChecklist: [
+      "为每个方案卡定义 scenario、users、data_sources、tools、risk_level、eval_metrics 和 fallback。",
+      "先做 deterministic workflow 或 RAG baseline，再证明 Agent loop 的收益。",
+      "权限、审计、human review 和 unsupported state 必须前置设计。",
+      "上线后跟踪业务成功率、人工接管率、成本、延迟和安全拦截。",
+    ],
+    metrics: [
+      "business_success_rate",
+      "manual_handoff_rate",
+      "unsupported_request_rate",
+      "cost_per_success",
+      "risk_block_rate",
+    ],
+    projectHooks: [
+      "DataAgent 适合讲 Text2SQL、权限过滤、结果解释和审计。",
+      "AI Code Review 适合讲 diff、规则、LLM reviewer 和评论质量。",
+      "客服知识库适合讲 RAG、引用、过期文档和 human fallback。",
+    ],
+  },
 };

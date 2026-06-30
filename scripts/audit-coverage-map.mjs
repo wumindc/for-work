@@ -112,6 +112,25 @@ const minimumsByDomain = {
     ],
     topics: 8,
   },
+  "ai-engineering-trends": {
+    categories: 8,
+    questions: 12,
+    requiredTopicIds: [
+      "loop-engineering-agent-runtime",
+      "agent-state-file-verifier",
+      "codex-claude-context-workflow",
+      "ai-code-review-pipeline",
+      "rag-document-ingestion-stack",
+      "self-growing-knowledge-base",
+      "agent-memory-layering-compression",
+      "skill-packaging-workflow",
+      "design-assets-for-ai-coding",
+      "computer-use-agent-benchmark",
+      "local-ai-inference-stack",
+      "enterprise-agent-solution-map",
+    ],
+    topics: 12,
+  },
 };
 
 const topicIds = new Set(topics.map((topic) => topic.id));
