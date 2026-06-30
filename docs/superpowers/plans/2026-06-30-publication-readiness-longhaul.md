@@ -187,6 +187,11 @@ AI Agent / RAG topic backlog:
 - [x] `framework-selection`
 - [x] `handoff-pattern`
 - [x] `multi-agent-roles`
+- [x] `browser-observation`
+- [x] `citation-grounding`
+- [x] `coding-harness`
+- [x] `context-compression`
+- [x] `llm-foundation`
 
 For each question:
 

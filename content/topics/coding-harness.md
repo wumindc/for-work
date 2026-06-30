@@ -26,7 +26,9 @@ flowchart LR
   Verdict --> Trace[Run Trace + rollback]
 ```
 
-Harness 的核心不是“让模型能执行更多命令”，而是让每个高风险动作都有 preview、验证和恢复路径。
+图 1：Coding Agent Harness 的受控修改链路。
+
+图中 Planner、Search、Reader、Patch 和 Test Runner 不是普通工具堆叠，而是一条事务链。模型只能通过 Search/Reader 获取证据，通过 Patch Engine 提交可审计 diff，再由 Policy Gate 和 Test Runner 给出真实 verdict。Harness 的核心不是“让模型能执行更多命令”，而是让每个高风险动作都有 preview、验证和恢复路径。
 
 ## 架构与运行机制
 
@@ -51,6 +53,10 @@ workspace sandbox 隔离文件系统、网络、环境变量和命令权限。Co
 
 关键字段包括 `run_id`、`workspace_id`、`changed_files`、`patch_id`、`approval_id`、`test_command`、`exit_code`、`artifact_ref`、`rollback_ref`。指标包括 `issue_resolution_rate`、`test_pass_rate`、`patch_apply_failure_rate`、`rollback_success_rate`、`unsafe_command_block_count` 和 `review_findings_per_patch`。
 
+生产系统还要区分“工具失败”和“任务失败”。`npm test` 返回非 0 是任务观察结果，Agent 可以继续读取失败日志并修复；shell 权限拒绝、依赖缺失、超时、工作区损坏才是工具层故障。这个区分决定了恢复策略：任务失败走下一轮 patch，工具失败走环境修复或人工接管。
+
+另一个关键边界是凭据和外部副作用。Coding Agent 可以读取普通源码和测试，但不能默认读取 `.env`、密钥文件、浏览器登录态或云账号凭据。会修改数据库、发布版本、删除文件、升级依赖、发邮件或调用付费 API 的命令，都应进入高风险 approval。公开讲 Harness 时，要强调它既是生产力系统，也是安全控制面。
+
 ## 系统设计案例
 
 修复一个前端按钮溢出 bug 时，Agent 先读取失败截图或测试，再搜索组件和 CSS。Patch Engine 生成最小 diff。Test Runner 运行类型检查、UI contract 和构建。若构建失败，Verifier 把错误写回状态，Agent 继续修复。若补丁修改无关文件，review rubric 失败。
@@ -58,6 +64,8 @@ workspace sandbox 隔离文件系统、网络、环境变量和命令权限。Co
 ## 真实问题与排障
 
 如果测试通过但问题未修，说明 verifier 覆盖不够。若 Agent 总是改无关文件，检查检索和计划阶段。若命令失败率高，排查 sandbox 依赖和环境变量。若误删文件，检查 Patch Engine 是否绕过 preview，以及 rollback 是否可用。
+
+排查链路可以从四个问题开始：第一，Agent 是否读到了正确上下文；第二，diff 是否只落在需求相关文件；第三，验证命令是否覆盖原始症状；第四，回滚是否能恢复到修改前状态。如果其中任一项没有证据，就不能把任务标成完成。对公开文章来说，这一点比“模型会写代码”更重要，因为它直接决定用户能不能信任自动修改。
 
 ## 常见误区与排障
 
@@ -105,6 +113,7 @@ Harness 的关键是把“模型想改代码”变成一组可审计事务。Pat
 
 ## 来源与延伸阅读
 
-- [SWE-bench GitHub](https://github.com/swe-bench/SWE-bench)：理解 issue-to-patch 的评测形式。
-- [SWE-bench Paper](https://arxiv.org/abs/2310.06770)：理解真实仓库问题对 coding agent 的挑战。
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：参考工具调用、handoff 和 guardrail trace。
+- [SWE-bench GitHub](https://github.com/swe-bench/SWE-bench)：用于支持 issue-to-patch 评测形式，说明 Coding Agent 需要在真实仓库里完成可验证修改。
+- [SWE-bench Paper](https://arxiv.org/abs/2310.06770)：用于解释真实 GitHub issue 对检索、定位、补丁生成和回归测试的挑战。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持 tool call、handoff、guardrail 等运行轨迹需要被结构化记录。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：用于说明 Agent 工具是受接口约束的能力边界，不应等同于任意 shell 权限。
