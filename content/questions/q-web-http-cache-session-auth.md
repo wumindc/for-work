@@ -92,6 +92,14 @@ CORS 不是鉴权。非浏览器客户端不受 CORS 限制，服务端仍要校
    - 考察点：是否理解 Cookie 登录态下的跨站请求风险。
    - 常见坑：只设 CORS 或只靠前端校验。
 
+## 公开阅读校验
+
+这道题要把几个容易混淆的概念拆开：HTTP 缓存不是 Redis 缓存，CORS 不是鉴权，认证不是授权，JWT 签名不是加密，退出登录不是只删前端状态。一个可靠回答要先按数据敏感度决定缓存策略，再按会话生命周期设计撤销和续期，最后用服务端资源归属校验兜住权限。
+
+项目场景可以讲用户资料或后台权限接口：静态资源走 CDN 长缓存，用户态 API 返回 `no-store`，Cookie 设置 HttpOnly、Secure、SameSite，Session Store 支持踢下线和 `session_version`，JWT 场景使用短有效期、refresh token rotation 和服务端撤销策略。CSRF 防护结合 SameSite、CSRF token、Origin/Referer 和高风险操作二次确认。
+
+排障自测要覆盖缓存串用户、权限降级未生效、JWT 泄露、CORS 误放开、CSRF token 失效和浏览器后退缓存。指标看 `sensitive_cache_bypass_count`、`auth_error_rate`、`session_revoked_count`、`token_refresh_fail_rate`、`csrf_block_count`、`cors_error_count` 和多用户回归用例结果。
+
 ## 深问准备
 
 1. no-store 和 private 区别？
