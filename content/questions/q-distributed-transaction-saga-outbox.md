@@ -109,6 +109,16 @@ Saga 每一步都要有状态、重试、补偿和审计。补偿不是万能，
 4. TCC 适合什么场景？
 5. 如何做一致性对账？
 
+## 公开阅读校验
+
+这道题对外发布时，要避免把几个方案写成并列名词表。更好的回答结构是先说本地事务边界，再按业务约束选方案：单服务内用本地事务；可靠发事件用 Outbox；MQ 原生能力成熟且团队熟悉时可用事务消息；跨多个可补偿步骤用 Saga；需要预留/确认/取消语义且业务能改造时才考虑 TCC。
+
+Outbox 的关键不是“有一张表”，而是可恢复发布链路。业务表和 outbox event 同事务提交，Relay/CDC 发布时允许重复，消费者必须幂等，pending 事件要有 age 告警和人工处理入口。公开读者应该能从答案里看到 `event_id`、`outbox_status`、`next_retry_at`、`published_at`、`oldest_pending_age` 这些运行状态。
+
+Saga 的关键不是“失败补偿”，而是每个步骤都有终态和去向。补偿本身可能失败，不可逆动作不能假装可以回滚，用户必须看到处理中或待人工处理状态。对账任务要周期性扫描 paid but coupon missing、sent but not consumed、saga pending too long 这类不变量破坏。
+
+高分收束可以说：分布式事务选型不是看方案名字，而是看一致性窗口、是否可补偿、是否允许用户等待、是否能幂等重放、是否有对账和告警。这个回答比“Outbox 最终一致，Saga 补偿”更能说服读者。
+
 ## 来源与延伸阅读
 
 - [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)：用于支持“业务状态和待发布事件放在同一本地事务中，再由独立进程投递”的核心机制。

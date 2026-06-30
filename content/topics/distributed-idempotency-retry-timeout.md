@@ -108,6 +108,16 @@ flowchart LR
 
 幂等验收可以用四组用例压住：同 key 同请求重复提交返回同一结果；同 key 不同请求返回 conflict；超时后查询状态再重试能收敛；处理中状态重复请求不会并发执行两次。再配合故障注入：下游 429、5xx、半成功、响应丢失、服务重启、MQ 重投，验证 `retry_rate`、`timeout_rate`、`unknown_result_count`、`duplicate_skip_count` 和 `idempotency_conflict_count` 都能解释系统行为。
 
+## 公开阅读校验
+
+这篇文章对外发布时，要避免把“重试”写成可靠性的主角。更准确的主线是：超时会产生未知状态，重试会放大压力，幂等负责收敛重复副作用，限流/熔断/降级负责保护核心链路。四者必须一起设计，否则任何单点机制都可能反过来制造事故。
+
+幂等键要绑定业务意图，而不是绑定一次 HTTP 请求。支付、发券、订单取消、Agent tool call 都应能用稳定业务键识别同一个意图；同一 key 但参数 fingerprint 不一致时要返回 conflict。幂等记录应保存状态、结果摘要、请求摘要、过期时间和审计字段，不能只是 Redis set 一下就结束。
+
+重试策略要分层治理。SDK 可以做很短的网络级重试，服务层才能根据 error_code、幂等键和业务副作用决定是否重试；MQ 消费者的 redelivery 也要有最大次数、退避和 DLQ。网关、SDK、服务端、消费者如果同时独立重试，会出现乘法放大，导致原本慢的下游被重试打死。
+
+面试里可以用“证明机制有效”的指标收口：`retry_success_rate` 说明重试是否带来收益，`retry_amplification_factor` 说明是否放大流量，`duplicate_skip_count` 说明幂等在工作，`unknown_result_count` 暴露超时后的查询和补偿缺口，`fallback_success_rate` 说明降级是否真的保护了用户路径。
+
 ## 来源与延伸阅读
 
 - [AWS Builders Library: Timeouts, retries, and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)：官方工程文章，用于支持超时、退避、jitter 和重试放大风险。

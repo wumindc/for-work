@@ -325,6 +325,13 @@ Post-publish thin-depth deepening:
 - [x] `observability-structured-logging-correlation`
 - [x] `prometheus-metrics-promql`
 - [x] `q-observability-incident-tracing`
+- [x] `redis-expiration-eviction-memory`
+- [x] `redis-lua-transaction-pipeline`
+- [x] `distributed-idempotency-retry-timeout`
+- [x] `distributed-transaction-saga-outbox`
+- [x] `q-distributed-idempotency-retry-timeout`
+- [x] `q-distributed-transaction-saga-outbox`
+- [x] `system-capacity-planning-hotspot`
 
 For each question:
 
@@ -363,10 +370,12 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-db-mvcc-transaction-isolation`
   - [x] `db-index-execution-plan`
   - [x] `db-mvcc-transaction-isolation`
-- [x] Redis questions with missing sources.
+- [x] Redis low-score questions and topics.
   - [x] `redis-data-types-encoding`
   - [x] `redis-hotkey-breakdown-avalanche`
   - [x] `redis-replication-sentinel-cluster`
+  - [x] `redis-expiration-eviction-memory`
+  - [x] `redis-lua-transaction-pipeline`
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
   - [x] `q-redis-data-types-encoding`
@@ -400,6 +409,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `distributed-transaction-saga-outbox`
   - [x] `q-distributed-idempotency-retry-timeout`
   - [x] `q-distributed-transaction-saga-outbox`
+  - [x] `system-capacity-planning-hotspot`
 - [ ] Web engineering low-score questions.
   - [x] `web-api-contract-idempotency-security`
   - [x] `web-http-cache-session-auth`
