@@ -41,7 +41,9 @@ flowchart LR
   Obs --> Trace
 ```
 
-图里可以强调：失败不是异常堆栈，而是进入恢复策略的数据结构。
+图 1：外部工具失败从结构化错误到恢复策略、补偿和审计的处理链路。
+
+这张图里，tool_call 进入 Tool Dispatcher 后先被执行并转成 Success 或 Structured Error Envelope。成功时返回 Observation；失败时不是把异常堆栈直接丢给模型，而是由 Error Classifier 标注错误类别、可重试性、副作用状态和严重度。Recovery Policy 再按读写风险、幂等性、剩余预算和用户体验选择 Retry with Backoff、Fallback or Replan、Human Handoff 或 Compensation。Trace + Audit 记录每次失败、恢复动作和最终状态，便于复盘重复副作用、重试风暴和降级质量。
 
 ## 系统设计案例
 
@@ -60,6 +62,20 @@ flowchart LR
 - timeout 能不能安全重试？读操作通常可以，写操作必须先确认幂等和外部状态。
 - permission_denied 怎么办？不要重试，走授权、降级或明确告知不可用。
 - Agent 失败后如何避免胡编？最终回答必须引用 observation 或 error envelope，缺证据时输出 unsupported。
+
+## 多轮追问模拟
+
+第一轮追问：timeout 后什么时候可以重试？
+回答要点：只读工具通常可以按指数退避重试；写操作必须先确认 idempotency key、外部状态和 `side_effect_state`，状态未知时转人工或补偿。考察点是 timeout 不等于未执行。陷阱是把所有 timeout 都当成 transient error 直接重试。
+
+第二轮追问：`permission_denied` 和 `rate_limited` 的恢复策略有什么区别？
+回答要点：权限拒绝通常不可重试，应请求授权、降级或停止；限流可以看 `retry_after_ms`、预算和用户价值决定延迟重试或降级。考察点是错误分类。陷阱是用统一 retry 策略处理所有失败。
+
+第三轮追问：工具返回空结果时算失败吗？
+回答要点：不一定。empty result 可能是业务事实、query 太窄或权限过滤后的结果；应作为 observation 处理，允许改 query、补检索或向用户澄清。考察点是错误与事实的边界。陷阱是把空结果当异常无限重试。
+
+第四轮追问：如何证明恢复策略真的有用？
+回答要点：按工具和版本拆 `tool_error_rate`、`retry_success_rate`、`fallback_success_rate`、`duplicate_side_effect_count`、`human_handoff_rate` 和 `error_budget_burn`。考察点是指标归因。陷阱是只看最终任务成功率，掩盖某个工具的重复副作用。
 
 ## 项目化回答
 
@@ -92,5 +108,5 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支撑 Agent 编排、工具执行、人工介入和评估的工程化边界。
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于说明 agent workflow 中工具反馈、上下文控制和简单可靠流程优先的设计取舍。

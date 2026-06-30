@@ -10,7 +10,7 @@
 
 ## 标准回答
 
-我会把工具注册表分成定义层和执行层。定义层面向模型，描述工具是什么、何时使用、参数和返回结构。执行层面向宿主，保存真实 handler、凭证引用、权限策略、限流和回滚能力。模型永远不应该拿到执行凭证。
+我会把工具注册表分成定义层和执行层。定义层面向模型，描述工具是什么、何时使用、参数和返回结构。执行层面向宿主，保存真实 handler、凭证引用、权限策略、限流和回滚能力。模型不应拿到执行凭证，执行凭证只应由宿主和受控运行时管理。
 
 设计时还要支持版本。一个工具的 schema 改了，历史 trace、评测样本和旧 prompt 可能都会受影响。Registry 应记录 schema version、兼容性说明、灰度状态和 owner。这样当 `invalid_args_rate` 或 `schema_compatibility_errors` 上升时，能定位到具体版本。
 
@@ -36,7 +36,9 @@ flowchart LR
   Executor --> Trace[Observation + Trace]
 ```
 
-这张图的重点是 registry 不只是静态配置，dispatcher 每次执行也要回到 registry 读取策略和版本。
+图 1：工具注册表从能力发现、模型可见裁剪到执行鉴权和 trace 的控制流。
+
+这张图里，Registry Store 保存工具定义、版本、owner、风险等级、权限范围、健康状态和执行引用。Tool Selector 先根据任务意图、用户权限、domain 和上下文裁剪候选工具，Context Builder 只把少量 Model-visible Tool Specs 暴露给模型。模型返回 tool_call 后，Dispatcher 再回到 Registry Store 解析 `tool_id@version`，Validator 校验 schema 和业务规则，Permission Gate 做确定性授权，Tool Executor 执行真实动作。Observation + Trace 把参数摘要、权限决策、版本和错误码写入记录，让工具选择错误、schema 兼容问题和越权拦截都能追溯。
 
 ## 系统设计案例
 
@@ -55,6 +57,20 @@ flowchart LR
 - 静态注册和动态注册怎么取舍？静态注册类型安全、简单，动态注册适合多租户和工具市场，但需要签名、健康检查和权限治理。
 - 工具太多怎么办？先按任务 domain 裁剪，再用 router 选候选，最后只给模型少量 schema。
 - owner 字段有什么用？owner 负责版本、SLA、错误码、文档和事故响应。
+
+## 多轮追问模拟
+
+第一轮追问：Registry 和 Dispatcher 的职责怎么拆？
+回答要点：Registry 管工具元数据、版本、权限、健康和 owner；Dispatcher 负责按 registry resolve 执行器、校验策略、调用运行时并写 trace。考察点是控制面和执行面的边界。陷阱是把 registry 写成函数 Map，既无治理也无审计。
+
+第二轮追问：工具太多时如何避免模型选错？
+回答要点：先按用户权限和任务 domain 过滤，再用 router/retrieval 召回候选，最后只把少量 schema 放进上下文；监控 `unused_exposed_tools` 和 `tool_selection_accuracy`。考察点是候选裁剪。陷阱是把所有工具一次性暴露给模型。
+
+第三轮追问：动态接入 MCP Server 有什么额外风险？
+回答要点：需要签名、来源验证、健康检查、scope 同步、工具下线策略和服务端二次鉴权；动态发现不等于动态授权。考察点是插件化治理。陷阱是把远端 tools 列表原样交给模型。
+
+第四轮追问：工具版本升级如何不破坏旧任务？
+回答要点：使用 version pinning、schema hash、灰度、兼容层和 trace replay；新增 required 字段属于破坏性变更，需要 fixtures 和 shadow run。考察点是版本兼容。陷阱是直接覆盖 schema，导致历史 prompt 和评测样本失效。
 
 ## 项目化回答
 
@@ -87,5 +103,5 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [Model Context Protocol](https://modelcontextprotocol.io/)：用于理解外部工具能力如何以 tools/resources 暴露给 Host，并映射到统一 registry。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持工具治理、人工审核和可控执行的工程实践。

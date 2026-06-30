@@ -35,7 +35,9 @@ flowchart TD
   Output --> Trace[State and Trace]
 ```
 
-这张图可以说明 schema 不是孤立文件，而是贯穿工具发现、调用、执行和复盘的契约。
+图 1：工具 Schema 贯穿工具发现、模型选择、运行时校验、权限控制和复盘的契约链路。
+
+图中 Tool Registry 提供候选工具及其 schema、风险和版本，Context Builder 根据任务和权限裁剪后只让模型看到 selected schemas。模型生成 tool_call 后，JSON Schema Validator 只能证明参数结构合法；Business Rule Validator 还要检查订单状态、资源归属、金额上限等业务约束；Permission and Risk Gate 再判断当前用户、租户、riskLevel 和 confirmation 是否允许执行。Executor 的结果经过 Output Schema Normalizer 转成可决策 observation，State and Trace 保存 schema version、args hash、policy decision 和 error code。这个链路说明 schema 是第一层契约，不是最终安全边界。
 
 ## 系统设计案例
 
@@ -54,6 +56,20 @@ flowchart TD
 - JSON Schema 通过是否代表工具可以执行？不代表，还要做业务状态、资源归属和权限校验。
 - schema 要写多细？关键字段必须强约束，低价值自由文本可以放宽，但输出要可决策。
 - 如何接入高风险写操作？用 preview、confirmation、idempotency key、audit log 和 rollback plan。
+
+## 多轮追问模拟
+
+第一轮追问：JSON Schema 通过是否代表工具可以执行？
+回答要点：不代表。Schema 只证明结构合法，执行前还要检查业务状态、资源归属、权限、风险和确认状态。考察点是 schema 与 runtime policy 的边界。陷阱是把 schema validation 当成安全边界。
+
+第二轮追问：工具粒度应该粗一点还是细一点？
+回答要点：高风险业务倾向拆成 preview/apply 两段，低风险查询可适度合并；粒度要平衡选择复杂度、交互成本和副作用风险。考察点是接口设计取舍。陷阱是做一个全能 `handleRequest` 或拆成大量无语义小工具。
+
+第三轮追问：如何设计一个退款工具 schema？
+回答要点：先做 `create_refund_preview`，输出 policyCheck、risk 和 confirmationRequired；再用 `apply_refund_after_confirmation`，要求 previewId、confirmationId 和 idempotencyKey。考察点是高风险写操作的 staged contract。陷阱是让模型直接调 `POST /refunds`。
+
+第四轮追问：schema 变更如何上线？
+回答要点：记录 version 和 schema hash，用 fixtures、trace replay 和 shadow run 验证；新增 required 字段或改变输出结构是破坏性变更，要灰度和兼容层。考察点是演进治理。陷阱是覆盖旧 schema 导致历史任务不可回放。
 
 ## 项目化回答
 
@@ -86,5 +102,5 @@ JSON Schema 通过不等于业务允许。`amount` 是数字、`order_id` 格式
 
 ## 来源与延伸阅读
 
-- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)：用于说明结构化工具参数、schema 约束和模型工具选择之间的关系。
+- [Model Context Protocol](https://modelcontextprotocol.io/)：用于对照工具描述、能力暴露和 Host/Server 边界，补充动态工具接入场景。

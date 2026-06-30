@@ -30,6 +30,10 @@ flowchart LR
   Artifact --> Replay
 ```
 
+图 1：Agent Trace 从运行采集、脱敏、结构化存储到 Replay Harness 回放的链路。
+
+这张图里，Agent Run 会产生 model span、tool span、retrieval span、guardrail span、state diff 和 artifact 引用。Trace Collector 收集结构化 span，但敏感字段必须先经过 redaction，再写入 Trace Store。截图、DOM、PDF、测试日志和长 observation 进入 artifact store，trace 只保存引用、hash、权限和 TTL。Replay Harness 同时读取 Trace Store 和 Artifact Store，把失败样本冻结成可回放 fixture，用于验证修复后同一问题不会复发。
+
 ## 系统设计案例
 
 Web Agent 要保存 URL、DOM 摘要、截图引用、click 目标、点击后 observation 和 console error。Coding Agent 要保存文件读取、patch diff、测试命令和失败摘要。RAG Agent 要保存 query rewrite、召回候选、rerank 结果和 citation verifier verdict。
@@ -43,6 +47,20 @@ Web Agent 要保存 URL、DOM 摘要、截图引用、click 目标、点击后 o
 - Trace 和普通日志区别是什么？Trace 是结构化路径，可回放。
 - 大对象怎么存？进入 artifact store，trace 存引用。
 - 敏感信息怎么办？采集层 redaction，再分级访问。
+
+## 多轮追问模拟
+
+第一轮追问：Trace 和普通日志的本质区别是什么？
+回答要点：Trace 是结构化执行路径，有 run_id、span、状态、artifact 和 replay 能力；普通日志多是文本事件。考察点是可观测对象建模。陷阱是把“多打日志”当成 trace。
+
+第二轮追问：完整 prompt 要不要全量落盘？
+回答要点：不应简单全量明文落盘；保存 prompt manifest hash、输入引用、版本和必要摘要，敏感内容采集层脱敏，大对象进受控 artifact store。考察点是调试与隐私成本平衡。陷阱是为了排障把用户文档、secret 和 PII 全量保存。
+
+第三轮追问：如何从一次线上错答生成回归样本？
+回答要点：冻结 run 输入、模型配置、检索候选、工具 observation、artifact hash、policy verdict 和 expected outcome，生成 replay fixture。考察点是从 trace 到 eval 的闭环。陷阱是只保存最终答案，无法复现上下文。
+
+第四轮追问：Trace 设计的关键指标有哪些？
+回答要点：`trace_coverage`、`artifact_missing_rate`、`redaction_violation_count`、`replay_fixture_build_rate`、`debug_time_to_root_cause` 和 `p95_trace_write_latency`。考察点是 trace 自身质量。陷阱是只看业务成功率，不监控可观测性缺口。
 
 ## 项目化回答
 
@@ -78,6 +96,6 @@ Replay 要求 trace 能生成 fixture。大对象如 DOM、截图、PDF、日志
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)
-- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于说明 Agent run、span、tool 调用和调试视图的 trace 组织方式。
+- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)：用于支撑 span、parent-child 关系和分布式追踪的通用概念。
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：用于对照浏览器 Agent 中截图、DOM、动作和回放 artifact 的实践。
