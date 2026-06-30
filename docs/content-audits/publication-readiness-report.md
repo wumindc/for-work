@@ -8,17 +8,17 @@ It is advisory by default: it identifies the next content-review backlog without
 ## Summary
 
 - Documents: 310 (118 topics, 192 questions)
-- Publishable: 179
-- Needs revision: 131
+- Publishable: 184
+- Needs revision: 126
 - Blocked: 0
-- Average score: 86
-- Issues: blocker 0, major 325, minor 109
+- Average score: 87
+- Issues: blocker 0, major 305, minor 110
 
 ## Domain Readiness
 
 | Domain | Docs | Publishable | Needs revision | Blocked | Avg score |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| AI Agent 与 RAG | 154 | 80 | 74 | 0 | 82 |
+| AI Agent 与 RAG | 154 | 85 | 69 | 0 | 84 |
 | Elasticsearch | 9 | 4 | 5 | 0 | 80 |
 | MQ | 9 | 3 | 6 | 0 | 72 |
 | Redis | 17 | 5 | 12 | 0 | 85 |
@@ -34,12 +34,12 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 109 |
-| missing_figure_caption | 79 |
-| too_short | 64 |
-| missing_section | 50 |
-| missing_figure_explanation | 48 |
-| missing_source_intent | 33 |
+| thin_depth | 110 |
+| missing_figure_caption | 74 |
+| too_short | 59 |
+| missing_section | 45 |
+| missing_figure_explanation | 44 |
+| missing_source_intent | 32 |
 | thin_sources | 31 |
 | risky_absolute_language | 18 |
 | missing_incident_playbook | 2 |
@@ -48,56 +48,56 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | question | ai-agent-rag | `q-hybrid-search-deep` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
-| 2 | question | ai-agent-rag | `q-paper-agent-project-core` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
-| 3 | question | ai-agent-rag | `q-project-storytelling-deep` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>major:too_short |
-| 4 | question | ai-agent-rag | `q-rerank-deep` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
-| 5 | question | ai-agent-rag | `q-workflow-vs-agent-core` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
-| 6 | topic | ai-agent-rag | `react-loop` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:risky_absolute_language<br>major:too_short |
-| 7 | topic | ai-agent-rag | `tool-schema` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_incident_playbook<br>major:missing_source_intent<br>major:too_short |
-| 8 | topic | ai-agent-rag | `web-agent-eval` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
-| 9 | topic | ai-agent-rag | `web-agent-project` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
-| 10 | question | database | `q-db-index-execution-plan` | 52 | needs_revision | major:missing_section<br>major:risky_absolute_language<br>major:thin_sources<br>major:too_short |
-| 11 | topic | elasticsearch | `es-rag-hybrid-search` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_incident_playbook<br>major:too_short |
-| 12 | topic | mq | `mq-consumer-governance` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
-| 13 | topic | mq | `mq-ordering-partitioning` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
-| 14 | topic | mq | `mq-use-cases-boundary` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
-| 15 | question | mq | `q-mq-consumer-lag` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
-| 16 | topic | ai-agent-rag | `framework-selection` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
-| 17 | topic | ai-agent-rag | `handoff-pattern` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
-| 18 | topic | ai-agent-rag | `multi-agent-roles` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
-| 19 | question | ai-agent-rag | `q-a2a-acp-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 20 | question | ai-agent-rag | `q-agentic-rag-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 21 | question | ai-agent-rag | `q-component-eval-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 22 | question | ai-agent-rag | `q-component-eval-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 23 | question | ai-agent-rag | `q-context-layers-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 24 | question | ai-agent-rag | `q-guardrails-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 25 | question | ai-agent-rag | `q-guardrails-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 26 | question | ai-agent-rag | `q-long-term-memory-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
-| 27 | question | ai-agent-rag | `q-mcp-fundamentals-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 28 | question | ai-agent-rag | `q-multi-agent-roles-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 29 | question | ai-agent-rag | `q-prompt-injection-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 30 | question | ai-agent-rag | `q-prompt-injection-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 31 | question | ai-agent-rag | `q-rag-pipeline-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 32 | question | ai-agent-rag | `q-skills-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 33 | question | ai-agent-rag | `q-skills-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
-| 34 | question | ai-agent-rag | `q-tool-error-recovery-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
-| 35 | question | ai-agent-rag | `q-tool-registry-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:risky_absolute_language<br>minor:thin_depth |
-| 36 | question | ai-agent-rag | `q-tool-schema-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
-| 37 | question | ai-agent-rag | `q-tool-schema-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
-| 38 | question | ai-agent-rag | `q-trace-replay-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 39 | question | ai-agent-rag | `q-trace-replay-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
-| 40 | question | redis | `q-redis-cache-consistency` | 60 | needs_revision | major:missing_section<br>major:risky_absolute_language<br>major:thin_sources<br>minor:thin_depth |
-| 41 | topic | ai-agent-rag | `agent-core-modules` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
-| 42 | topic | ai-agent-rag | `agent-failure-modes` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
-| 43 | topic | ai-agent-rag | `agentic-rag` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 44 | topic | ai-agent-rag | `browser-observation` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
-| 45 | topic | ai-agent-rag | `citation-grounding` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 46 | topic | ai-agent-rag | `coding-harness` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 47 | topic | ai-agent-rag | `context-compression` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 48 | topic | ai-agent-rag | `llm-foundation` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 49 | topic | ai-agent-rag | `memory-decay` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
-| 50 | topic | ai-agent-rag | `paper-agent-project` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 1 | topic | ai-agent-rag | `react-loop` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:risky_absolute_language<br>major:too_short |
+| 2 | topic | ai-agent-rag | `tool-schema` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_incident_playbook<br>major:missing_source_intent<br>major:too_short |
+| 3 | topic | ai-agent-rag | `web-agent-eval` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
+| 4 | topic | ai-agent-rag | `web-agent-project` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
+| 5 | question | database | `q-db-index-execution-plan` | 52 | needs_revision | major:missing_section<br>major:risky_absolute_language<br>major:thin_sources<br>major:too_short |
+| 6 | topic | elasticsearch | `es-rag-hybrid-search` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_incident_playbook<br>major:too_short |
+| 7 | topic | mq | `mq-consumer-governance` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
+| 8 | topic | mq | `mq-ordering-partitioning` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
+| 9 | topic | mq | `mq-use-cases-boundary` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>major:too_short |
+| 10 | question | mq | `q-mq-consumer-lag` | 52 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>major:too_short |
+| 11 | topic | ai-agent-rag | `framework-selection` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
+| 12 | topic | ai-agent-rag | `handoff-pattern` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
+| 13 | topic | ai-agent-rag | `multi-agent-roles` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_source_intent<br>minor:thin_depth |
+| 14 | question | ai-agent-rag | `q-a2a-acp-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 15 | question | ai-agent-rag | `q-agentic-rag-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 16 | question | ai-agent-rag | `q-component-eval-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 17 | question | ai-agent-rag | `q-component-eval-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 18 | question | ai-agent-rag | `q-context-layers-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 19 | question | ai-agent-rag | `q-guardrails-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 20 | question | ai-agent-rag | `q-guardrails-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 21 | question | ai-agent-rag | `q-long-term-memory-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
+| 22 | question | ai-agent-rag | `q-mcp-fundamentals-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 23 | question | ai-agent-rag | `q-multi-agent-roles-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 24 | question | ai-agent-rag | `q-prompt-injection-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 25 | question | ai-agent-rag | `q-prompt-injection-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 26 | question | ai-agent-rag | `q-rag-pipeline-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 27 | question | ai-agent-rag | `q-skills-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 28 | question | ai-agent-rag | `q-skills-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
+| 29 | question | ai-agent-rag | `q-tool-error-recovery-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
+| 30 | question | ai-agent-rag | `q-tool-registry-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:risky_absolute_language<br>minor:thin_depth |
+| 31 | question | ai-agent-rag | `q-tool-schema-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
+| 32 | question | ai-agent-rag | `q-tool-schema-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent<br>minor:thin_depth |
+| 33 | question | ai-agent-rag | `q-trace-replay-core` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 34 | question | ai-agent-rag | `q-trace-replay-deep` | 60 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:missing_section<br>minor:thin_depth |
+| 35 | question | redis | `q-redis-cache-consistency` | 60 | needs_revision | major:missing_section<br>major:risky_absolute_language<br>major:thin_sources<br>minor:thin_depth |
+| 36 | topic | ai-agent-rag | `agent-core-modules` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
+| 37 | topic | ai-agent-rag | `agent-failure-modes` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
+| 38 | topic | ai-agent-rag | `agentic-rag` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 39 | topic | ai-agent-rag | `browser-observation` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
+| 40 | topic | ai-agent-rag | `citation-grounding` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 41 | topic | ai-agent-rag | `coding-harness` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 42 | topic | ai-agent-rag | `context-compression` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 43 | topic | ai-agent-rag | `llm-foundation` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 44 | topic | ai-agent-rag | `memory-decay` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 45 | topic | ai-agent-rag | `paper-agent-project` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_figure_explanation<br>major:too_short |
+| 46 | question | ai-agent-rag | `q-ai-tool-contract-structured` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent |
+| 47 | question | ai-agent-rag | `q-reflection-review-deep` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent |
+| 48 | question | ai-agent-rag | `q-tool-error-recovery-deep` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent |
+| 49 | question | ai-agent-rag | `q-tool-registry-deep` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_section<br>major:missing_source_intent |
+| 50 | topic | ai-agent-rag | `reflection-review` | 64 | needs_revision | major:missing_figure_caption<br>major:missing_source_intent<br>major:too_short |
 
 ## How To Use
 

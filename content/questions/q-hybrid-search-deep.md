@@ -35,7 +35,11 @@ flowchart TD
   F --> G[Failure analysis]
 ```
 
-数据流要保证每个实验组使用相同的文档快照和权限过滤，否则对比不可信。
+图 1：Hybrid search 消融实验把同一批 golden queries 同时送进 BM25、向量、融合和融合加精排四个实验组，再统一进入指标看板和失败归因。
+
+这张图的关键边界是 `Golden queries` 和 `Metrics board`。Golden queries 固定了输入、标注和文档快照，避免某个实验组因为语料更新而“看起来更好”；Metrics board 则把质量、延迟、成本和失败样本放在同一个表里，避免只拿 recall 或主观样例做结论。Failure analysis 不是事后描述，而是决定下一轮改 analyzer、embedding、chunk、RRF 参数还是 reranker 的入口。
+
+数据流要保证每个实验组使用相同的文档快照和权限过滤，否则对比不可信。权限过滤也要进入实验配置，因为企业知识库里“命中正确文档但用户无权查看”不能算成功召回。
 
 ## 可画图
 
@@ -60,6 +64,32 @@ flowchart TD
 - 怎样避免评测数据泄漏？
 - hybrid 增加成本怎么权衡？
 - 线上 A/B 与离线 eval 如何结合？
+
+## 多轮追问模拟
+
+### 追问 1：标注集怎么构建才不偏？
+
+回答要点：我会把真实 query log、人工边界样本、线上失败样本和无答案样本混合起来，并按 query type 分层抽样。每条样本至少标注期望文档、期望证据 span、是否无答案、权限范围和 freshness 要求。标注结果需要双人复核或抽样仲裁，避免单人偏好把 hybrid 调成只适配某类查询。
+
+考察点：面试官想确认你知道评测集本身会决定实验结论。
+
+容易掉坑：只说“找一些真实 query”但不讲分层、证据粒度、无答案样本和标注一致性。
+
+### 追问 2：如果 hybrid 总体指标升了，但错误码类 query 下降怎么办？
+
+回答要点：不能只看总体平均，要按 query type 拆开。错误码、订单号、接口名这类精确词查询可以保留 BM25 优先或提高 keyword boost；自然语言长问答再启用 hybrid 或 rerank。线上策略可以由 query classifier 决定路径，而不是把一个全局权重套在所有查询上。
+
+考察点：是否能从离线实验走向生产策略。
+
+容易掉坑：为了追求总体 nDCG 把高价值精确查询牺牲掉。
+
+### 追问 3：离线 eval 通过后为什么还要 A/B？
+
+回答要点：离线 eval 只能证明候选策略在标注集上更好，线上还要验证真实用户任务是否完成、答案是否减少人工修改、延迟和成本是否可接受。A/B 应该看 task_success、manual_revision_rate、unsupported_claim_rate、latency_p95 和 cost_per_success，并设置回滚阈值。
+
+考察点：是否理解检索质量和业务成功之间有距离。
+
+容易掉坑：把离线 recall@k 当成上线充分条件。
 
 ## 项目化回答
 
@@ -96,6 +126,6 @@ Hybrid search 消融实验要固定四个变量：语料快照、权限过滤、
 
 ## 来源与延伸阅读
 
-- [Elasticsearch Reciprocal Rank Fusion](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)
-- [Elasticsearch kNN search](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [Elasticsearch Reciprocal Rank Fusion](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)：用于支持“hybrid 不只是相加分数，还要明确融合算法和参数”的结论。
+- [Elasticsearch kNN search](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)：用于支持向量检索实验需要固定 embedding、top_k、filter 和索引配置。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持离线 eval、数据集、experiment 和指标对比应该体系化记录。
