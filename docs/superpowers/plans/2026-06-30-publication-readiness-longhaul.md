@@ -260,6 +260,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `redis-cache-consistency`
   - [x] `redis-persistence-aof-rdb`
 - [ ] Prometheus and observability low-score questions.
+  - [x] `prometheus-metrics-promql`
   - [x] `observability-incident-tracing`
   - [x] `q-observability-incident-tracing`
   - [x] `q-prometheus-metrics-promql`
@@ -267,9 +268,13 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-java-thread-pool-governance`
   - [x] `q-jvm-gc-troubleshooting`
 - [ ] System-design blocked documents.
+  - [x] `distributed-idempotency-retry-timeout`
+  - [x] `distributed-transaction-saga-outbox`
   - [x] `q-distributed-idempotency-retry-timeout`
   - [x] `q-distributed-transaction-saga-outbox`
 - [ ] Web engineering low-score questions.
+  - [x] `web-api-contract-idempotency-security`
+  - [x] `web-http-cache-session-auth`
   - [x] `q-web-api-contract-idempotency-security`
   - [x] `q-web-http-cache-session-auth`
 - [ ] AI engineering trend documents.

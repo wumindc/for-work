@@ -101,16 +101,17 @@ Saga 解决的是多服务长事务。每一步都是一个本地事务，状态
 
 面试收束可以说：分布式一致性设计不是选一个框架名，而是定义状态机、事件、幂等、补偿、对账、告警和用户可见状态，并在压测和故障演练里证明它们能工作。
 
-这些证据越完整，越能说明方案不是停留在 PPT。
+## 生产验收清单
 
-同时也能用指标证明链路正在收敛。
+Outbox 的验收重点是“重复发布可接受，丢事件不可接受”。业务事务写入领域表和 outbox 表后，Relay 可以用轮询、CDC 或数据库逻辑复制读取 pending 事件。Relay 发布成功但更新 outbox 状态失败时，事件会再次发布；因此消费者要以 `event_id` 或业务唯一键做幂等。Relay 本身要记录 `attempts`、`last_error`、`next_retry_at`、`published_at` 和 `oldest_pending_age`，避免 pending 事件悄悄堆积。
 
-这比口头承诺可靠。
+Saga 的验收重点是“每一步都有状态，每个失败都有去向”。状态机要明确 running、waiting、succeeded、failed、compensating、compensated、manual_review 等状态；每个 step 都要记录入参摘要、出参摘要、幂等键、重试次数和补偿结果。补偿失败不能无限重试压垮下游，要进入人工队列或对账任务。对于不可逆动作，系统要把它放在确认点之后，并给用户展示可解释状态。
 
-可验收。
+对账验收要能回答三类问题：业务状态和事件状态是否一致，事件消费结果和下游状态是否一致，用户可见状态和后台真实状态是否一致。典型 SQL 或任务会扫描 paid but coupon_missing、outbox_sent but consumer_missing、saga_pending_too_long、compensation_failed 等集合。每个集合都有 owner、SLA、修复脚本和审计记录。面试里讲出这套对账，会比只说“最终一致”可信得多。
 
 ## 来源与延伸阅读
 
-- RocketMQ Transaction Message 官方文档：用于说明半消息和事务回查语义。
-- Kafka 官方文档：用于说明事件发布和消费的可靠性边界。
-- PostgreSQL MVCC 官方文档：用于区分本地事务和跨系统一致性。
+- [Transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html)：用于解释业务状态与待发布事件同本地事务提交的模式边界。
+- [Saga pattern](https://microservices.io/patterns/data/saga.html)：用于说明长事务拆成本地事务、补偿和最终一致性的工程语义。
+- [Debezium Outbox Event Router](https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html)：官方文档，用于支持 CDC/outbox relay 的实现路径。
+- [Apache RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：官方文档，用于对比事务消息、半消息和事务回查方案。

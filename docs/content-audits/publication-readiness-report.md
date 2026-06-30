@@ -8,11 +8,11 @@ It is advisory by default: it identifies the next content-review backlog without
 ## Summary
 
 - Documents: 310 (118 topics, 192 questions)
-- Publishable: 276
-- Needs revision: 34
+- Publishable: 281
+- Needs revision: 29
 - Blocked: 0
 - Average score: 97
-- Issues: blocker 0, major 39, minor 111
+- Issues: blocker 0, major 29, minor 116
 
 ## Domain Readiness
 
@@ -23,10 +23,10 @@ It is advisory by default: it identifies the next content-review backlog without
 | MQ | 9 | 8 | 1 | 0 | 96 |
 | Redis | 17 | 9 | 8 | 0 | 93 |
 | 数据库 | 17 | 16 | 1 | 0 | 97 |
-| Prometheus 与监控体系 | 14 | 13 | 1 | 0 | 97 |
+| Prometheus 与监控体系 | 14 | 14 | 0 | 0 | 98 |
 | Java 并发与 JVM | 20 | 18 | 2 | 0 | 97 |
-| 分布式与系统设计 | 16 | 14 | 2 | 0 | 95 |
-| Web 工程 | 18 | 16 | 2 | 0 | 96 |
+| 分布式与系统设计 | 16 | 16 | 0 | 0 | 98 |
+| Web 工程 | 18 | 18 | 0 | 0 | 98 |
 | AI 工程趋势与实战方案 | 36 | 25 | 11 | 0 | 96 |
 | 工程质量与故障治理 | 0 | 0 | 0 | 0 | 0 |
 
@@ -34,9 +34,9 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 111 |
-| too_short | 16 |
-| thin_sources | 12 |
+| thin_depth | 116 |
+| too_short | 11 |
+| thin_sources | 7 |
 | risky_absolute_language | 5 |
 | missing_figure_caption | 3 |
 | missing_section | 2 |
@@ -46,56 +46,56 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | topic | prometheus-observability | `prometheus-metrics-promql` | 76 | needs_revision | major:thin_sources<br>major:too_short |
-| 2 | topic | system-design | `distributed-idempotency-retry-timeout` | 76 | needs_revision | major:thin_sources<br>major:too_short |
-| 3 | topic | system-design | `distributed-transaction-saga-outbox` | 76 | needs_revision | major:thin_sources<br>major:too_short |
-| 4 | topic | web-engineering | `web-api-contract-idempotency-security` | 76 | needs_revision | major:thin_sources<br>major:too_short |
-| 5 | topic | web-engineering | `web-http-cache-session-auth` | 76 | needs_revision | major:thin_sources<br>major:too_short |
-| 6 | topic | ai-agent-rag | `guardrails` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
-| 7 | question | ai-agent-rag | `q-rag-pipeline-core` | 84 | needs_revision | major:missing_section<br>minor:thin_depth |
-| 8 | topic | ai-agent-rag | `tool-permissions` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
-| 9 | topic | database | `db-mvcc-transaction-isolation` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 10 | topic | elasticsearch | `es-inverted-index-mapping` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
-| 11 | topic | java-jvm | `java-thread-pool-governance` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 12 | topic | java-jvm | `jvm-gc-troubleshooting` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 13 | topic | mq | `mq-reliable-delivery-idempotency` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
-| 14 | topic | redis | `redis-data-types-encoding` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 15 | topic | redis | `redis-distributed-lock-rate-limit` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
-| 16 | topic | redis | `redis-hotkey-breakdown-avalanche` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 17 | topic | redis | `redis-replication-sentinel-cluster` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 18 | question | ai-agent-rag | `q-function-calling-core` | 88 | needs_revision | major:missing_section |
-| 19 | question | ai-agent-rag | `q-tool-registry-deep` | 88 | needs_revision | major:missing_source_intent |
-| 20 | topic | ai-engineering-trends | `agent-memory-layering-compression` | 88 | needs_revision | major:too_short |
-| 21 | topic | ai-engineering-trends | `agent-state-file-verifier` | 88 | needs_revision | major:too_short |
-| 22 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 88 | needs_revision | major:too_short |
-| 23 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 88 | needs_revision | major:too_short |
-| 24 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 88 | needs_revision | major:too_short |
-| 25 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 88 | needs_revision | major:too_short |
-| 26 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 88 | needs_revision | major:too_short |
-| 27 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 88 | needs_revision | major:too_short |
-| 28 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 88 | needs_revision | major:too_short |
-| 29 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 88 | needs_revision | major:too_short |
-| 30 | topic | ai-engineering-trends | `skill-packaging-workflow` | 88 | needs_revision | major:too_short |
-| 31 | question | redis | `q-redis-data-types-encoding` | 88 | needs_revision | major:thin_sources |
-| 32 | question | redis | `q-redis-distributed-lock-rate-limit` | 88 | needs_revision | major:risky_absolute_language |
-| 33 | question | redis | `q-redis-lua-transaction-pipeline` | 88 | needs_revision | major:risky_absolute_language |
-| 34 | question | redis | `q-redis-persistence-aof-rdb` | 88 | needs_revision | major:risky_absolute_language |
-| 35 | topic | ai-agent-rag | `agent-core-modules` | 96 | publishable | minor:thin_depth |
-| 36 | topic | ai-agent-rag | `agent-failure-modes` | 96 | publishable | minor:thin_depth |
-| 37 | topic | ai-agent-rag | `agentic-rag` | 96 | publishable | minor:thin_depth |
-| 38 | topic | ai-agent-rag | `browser-observation` | 96 | publishable | minor:thin_depth |
-| 39 | topic | ai-agent-rag | `citation-grounding` | 96 | publishable | minor:thin_depth |
-| 40 | topic | ai-agent-rag | `coding-harness` | 96 | publishable | minor:thin_depth |
-| 41 | topic | ai-agent-rag | `context-compaction` | 96 | publishable | minor:thin_depth |
-| 42 | topic | ai-agent-rag | `context-compression` | 96 | publishable | minor:thin_depth |
-| 43 | topic | ai-agent-rag | `context-layers` | 96 | publishable | minor:thin_depth |
-| 44 | topic | ai-agent-rag | `framework-selection` | 96 | publishable | minor:thin_depth |
-| 45 | topic | ai-agent-rag | `handoff-pattern` | 96 | publishable | minor:thin_depth |
-| 46 | topic | ai-agent-rag | `hybrid-search` | 96 | publishable | minor:thin_depth |
-| 47 | topic | ai-agent-rag | `langgraph` | 96 | publishable | minor:thin_depth |
-| 48 | topic | ai-agent-rag | `llm-foundation` | 96 | publishable | minor:thin_depth |
-| 49 | topic | ai-agent-rag | `llm-training-alignment` | 96 | publishable | minor:thin_depth |
-| 50 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
+| 1 | topic | ai-agent-rag | `guardrails` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
+| 2 | question | ai-agent-rag | `q-rag-pipeline-core` | 84 | needs_revision | major:missing_section<br>minor:thin_depth |
+| 3 | topic | ai-agent-rag | `tool-permissions` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
+| 4 | topic | database | `db-mvcc-transaction-isolation` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 5 | topic | elasticsearch | `es-inverted-index-mapping` | 84 | needs_revision | major:missing_figure_caption<br>minor:thin_depth |
+| 6 | topic | java-jvm | `java-thread-pool-governance` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 7 | topic | java-jvm | `jvm-gc-troubleshooting` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 8 | topic | mq | `mq-reliable-delivery-idempotency` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
+| 9 | topic | redis | `redis-data-types-encoding` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 10 | topic | redis | `redis-distributed-lock-rate-limit` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
+| 11 | topic | redis | `redis-hotkey-breakdown-avalanche` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 12 | topic | redis | `redis-replication-sentinel-cluster` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 13 | question | ai-agent-rag | `q-function-calling-core` | 88 | needs_revision | major:missing_section |
+| 14 | question | ai-agent-rag | `q-tool-registry-deep` | 88 | needs_revision | major:missing_source_intent |
+| 15 | topic | ai-engineering-trends | `agent-memory-layering-compression` | 88 | needs_revision | major:too_short |
+| 16 | topic | ai-engineering-trends | `agent-state-file-verifier` | 88 | needs_revision | major:too_short |
+| 17 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 88 | needs_revision | major:too_short |
+| 18 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 88 | needs_revision | major:too_short |
+| 19 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 88 | needs_revision | major:too_short |
+| 20 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 88 | needs_revision | major:too_short |
+| 21 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 88 | needs_revision | major:too_short |
+| 22 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 88 | needs_revision | major:too_short |
+| 23 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 88 | needs_revision | major:too_short |
+| 24 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 88 | needs_revision | major:too_short |
+| 25 | topic | ai-engineering-trends | `skill-packaging-workflow` | 88 | needs_revision | major:too_short |
+| 26 | question | redis | `q-redis-data-types-encoding` | 88 | needs_revision | major:thin_sources |
+| 27 | question | redis | `q-redis-distributed-lock-rate-limit` | 88 | needs_revision | major:risky_absolute_language |
+| 28 | question | redis | `q-redis-lua-transaction-pipeline` | 88 | needs_revision | major:risky_absolute_language |
+| 29 | question | redis | `q-redis-persistence-aof-rdb` | 88 | needs_revision | major:risky_absolute_language |
+| 30 | topic | ai-agent-rag | `agent-core-modules` | 96 | publishable | minor:thin_depth |
+| 31 | topic | ai-agent-rag | `agent-failure-modes` | 96 | publishable | minor:thin_depth |
+| 32 | topic | ai-agent-rag | `agentic-rag` | 96 | publishable | minor:thin_depth |
+| 33 | topic | ai-agent-rag | `browser-observation` | 96 | publishable | minor:thin_depth |
+| 34 | topic | ai-agent-rag | `citation-grounding` | 96 | publishable | minor:thin_depth |
+| 35 | topic | ai-agent-rag | `coding-harness` | 96 | publishable | minor:thin_depth |
+| 36 | topic | ai-agent-rag | `context-compaction` | 96 | publishable | minor:thin_depth |
+| 37 | topic | ai-agent-rag | `context-compression` | 96 | publishable | minor:thin_depth |
+| 38 | topic | ai-agent-rag | `context-layers` | 96 | publishable | minor:thin_depth |
+| 39 | topic | ai-agent-rag | `framework-selection` | 96 | publishable | minor:thin_depth |
+| 40 | topic | ai-agent-rag | `handoff-pattern` | 96 | publishable | minor:thin_depth |
+| 41 | topic | ai-agent-rag | `hybrid-search` | 96 | publishable | minor:thin_depth |
+| 42 | topic | ai-agent-rag | `langgraph` | 96 | publishable | minor:thin_depth |
+| 43 | topic | ai-agent-rag | `llm-foundation` | 96 | publishable | minor:thin_depth |
+| 44 | topic | ai-agent-rag | `llm-training-alignment` | 96 | publishable | minor:thin_depth |
+| 45 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
+| 46 | topic | ai-agent-rag | `memory-decay` | 96 | publishable | minor:thin_depth |
+| 47 | topic | ai-agent-rag | `multi-agent-roles` | 96 | publishable | minor:thin_depth |
+| 48 | topic | ai-agent-rag | `paper-agent-project` | 96 | publishable | minor:thin_depth |
+| 49 | topic | ai-agent-rag | `planning-methods` | 96 | publishable | minor:thin_depth |
+| 50 | topic | ai-agent-rag | `playwright-actions` | 96 | publishable | minor:thin_depth |
 
 ## How To Use
 

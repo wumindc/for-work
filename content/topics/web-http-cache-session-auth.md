@@ -103,8 +103,17 @@ CORS 只控制浏览器是否允许前端读取跨域响应，不是服务端权
 
 相关指标包括认证失败率、会话刷新失败率和安全拦截次数。
 
+## 生产验收清单
+
+缓存验收先按响应分类。静态资源要求文件名带 hash、长缓存、可灰度回滚；公共匿名接口要明确 `public`、`max-age`、`stale-while-revalidate` 和 CDN key；登录态接口默认 `no-store` 或至少 `private`，并验证带 `Authorization`、`Cookie`、租户和权限差异的响应不会进入共享缓存。对于 ETag，要测试权限变化、退出登录、切换账号和浏览器后退场景，避免协商缓存绕过服务端授权。
+
+会话验收要覆盖生命周期。登录创建 session，刷新延长有效期，退出删除服务端 session，改密、封禁、权限降级和设备踢出都要让旧 session/token 失效。Session 模式要验证 Redis 故障、复制延迟和 session_version；JWT 模式要验证短有效期、refresh token rotation、黑名单或权限版本号。高风险后台系统还要有设备管理、异常登录告警和二次确认。
+
+CSRF/CORS 验收要区分“浏览器读取限制”和“服务端授权”。CORS allowlist 要按环境和来源精确配置，不用通配符放开带凭证请求；CSRF 要测试 SameSite、CSRF token、Origin/Referer 校验和敏感方法。面试里可以强调：CORS 配错会造成浏览器侧数据暴露风险，但 CORS 正确也不能替代服务端资源归属校验。最终指标看 `csrf_block_count`、`cors_error_count`、`auth_error_rate`、`session_revoked_count` 和 `sensitive_cache_bypass_count`。
+
 ## 来源与延伸阅读
 
-- RFC 9110 HTTP Semantics：用于确认 HTTP 语义边界。
-- MDN HTTP Caching：用于说明浏览器和共享缓存行为。
-- OWASP API Security：用于支持认证授权和 API 安全风险。
+- [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/info/rfc9110)：官方 RFC，用于确认 HTTP 方法、状态码和认证相关语义边界。
+- [RFC 9111: HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111)：官方 RFC，用于说明浏览器、代理和共享缓存的协议约束。
+- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)：用于支持 Cookie 属性、会话生命周期和失效策略。
+- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)：用于支持 SameSite、CSRF token、Origin/Referer 校验等防护边界。

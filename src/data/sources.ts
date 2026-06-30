@@ -195,6 +195,24 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "microservices-transactional-outbox",
+    title: "Microservices.io: Transactional outbox pattern",
+    url: "https://microservices.io/patterns/data/transactional-outbox.html",
+    kind: "doc",
+  },
+  {
+    id: "microservices-saga",
+    title: "Microservices.io: Saga pattern",
+    url: "https://microservices.io/patterns/data/saga.html",
+    kind: "doc",
+  },
+  {
+    id: "debezium-outbox-event-router",
+    title: "Debezium Documentation: Outbox Event Router",
+    url: "https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html",
+    kind: "official",
+  },
+  {
     id: "redis-docs",
     title: "Redis Documentation",
     url: "https://redis.io/docs/latest/",
@@ -309,6 +327,30 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "prometheus-querying-basics",
+    title: "Prometheus Documentation: Querying basics",
+    url: "https://prometheus.io/docs/prometheus/latest/querying/basics/",
+    kind: "official",
+  },
+  {
+    id: "prometheus-querying-functions",
+    title: "Prometheus Documentation: Query functions",
+    url: "https://prometheus.io/docs/prometheus/latest/querying/functions/",
+    kind: "official",
+  },
+  {
+    id: "prometheus-histograms",
+    title: "Prometheus Documentation: Histograms and summaries",
+    url: "https://prometheus.io/docs/practices/histograms/",
+    kind: "official",
+  },
+  {
+    id: "prometheus-alerting-rules",
+    title: "Prometheus Documentation: Alerting rules",
+    url: "https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/",
+    kind: "official",
+  },
+  {
     id: "prometheus-alertmanager",
     title: "Prometheus Alertmanager Documentation",
     url: "https://prometheus.io/docs/alerting/latest/alertmanager/",
@@ -345,6 +387,18 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "stripe-idempotent-requests",
+    title: "Stripe API Documentation: Idempotent requests",
+    url: "https://docs.stripe.com/api/idempotent_requests",
+    kind: "official",
+  },
+  {
+    id: "grpc-deadlines",
+    title: "gRPC Documentation: Deadlines",
+    url: "https://grpc.io/docs/guides/deadlines/",
+    kind: "official",
+  },
+  {
     id: "aws-static-stability",
     title: "AWS Builders Library: Static stability using Availability Zones",
     url: "https://aws.amazon.com/builders-library/static-stability-using-availability-zones/",
@@ -378,6 +432,18 @@ export const sources = [
     id: "ietf-http-semantics",
     title: "RFC 9110: HTTP Semantics",
     url: "https://www.rfc-editor.org/info/rfc9110",
+    kind: "official",
+  },
+  {
+    id: "ietf-http-caching",
+    title: "RFC 9111: HTTP Caching",
+    url: "https://www.rfc-editor.org/rfc/rfc9111",
+    kind: "official",
+  },
+  {
+    id: "openapi-spec",
+    title: "OpenAPI Specification",
+    url: "https://spec.openapis.org/oas/latest.html",
     kind: "official",
   },
   {
@@ -420,6 +486,18 @@ export const sources = [
     id: "owasp-api-security",
     title: "OWASP API Security Project",
     url: "https://owasp.org/www-project-api-security/",
+    kind: "official",
+  },
+  {
+    id: "owasp-session-management",
+    title: "OWASP Cheat Sheet: Session Management",
+    url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+    kind: "official",
+  },
+  {
+    id: "owasp-csrf-prevention",
+    title: "OWASP Cheat Sheet: Cross-Site Request Forgery Prevention",
+    url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
     kind: "official",
   },
   {
