@@ -252,6 +252,14 @@ Post-publish thin-depth deepening:
 - [x] `playwright-actions`
 - [x] `project-storytelling`
 - [x] `prompt-injection`
+- [x] `q-agent-definition-deep`
+- [x] `q-ai-chatgpt-runtime-core`
+- [x] `q-ai-eval-observability-structured`
+- [x] `q-ai-llm-foundation-core`
+- [x] `q-ai-llm-foundation-deep`
+- [x] `q-ai-llm-training-core`
+- [x] `q-ai-llm-training-deep`
+- [x] `q-langgraph-deep`
 
 For each question:
 

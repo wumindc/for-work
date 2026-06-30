@@ -101,6 +101,14 @@ RAG 方案还要继续拆：ingest 是否正确、chunk 是否保留标题和层
 - 追问样本不足怎么办：先 prompt/schema/RAG，收集线上失败样本，人工审核后再训练。
 - 追问怎么证明选型正确：做 A/B 或离线 eval，对比 accuracy、citation_precision、latency_p95、cost_per_success。
 
+## 公开阅读校验
+
+这篇文章要让读者带走一个选型原则：Prompt、RAG、微调不是成熟度阶梯，而是解决不同失败类型的工具箱。Prompt 改本次任务表达，RAG 提供可更新可引用的外部事实，微调改变模型在大量相似输入上的稳定行为。把它们排成“越往后越高级”，通常会导致过度训练或把动态知识固化到参数里。
+
+公开方案评审可以要求同一批 golden set 同时跑四组对照：prompt-only、RAG、RAG+rerank、fine-tune 或 fine-tune+RAG。指标不要只看准确率，还要看 citation_precision、format_pass_rate、latency_p95、cost_per_success、rollback_complexity 和人工维护成本。这样才能判断方案是质量真的更好，还是只是一次人工体验更顺眼。
+
+还有一个现实边界：业务团队往往想用微调解决“模型不懂我们公司”。这句话要继续拆开。如果是不懂最新制度，是知识源问题；如果是不懂内部术语，是词表、检索和示例问题；如果是输出口径长期不稳定，才可能是 SFT 问题。拆清楚之后再选方案，才能避免把训练当成万能药。
+
 ## 来源与延伸阅读
 
 - [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)：官方文档用于支持微调适合稳定输出行为、格式和领域表达，而不是替代动态事实源。
