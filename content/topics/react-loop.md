@@ -30,7 +30,9 @@ flowchart LR
   Verify -->|stop| Final[final answer]
 ```
 
-图里最重要的是 Observation 和 Verifier。工具结果是外部事实，Verifier 负责判断是否满足成功标准，而不是让模型无限自说自话。
+图 1：ReAct loop 把观察、决策摘要、结构化动作、工具执行、状态归并和验证器串成闭环，验证器决定继续、恢复或停止。
+
+图里最重要的是 Observation、State Reducer 和 Verifier 三个边界。Observation 是外部事实，不能被模型的上一轮判断覆盖；State Reducer 把工具结果写成可审计状态变化，而不是简单追加聊天记录；Verifier 根据任务目标、预算、风险和成功断言判断是否满足标准。这样 ReAct 才是受控循环，而不是让模型持续自说自话。
 
 ## 架构与运行机制
 
@@ -85,7 +87,7 @@ sequenceDiagram
 
 ## 常见误区与排障
 
-常见误区是把 ReAct 等同于暴露思维链，或让模型自己决定永远继续。排障要看 action 和 observation 的差异，不要只看最终输出。
+常见误区是把 ReAct 等同于暴露思维链，或让模型在没有外部停止条件时自行循环。排障要看 action 和 observation 的差异，不要只看最终输出。
 
 ## 面试追问
 
@@ -103,6 +105,10 @@ Coding Agent 的 read/patch/test 就是典型 loop。Paper Agent 的检索、证
 ReAct 落地时不要把 loop 写成“模型回复一段思考，再执行”。更稳的状态机是：Loop Controller 生成 context，模型只能输出 `action` 或 `final_answer`，Action Validator 校验参数和风险，Tool Runtime 执行，State Reducer 写入 observation，Verifier 判断是否达到 done condition。每一轮都更新 `step_id`、`state_version`、`budget_used`、`open_risks` 和 `stop_reason`。
 
 Observation 是 loop 的事实边界。浏览器工具要返回 DOM 片段、screenshot ref、URL 和 action result；代码工具要返回 exit code、失败摘要和日志引用；RAG 工具要返回 evidence id 和 score。不要把长日志原样塞回上下文，而是保存引用和摘要，必要时再按 cursor 读取，避免上下文污染和 token 爆炸。
+
+工程上还要区分三类“继续”。第一类是正常推进，例如检索到证据后进入生成；第二类是恢复，例如工具超时后换查询或降级；第三类是澄清，例如 observation 表明用户目标缺参数，需要追问。把这三类都写成普通 continue，会让 trace 很难解释，也会让评测无法区分模型确实在推进还是只是在绕圈。
+
+ReAct 的风险控制也应放进 loop contract。高风险工具调用前要经过 Policy Gate；连续失败要触发 backoff 或 handoff；相同 action 在相同 state 上重复超过阈值要停止；observation 与预期状态冲突时要先进入 diagnosis，而不是马上生成最终答案。面试里讲到这些细节，能说明你真正把 loop 当成生产系统，而不是只复述“想、做、看反馈”。
 
 ## 关键数据结构与协议
 
@@ -127,5 +133,5 @@ Observation 是 loop 的事实边界。浏览器工具要返回 DOM 片段、scr
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow 与 agent 的差异、何时使用 agent loop、以及生产中需要可控工具和反馈边界。
+- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)：用于支持 ReAct、规划、工具调用、记忆和多智能体等 Agent 基础模块的学习路径划分。

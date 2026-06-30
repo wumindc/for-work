@@ -156,6 +156,10 @@ AI Agent / RAG topic backlog:
 - [x] `playwright-actions`
 - [x] `planning-methods`
 - [x] `project-storytelling`
+- [x] `react-loop`
+- [x] `tool-schema`
+- [x] `web-agent-eval`
+- [x] `web-agent-project`
 
 For each question:
 

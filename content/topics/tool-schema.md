@@ -30,7 +30,9 @@ flowchart LR
   Execute --> Output[output schema / error]
 ```
 
-图里有两层 validation。JSON Schema 管格式，Runtime validation 管业务语义，比如对象归属、状态和权限。
+图 1：工具 Schema 从用户意图和工具说明进入模型选择，再经过格式校验、业务校验、权限门禁、执行和结构化输出。
+
+图里有两层 validation。JSON Schema 管格式，例如字段类型、required、enum 和数值范围；Runtime validation 管业务语义，例如对象归属、资源状态、额度、幂等和权限。Permission 单独成层，是因为“参数合法”不代表“当前用户可以执行”。Output schema 同样是契约，它决定 Agent 能否判断工具成功、失败、可重试还是需要人工确认。
 
 ## 架构与运行机制
 
@@ -78,6 +80,8 @@ sequenceDiagram
 
 如果工具常常 invalid args，先看 description 是否含糊，required 和 enum 是否缺失，示例是否误导。如果工具选错，检查候选工具是否过多、名称是否相似、边界是否重叠。
 
+事故复盘可以按四步讲。第一，影响面：统计 invalid_args_rate、permission_denial_rate、unsafe_action_block_rate、真实执行失败和用户可见失败。第二，止血：临时隐藏高风险工具、开启 dry-run、收窄 tool visibility 或把写操作切到人工确认。第三，根因：回放 tool_call，检查是 schema 过松、description 误导、runtime validation 缺失、权限 scope 错误还是 output schema 让模型误读。第四，回归：把失败调用加入 schema eval，验证相似工具、边界参数、越权参数和工具错误输出都能被正确处理。
+
 ## 常见误区与排障
 
 常见误区是把后端 API 原样暴露给模型。后端 API 面向程序员，Agent 工具面向模型，要更短、更语义化、更可校验。
@@ -98,6 +102,10 @@ Coding Agent 的 `apply_patch` 要有路径、diff、预期影响和权限。Web
 工具 schema 要同时优化模型选择和运行时校验。模型侧依赖工具名、description、参数名和 examples 判断何时调用；运行时侧依赖 JSON Schema、业务校验、权限和风险等级决定能否执行。好的 schema 会把不确定性提前暴露，例如 `requires_confirmation`、`dry_run_supported`、`idempotency_key_required` 和 `side_effect`，让 orchestrator 能做安全策略。
 
 输出 schema 和输入 schema 同样重要。返回值应包含 `status`、`data`、`evidence_ref`、`summary`、`error_code`、`retryable`、`next_action_hint` 和 `raw_ref`。大对象不要直接塞进上下文，而是返回 handle 或 evidence id。否则模型会被长文本污染，也无法稳定判断工具是否成功。
+
+工具目录也需要治理。Context Builder 不应把所有工具一次性暴露给模型，而应根据任务、用户权限、风险等级和当前状态裁剪候选工具。否则即使每个 schema 单独合理，组合起来也会产生歧义：`search_user`、`lookup_customer`、`get_profile` 同时出现时，模型很可能误选。生产系统通常要给工具加 owner、version、deprecated 标记和评测样本，让 schema 变更能被回归测试覆盖。
+
+高风险工具最好拆成 preview 和 commit 两段。比如退款先 `create_refund_preview`，返回 preview_id、金额、风险提示和需要确认的字段；确认后 `apply_refund` 才执行，并携带 idempotency_key。这样 schema 不只是“让模型填参数”，而是把人类确认、幂等、防重复提交和审计链路都放进协议。
 
 ## 关键数据结构与协议
 
@@ -120,6 +128,6 @@ Coding Agent 的 `apply_patch` 要有路径、diff、预期影响和权限。Web
 
 ## 来源与延伸阅读
 
-- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
+- [OpenAI Function Calling](https://developers.openai.com/api/docs/guides/function-calling)：用于支持工具调用需要结构化参数、schema 约束和宿主侧校验，而不是让模型输出任意文本。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持工具、guardrails、human oversight 和 eval 共同构成 Agent 的生产边界。
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持工具应简单、清晰、可组合，并由外层 workflow/guardrail 约束高风险动作。
