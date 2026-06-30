@@ -35,6 +35,8 @@ flowchart LR
   Human --> Action
 ```
 
+图 1：Workflow 与 Agent 的生产边界。Router 先按任务风险、路径确定性和权限范围分流，固定路径进入 deterministic workflow，开放探索进入 Agent Loop，最终高风险动作仍回到 workflow 或人工确认。
+
 图里的核心是 Router 和边界。不是所有请求都进入 Agent。固定、高风险、强合规路径优先 workflow；开放探索可以给 Agent，但最终提交仍回到 workflow 或人工确认。
 
 ## 架构与运行机制
@@ -42,6 +44,8 @@ flowchart LR
 Workflow 的数据流通常是状态机：输入校验、分支判断、调用服务、更新状态、返回结果。它的优点是路径稳定、容易测试、容易审计。
 
 Agent 的数据流是反馈循环：观察当前状态，决定下一步工具，执行后读取 observation，再决定继续、重试、降级或停止。它的优点是可以处理步骤不确定的任务。
+
+判断边界时可以用“控制流是否可枚举”做第一层筛选。若下一步由状态机、审批规则或事务结果决定，并且失败分支已经清楚，优先 workflow；若下一步取决于搜索结果、页面状态、代码结构、诊断证据或工具 observation，才考虑 Agent。这个判断比“是否用了大模型”更准确，因为很多 LLM 分类、抽取、总结任务仍然只是 workflow 中的一个函数调用。
 
 ## 运行机制
 
@@ -85,6 +89,8 @@ sequenceDiagram
   W-->>U: final result
 ```
 
+图 2：客服场景中的 hybrid 编排。Router 把确定性意图交给 Workflow，把开放调查交给 Agent；Agent 只提出候选动作，真正退款、改地址或取消订单仍由 Workflow 和 Human Review 控制。
+
 这个案例说明 Agent 是生产链路里的开放子系统，不是替代所有后端流程。
 
 ## 真实问题与排障
@@ -116,6 +122,8 @@ sequenceDiagram
 
 落地时可以先定义 decision matrix：`path_entropy`、`failure_cost`、`state_branching_factor`、`tool_side_effect_risk`、`eval_observability`、`latency_budget` 和 `human_handoff_cost`。只有路径不确定且能用 eval 证明收益时，才把任务交给 Agent。
 
+灰度时建议先让 Agent 只读运行，记录它会调用哪些工具、会提出哪些动作、与现有 workflow 的结果差异有多大。第二阶段让 Agent 输出 proposal，由人工或 workflow gate 执行。第三阶段才把低风险、可回滚、可观测的子任务自动化。这样做的好处是每一步都有 baseline 对照，坏路径可以沉淀成 trajectory eval 和 replay case，而不是上线后才发现 Agent 把确定性流程做复杂了。
+
 ## 关键数据结构与协议
 
 | 字段 | Workflow | Agent |
@@ -137,6 +145,6 @@ sequenceDiagram
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于 workflow 与 agent 的边界判断。
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于 agent 编排、guardrails 和 handoff 思路。
-- [AgentGuide Agent 求职路线](https://github.com/adongwanai/AgentGuide/blob/main/docs/05-roadmaps/agent-job-ready-roadmap-2026.md)：用于中文面试表达。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：官方工程文章，用于支持 workflow 与 agent 的边界判断、复杂度递增和简单优先原则。
+- [OpenAI: A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：官方工程指南，用于说明 agent 编排、guardrails、handoff 和人机协作控制面。
+- [AgentGuide Agent 求职路线](https://github.com/adongwanai/AgentGuide/blob/main/docs/05-roadmaps/agent-job-ready-roadmap-2026.md)：中文开源资料，用于补充面试表达中的 workflow、Agent loop 和项目叙事。

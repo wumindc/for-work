@@ -218,6 +218,7 @@ AI Agent / RAG topic backlog:
 - [x] `state-management`
 - [x] `trace-replay`
 - [x] `trajectory-eval`
+- [x] `workflow-vs-agent`
 
 For each question:
 
@@ -246,12 +247,16 @@ Work after the first AI Agent / RAG batch:
   - [x] `mq-ordering-partitioning`
   - [x] `mq-use-cases-boundary`
   - [x] `q-mq-consumer-lag`
+  - [x] `q-mq-reliable-delivery`
 - [ ] Database low-score questions.
   - [x] `q-db-index-execution-plan`
   - [x] `q-db-mvcc-transaction-isolation`
+  - [x] `db-index-execution-plan`
 - [ ] Redis questions with missing sources.
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
+  - [x] `redis-cache-consistency`
+  - [x] `redis-persistence-aof-rdb`
 - [ ] Prometheus and observability low-score questions.
   - [x] `q-observability-incident-tracing`
   - [x] `q-prometheus-metrics-promql`
