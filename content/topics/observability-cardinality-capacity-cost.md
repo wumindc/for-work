@@ -145,11 +145,13 @@ flowchart LR
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `metric_name` | 指标契约 | 标识时间序列语义 | 判断是否重复或废弃 |
+| `label_allowlist` | 指标契约 | 限定可用标签 | 防止 user_id、trace_id 入侵 |
+| `estimated_series` | 容量评审 | 预估新增 series 数 | 发布前评估成本 |
+| `samples_per_second` | 采集容量 | 估算采样写入压力 | 判断 scrape/remote write 风险 |
+| `retention_days` | 存储策略 | 控制热数据保留周期 | 平衡排障与成本 |
+| `drop_rule` | 采集规则 | 丢弃无用或高风险标签 | 事故止血 |
+| `tenant_quota` | 多租户治理 | 限制团队或业务线用量 | 防止单租户拖垮平台 |
 
 ## 深问准备
 
@@ -158,6 +160,16 @@ flowchart LR
 - 反例要明确，例如强事务事实源不能交给缓存或搜索读模型。
 - 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
 - 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
+
+## 公开阅读校验
+
+这篇文章要让读者理解：可观测性平台本身也是生产系统，也会被容量、查询和成本拖垮。Prometheus 的核心成本不是“指标个数”这么简单，而是 metric name 与所有 label value 组合形成的 active series。一个看似普通的新标签，如果取值来自用户、文档、URL 原文或 trace，就可能瞬间制造大量时间序列。
+
+生产治理通常要前置到指标评审。新增指标时需要说明 owner、单位、类型、标签白名单、预计 series 数、保留周期和废弃策略；发布后监控 `active_series`、`scrape_duration_seconds`、`scrape_samples_post_metric_relabeling`、`rule_group_duration_seconds`、remote write lag 和查询耗时。如果这些指标开始恶化，要先下线高基数标签或加 drop rule，而不是只扩容监控集群。
+
+日志和 Trace 的成本治理不要和指标混在一起。高基数字段适合进入日志或 Trace，但也要控制索引字段、采样率、保留周期和访问权限。错误、慢请求、高价值交易和安全拦截可以提高采样；普通成功流量可以降采样或聚合保存。这样既保留事故证据，又不会为所有请求付同样的存储成本。
+
+面试里可以给出一个反例：把 `document_id` 放进 RAG 请求指标标签后，索引重建期间新增大量文档，Prometheus active series 暴涨，Dashboard 查询变慢，告警规则超时。正确处置是 relabel drop 该标签、用 `document_tier` 或 `source_type` 替代聚合维度，并把具体 document_id 放到日志或 trace 里按需查询。
 
 ## 来源与延伸阅读
 

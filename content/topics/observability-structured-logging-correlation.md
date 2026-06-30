@@ -145,11 +145,13 @@ flowchart LR
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `trace_id` | 日志事件 | 关联 Trace 与指标告警 | 从告警跳到单次请求 |
+| `span_id` | 日志事件 | 关联具体操作节点 | 定位慢 span 或失败 span |
+| `error_code` | 日志事件 | 稳定错误分类 | 聚合同类问题 |
+| `release_id` | 日志事件 | 标识代码或配置版本 | 关联发布回滚 |
+| `payload_hash` | 日志事件 | 参数摘要或证据指纹 | 保护敏感数据 |
+| `redaction_policy` | 日志规范 | 说明脱敏规则 | 降低泄露风险 |
+| `runbook_hint` | 日志事件 | 指向排查入口 | 缩短人工定位时间 |
 
 ## 深问准备
 
@@ -158,6 +160,16 @@ flowchart LR
 - 反例要明确，例如强事务事实源不能交给缓存或搜索读模型。
 - 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
 - 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
+
+## 公开阅读校验
+
+这篇文章要让读者看到日志的边界：日志不是越多越好，而是要在事故中提供可检索、可关联、可解释、可合规的证据。结构化日志应使用稳定字段，比如 `trace_id`、`span_id`、`service`、`route_template`、`error_code`、`release_id`、`tenant_tier`、`payload_hash`，而不是把整段自然语言拼成一条不可解析字符串。
+
+日志与 Trace 的关联要做到自动注入，而不是靠开发者手动传参。HTTP、MQ、线程池和异步任务都要携带上下文；消费者日志要包含 topic、partition、offset、message_id、retry_count 和 trace context；Agent tool 日志要包含 tool_name、args_hash、policy_verdict、observation_summary 和 error_code。这样事故时才能从指标告警跳到 Trace，再跳到同一个 span 的日志。
+
+敏感信息治理是公开文章必须强调的专业边界。prompt 原文、token、手机号、身份证、订单隐私、完整 SQL 参数和工具原始参数都不应直接落日志。可以使用字段白名单、hash、摘要、evidence_id、脱敏函数和访问控制替代。调试便利不能压过隐私、合规和安全。
+
+生产验收可以看三类指标：`trace_log_join_rate` 表示日志是否能和 Trace 关联，`sensitive_log_violation_count` 表示脱敏扫描是否发现违规字段，`log_ingestion_bytes` 与 `log_query_latency` 表示日志成本和查询体验。只要这三类指标长期无人看，日志平台迟早会变成昂贵且低可信的文本仓库。
 
 ## 来源与延伸阅读
 
