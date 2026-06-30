@@ -26,6 +26,10 @@ flowchart TD
   F --> G[Answer and trace]
 ```
 
+图 1：RAG 与 Memory 的上下文组装链路，Context Builder 同时接收外部事实证据和用户连续性记录，但在进入模型前必须区分标签、权限、优先级和生命周期。
+
+这张图的关键是 `RAG Retriever` 和 `Memory Retriever` 虽然都进入 `Context Builder`，但语义完全不同。RAG block 是事实证据，要求 citation、版本、权限和 evidence span；Memory block 是个性化连续性，要求 scope、TTL、confidence 和可删除性。`Verifier` 要分别检查事实 claim 是否有证据、Memory 注入是否越权，以及两者冲突时是否按优先级处理。
+
 数据流里，RAG evidence 和 Memory record 要分别标注 trust label。模型需要知道哪个是事实证据，哪个只是个性化上下文。
 
 ## 可画图
@@ -40,6 +44,8 @@ flowchart TD
 
 如果系统用旧偏好覆盖事实，检查 Context Builder 优先级和 Memory confidence。如果回答没有引用，检查 RAG 检索和 citation verifier。指标包括 citation_precision、memory_precision、stale_memory_rate 和 unsupported_claim_rate。
 
+事故处理要先定影响面：是单个用户记忆错、某个 namespace 污染，还是 RAG 证据与 Memory 优先级全局配置错误。止血可以暂时关闭长期 Memory 注入、只保留当前会话上下文，或对高风险领域强制 RAG/tool-only。根因排查要看写入策略、memory confidence、tenant filter、RAG metadata filter、Context Builder 排序和 verifier 日志。回归样本要覆盖旧偏好覆盖新证据、用户删除记忆后仍被召回、跨用户串记忆、RAG 无引用但模型给事实结论等路径。
+
 关键取舍是“可追溯事实”和“个性化连续性”谁优先。RAG 证据通常应覆盖 Memory 中的旧偏好或旧判断，因为它有来源和版本；Memory 可以提高体验，但必须允许用户更正、删除和降权。对高风险问题，系统可以只使用 RAG 和工具结果，不注入长期 Memory。
 
 ## 面试官追问
@@ -49,6 +55,20 @@ flowchart TD
 - 用户删除 Memory 后如何同步索引？
 - 如何防止跨用户串记忆？
 - 如何评估二者收益？
+
+## 多轮追问模拟
+
+**追问 1：RAG evidence 和 Memory record 冲突时如何排序？**
+
+先看指令层级和证据类型。当前用户明确指令高于历史 Memory；带版本、来源和权限校验的 RAG evidence 高于旧 Memory；安全策略高于两者。Memory 可以影响解释方式和学习路径，但事实 claim 必须回到 RAG、工具或业务系统证据。
+
+**追问 2：把聊天历史全部向量化是不是 Memory？**
+
+不是合格的 Memory。聊天历史是原始事件流，Memory 是经过写入策略筛选、带 scope/TTL/confidence 的结构化记录。直接把历史全文向量化会带来隐私、过期、跨用户和误召回问题，也很难支持删除和纠错。
+
+**追问 3：如何证明 Memory 真的带来收益？**
+
+要做 A/B 或离线回放：同一任务分别使用 RAG-only、Memory-only、RAG+Memory，比较 answer_personalization_gain、unsupported_claim_rate、stale_memory_rate、cross_user_leak_rate 和用户纠错率。如果个性化提升很小但错误和泄漏风险上升，就应缩小 Memory 注入范围。
 
 ## 项目化回答
 
@@ -85,6 +105,6 @@ RAG 和 Memory 一起用时，Context Builder 要输出两种不同 block。RAG 
 
 ## 来源与延伸阅读
 
-- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)
-- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
+- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)：官方文档用于支持 Memory 是跨会话状态管理能力，不应和一次性检索证据混为一谈。
+- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)：官方文档用于支持 Context Builder 分层组织系统指令、用户输入、检索证据、记忆和工具观察。
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于支持长期状态需要持久化、恢复和作用域控制，而不是简单拼接聊天历史。

@@ -33,6 +33,10 @@ flowchart LR
   Packet --> Resume[Agent Resume]
 ```
 
+图 1：Coding Agent 上下文压缩的结构化恢复链路，从运行 trace 中投影出可验证状态，再把硬约束、证据引用和下一步动作打包成 Resume Packet。
+
+这张图的边界是：压缩不是聊天摘要，而是 `state projection`。`constraint retention` 确保用户硬约束不丢，`evidence refs` 把大日志、diff、截图和测试输出留在 artifact store，`Resume Packet` 只保存恢复所需索引和结论。恢复后的 Agent 必须先验证这些引用和文件状态，再继续写代码。
+
 ## 系统设计案例
 
 修复 bug 时，压缩包保存用户目标、禁止改 API、已改文件、失败测试、已排除方案和下一步要读的模块。恢复后，Agent 先读取失败测试 artifact，再继续 patch。若丢了禁止改 API 这个约束，lost constraint eval 应失败。
@@ -46,6 +50,20 @@ flowchart LR
 - 什么时候触发压缩？token 水位、阶段完成、测试结果、用户确认或长任务切换。
 - state projection 存什么？目标、约束、计划、文件、测试、风险和证据引用。
 - 摘要和 trace 谁可信？trace 与 artifact 是事实源，摘要是可恢复索引。
+
+## 多轮追问模拟
+
+**追问 1：为什么自然语言总结不够？**
+
+自然语言总结可读，但不可验证，容易丢掉“只能改前端”“不要改 public API”“测试失败命令是什么”这类硬约束。Resume Packet 要有字段、来源 turn、文件 hash、artifact refs 和 next_actions，才能在恢复时被检查。
+
+**追问 2：压缩后第一步应该做什么？**
+
+先校验，不是继续 patch。检查 goal、hard_constraints、changed_files、failed_commands、artifact_refs、当前 git 状态和用户是否有新改动。只有恢复状态与当前工作区一致，才继续执行计划。
+
+**追问 3：如何评估压缩质量？**
+
+看 `constraint_retention_rate`、`artifact_ref_missing_rate`、`resume_success_rate`、`post_resume_regression_rate` 和重复步骤率。好的压缩能让新上下文继续正确工作，坏的压缩会让 Agent 重复旧错或违反约束。
 
 ## 项目化回答
 
@@ -81,6 +99,6 @@ Compaction Trigger 可以由 token 水位、阶段完成、测试失败、用户
 
 ## 来源与延伸阅读
 
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于支持长任务状态需要持久化、恢复和检查点，而不是只靠上下文窗口。
+- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)：官方文档用于支持短期上下文应被结构化管理，并和长期状态区分。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持把运行 trace、工具结果和测试证据作为压缩恢复的事实来源。
