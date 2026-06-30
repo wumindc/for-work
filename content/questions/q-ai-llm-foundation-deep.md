@@ -98,6 +98,14 @@ flowchart TD
 - 追问成本控制：按 task_type 路由模型，限制 context_tokens，缓存只缓存权限安全的中间结果。
 - 追问灰度回滚：模型版本、prompt_version、verifier_version 和工具版本都进入 trace，失败时按版本回退。
 
+## 公开阅读校验
+
+这篇文章面向公开读者时，要把“后端边界”讲得比“接了一个模型服务”更硬。LLM 不应该有 ambient authority，也就是不能因为它能生成理由，就默认拥有读数据、改状态、调用内部接口的权限。所有权限都必须来自后端鉴权、工具 policy、租户隔离和业务状态机，模型只能提出候选动作。
+
+一个可落地的接入方案应该能回答五个问题：Context Builder 如何证明每条 evidence 都有 ACL？Tool Permission Gate 如何在每次调用时重新鉴权？写操作是否有 preview、confirmation、idempotency key 和 audit ledger？Verifier 是否检查业务不变量而不只是 JSON 格式？Trace 是否能按 prompt、tool schema、policy 和 model 版本回滚？这些问题比“模型选哪家”更决定系统是否能上线。
+
+边界还包括组织协作。业务团队可以配置话术、知识源和低风险工具，但高风险 tool schema、权限策略、审计保留和回滚门槛应由平台或后端负责人统一治理。否则每个业务线都各自接模型，短期交付快，长期会出现权限口径不一致、成本无法归因、事故无法复盘的问题。灰度发布也应按租户、风险等级和工具类型分层，而不是一次性放开所有模型能力。
+
 ## 来源与延伸阅读
 
 - [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)：用于确认模型调用、输入输出和应用侧生成链路的基本语义。

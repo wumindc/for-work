@@ -105,6 +105,14 @@ Coding Agent 可以说明：文件定位和修复尝试由 Agent 处理，代码
 
 如果追问“怎么防止 Agent 乱来”，我会从四个层面答：缩小 tool surface、限制 max steps 和预算、用 verifier 检查 proposal、把 side effect tool 放到 preview + confirmation 后。模型可以参与决策，但权限、状态和审计必须由宿主系统掌握。
 
+## 公开阅读校验
+
+这篇文章给外部读者看时，最重要的是把“需要 Agent”变成可审查的工程判断，而不是一句“任务复杂”。可以用五个维度做决策表：路径熵是否高、中间 observation 是否会改变下一步、失败是否可以恢复、最终动作是否可验证、副作用风险是否能被宿主系统接住。五项都弱时，workflow 更合适；只有前几项强且后两项可控时，Agent 才有上线理由。
+
+还要强调一个反直觉点：Agent 的价值通常不在“模型会思考”，而在动态控制流能够用工具反馈不断缩小不确定性。这个能力必须和约束成对出现，例如 max steps、budget、tool allowlist、verifier、human confirmation 和 trace replay。没有这些约束，Agent 只是把不可枚举路径从代码里移到了模型输出里，系统并不会更可靠。
+
+如果读者要把这套判断带回项目评审，可以问三句话：当前 workflow baseline 的失败类型是什么？Agent 相比 baseline 提升的是成功率、恢复率还是人工节省？这个提升是否覆盖了延迟、成本、安全和审计成本？能回答这三句，才算从“概念解释”进入了“工程选型”。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow 与 agent 的定义差异，以及 orchestrator-worker、evaluator-optimizer 等工程模式。

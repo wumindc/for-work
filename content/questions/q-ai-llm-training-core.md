@@ -98,6 +98,14 @@ flowchart TD
 - 追问训练数据脱敏：讲 PII scan、secret scan、source policy、reviewer signoff 和 dataset_version。
 - 追问模型升级：回答 golden set、红队样本、灰度流量、trace 对比和 rollback model。
 
+## 公开阅读校验
+
+公开读者最容易把训练阶段理解成“模型知识越来越多”，这篇文章需要反过来建立边界：pretraining 提供通用能力，SFT 让模型更会按任务和格式工作，alignment 改善偏好和安全倾向，但它们都不等于业务事实源。企业政策、库存、订单、权限和价格这类事实仍然要靠 RAG、数据库或工具。
+
+做工程决策时，应该先给失败样本打标签，而不是先讨论要不要微调。`fact_missing` 走知识库和检索，`format_drift` 先走 schema、prompt 和 SFT 候选，`unsafe_answer` 看 guardrail、红队样本和安全策略，`tool_misuse` 看工具描述和权限协议。只有大量同类、稳定、可标注的行为错误持续出现，微调才有足够收益。
+
+训练相关方案的公开评审也要问三件事：数据集是否脱敏并记录来源，验证集是否覆盖反例和安全边界，升级失败是否能回滚到上一版模型与 prompt。没有这些配套，训练可能只是把少量 demo 样本记住，反而带来更难发现的回归。
+
 ## 来源与延伸阅读
 
 - [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)：用于确认 fine-tuning 更适合稳定行为、格式和领域表达，而不是替代权限化知识库。

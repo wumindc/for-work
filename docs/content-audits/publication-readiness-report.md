@@ -12,7 +12,7 @@ It is advisory by default: it identifies the next content-review backlog without
 - Needs revision: 0
 - Blocked: 0
 - Average score: 99
-- Issues: blocker 0, major 0, minor 95
+- Issues: blocker 0, major 0, minor 87
 
 ## Domain Readiness
 
@@ -34,62 +34,62 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 95 |
+| thin_depth | 87 |
 
 ## First 50 Revision Targets
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | question | ai-agent-rag | `q-agent-definition-deep` | 96 | publishable | minor:thin_depth |
-| 2 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 96 | publishable | minor:thin_depth |
-| 3 | question | ai-agent-rag | `q-ai-eval-observability-structured` | 96 | publishable | minor:thin_depth |
-| 4 | question | ai-agent-rag | `q-ai-llm-foundation-core` | 96 | publishable | minor:thin_depth |
-| 5 | question | ai-agent-rag | `q-ai-llm-foundation-deep` | 96 | publishable | minor:thin_depth |
-| 6 | question | ai-agent-rag | `q-ai-llm-training-core` | 96 | publishable | minor:thin_depth |
-| 7 | question | ai-agent-rag | `q-ai-llm-training-deep` | 96 | publishable | minor:thin_depth |
-| 8 | question | ai-agent-rag | `q-langgraph-deep` | 96 | publishable | minor:thin_depth |
-| 9 | question | ai-agent-rag | `q-planning-methods-core` | 96 | publishable | minor:thin_depth |
-| 10 | question | ai-agent-rag | `q-planning-methods-deep` | 96 | publishable | minor:thin_depth |
-| 11 | question | ai-agent-rag | `q-react-loop-core` | 96 | publishable | minor:thin_depth |
-| 12 | question | ai-agent-rag | `q-workflow-vs-agent-core` | 96 | publishable | minor:thin_depth |
-| 13 | topic | ai-agent-rag | `rag-pipeline` | 96 | publishable | minor:thin_depth |
-| 14 | topic | ai-agent-rag | `react-loop` | 96 | publishable | minor:thin_depth |
-| 15 | topic | ai-agent-rag | `reflection-review` | 96 | publishable | minor:thin_depth |
-| 16 | topic | ai-agent-rag | `rerank` | 96 | publishable | minor:thin_depth |
-| 17 | topic | ai-agent-rag | `sandbox` | 96 | publishable | minor:thin_depth |
-| 18 | topic | ai-agent-rag | `short-term-memory` | 96 | publishable | minor:thin_depth |
-| 19 | topic | ai-agent-rag | `skills` | 96 | publishable | minor:thin_depth |
-| 20 | topic | ai-agent-rag | `swe-bench` | 96 | publishable | minor:thin_depth |
-| 21 | topic | ai-agent-rag | `tool-error-recovery` | 96 | publishable | minor:thin_depth |
-| 22 | topic | ai-agent-rag | `tool-permissions` | 96 | publishable | minor:thin_depth |
-| 23 | topic | ai-agent-rag | `tool-registry` | 96 | publishable | minor:thin_depth |
-| 24 | topic | ai-agent-rag | `tool-schema` | 96 | publishable | minor:thin_depth |
-| 25 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
-| 26 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
-| 27 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
-| 28 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
-| 29 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
-| 30 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
-| 31 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
-| 32 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
-| 33 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
-| 34 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
-| 35 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 96 | publishable | minor:thin_depth |
-| 36 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 96 | publishable | minor:thin_depth |
-| 37 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 96 | publishable | minor:thin_depth |
-| 38 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 96 | publishable | minor:thin_depth |
-| 39 | topic | ai-engineering-trends | `skill-packaging-workflow` | 96 | publishable | minor:thin_depth |
-| 40 | topic | database | `db-backup-recovery-migration` | 96 | publishable | minor:thin_depth |
-| 41 | topic | database | `db-index-execution-plan` | 96 | publishable | minor:thin_depth |
-| 42 | topic | database | `db-lock-deadlock-troubleshooting` | 96 | publishable | minor:thin_depth |
-| 43 | topic | database | `db-online-ddl-schema-change` | 96 | publishable | minor:thin_depth |
-| 44 | topic | database | `db-replication-read-write-splitting` | 96 | publishable | minor:thin_depth |
-| 45 | topic | database | `db-sharding-partitioning` | 96 | publishable | minor:thin_depth |
-| 46 | topic | database | `db-sql-join-optimization` | 96 | publishable | minor:thin_depth |
-| 47 | topic | elasticsearch | `es-query-aggregation-optimization` | 96 | publishable | minor:thin_depth |
-| 48 | topic | elasticsearch | `es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
-| 49 | topic | elasticsearch | `es-shards-write-path` | 96 | publishable | minor:thin_depth |
-| 50 | topic | elasticsearch | `es-use-cases-boundary` | 96 | publishable | minor:thin_depth |
+| 1 | question | ai-agent-rag | `q-planning-methods-core` | 96 | publishable | minor:thin_depth |
+| 2 | question | ai-agent-rag | `q-planning-methods-deep` | 96 | publishable | minor:thin_depth |
+| 3 | question | ai-agent-rag | `q-react-loop-core` | 96 | publishable | minor:thin_depth |
+| 4 | question | ai-agent-rag | `q-workflow-vs-agent-core` | 96 | publishable | minor:thin_depth |
+| 5 | topic | ai-agent-rag | `rag-pipeline` | 96 | publishable | minor:thin_depth |
+| 6 | topic | ai-agent-rag | `react-loop` | 96 | publishable | minor:thin_depth |
+| 7 | topic | ai-agent-rag | `reflection-review` | 96 | publishable | minor:thin_depth |
+| 8 | topic | ai-agent-rag | `rerank` | 96 | publishable | minor:thin_depth |
+| 9 | topic | ai-agent-rag | `sandbox` | 96 | publishable | minor:thin_depth |
+| 10 | topic | ai-agent-rag | `short-term-memory` | 96 | publishable | minor:thin_depth |
+| 11 | topic | ai-agent-rag | `skills` | 96 | publishable | minor:thin_depth |
+| 12 | topic | ai-agent-rag | `swe-bench` | 96 | publishable | minor:thin_depth |
+| 13 | topic | ai-agent-rag | `tool-error-recovery` | 96 | publishable | minor:thin_depth |
+| 14 | topic | ai-agent-rag | `tool-permissions` | 96 | publishable | minor:thin_depth |
+| 15 | topic | ai-agent-rag | `tool-registry` | 96 | publishable | minor:thin_depth |
+| 16 | topic | ai-agent-rag | `tool-schema` | 96 | publishable | minor:thin_depth |
+| 17 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
+| 18 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
+| 19 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
+| 20 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
+| 21 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
+| 22 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
+| 23 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
+| 24 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
+| 25 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
+| 26 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
+| 27 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 96 | publishable | minor:thin_depth |
+| 28 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 96 | publishable | minor:thin_depth |
+| 29 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 96 | publishable | minor:thin_depth |
+| 30 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 96 | publishable | minor:thin_depth |
+| 31 | topic | ai-engineering-trends | `skill-packaging-workflow` | 96 | publishable | minor:thin_depth |
+| 32 | topic | database | `db-backup-recovery-migration` | 96 | publishable | minor:thin_depth |
+| 33 | topic | database | `db-index-execution-plan` | 96 | publishable | minor:thin_depth |
+| 34 | topic | database | `db-lock-deadlock-troubleshooting` | 96 | publishable | minor:thin_depth |
+| 35 | topic | database | `db-online-ddl-schema-change` | 96 | publishable | minor:thin_depth |
+| 36 | topic | database | `db-replication-read-write-splitting` | 96 | publishable | minor:thin_depth |
+| 37 | topic | database | `db-sharding-partitioning` | 96 | publishable | minor:thin_depth |
+| 38 | topic | database | `db-sql-join-optimization` | 96 | publishable | minor:thin_depth |
+| 39 | topic | elasticsearch | `es-query-aggregation-optimization` | 96 | publishable | minor:thin_depth |
+| 40 | topic | elasticsearch | `es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
+| 41 | topic | elasticsearch | `es-shards-write-path` | 96 | publishable | minor:thin_depth |
+| 42 | topic | elasticsearch | `es-use-cases-boundary` | 96 | publishable | minor:thin_depth |
+| 43 | question | elasticsearch | `q-es-query-optimization` | 96 | publishable | minor:thin_depth |
+| 44 | question | elasticsearch | `q-es-rag-hybrid-search` | 96 | publishable | minor:thin_depth |
+| 45 | topic | java-jvm | `java-classloading-spi` | 96 | publishable | minor:thin_depth |
+| 46 | topic | java-jvm | `java-completablefuture-async-timeout` | 96 | publishable | minor:thin_depth |
+| 47 | topic | java-jvm | `java-concurrent-collections-cas` | 96 | publishable | minor:thin_depth |
+| 48 | topic | java-jvm | `java-locks-aqs-synchronized-reentrantlock` | 96 | publishable | minor:thin_depth |
+| 49 | topic | java-jvm | `java-memory-model-volatile-happens-before` | 96 | publishable | minor:thin_depth |
+| 50 | topic | java-jvm | `java-thread-pool-governance` | 96 | publishable | minor:thin_depth |
 
 ## How To Use
 
