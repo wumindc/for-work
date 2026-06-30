@@ -31,6 +31,10 @@ flowchart TD
   G --> B
 ```
 
+图 1：MCP 工具接入边界与 A2A/ACP 跨 Agent 协作边界。
+
+这张图刻意把两条链路分开。左侧是 Host 通过 MCP Client 发现和调用 MCP Server 暴露的工具、资源和提示模板，重点是“模型应用怎么拿到外部能力”。右侧是 Agent A 通过 discovery、envelope 和 Gateway 请求 Agent B 执行任务，重点是“一个 Agent 如何把任务交给另一个 Agent 并追踪生命周期”。面试时如果能先画出这两条边界，后面讨论 auth、schema、trace 和 versioning 就不会混成一团。
+
 跨 Agent 协议的 message envelope 通常要包含 sender、receiver、task_id、correlation_id、capability、payload、context_refs、auth_scope、deadline 和 trace_id。
 
 ## 可画图
@@ -56,6 +60,20 @@ flowchart TD
 - message envelope 为什么需要 correlation_id？
 - 跨 Agent auth 如何做最小权限？
 - 协议版本升级怎么兼容旧调用方？
+
+## 多轮追问模拟
+
+第一轮追问：MCP Server 能不能内部实现成一个 Agent？  
+回答要点：可以，但这是实现细节，不应改变协议角色。调用方仍然只看到 tools、resources、prompts 和 schema。考察点是你能否区分“内部实现复杂度”和“外部协议契约”。陷阱是把 MCP Server 说成天然具备自主规划、长期状态和跨任务协作能力。
+
+第二轮追问：A2A/ACP 的 capability discovery 为什么不能暴露完整 prompt 和内部工具？  
+回答要点：discovery 应暴露能力名、输入输出 schema、版本、风险等级、SLA 和 owner，不暴露私有 prompt、凭据、底层工具列表和内部状态。考察点是最小权限和攻击面控制。陷阱是为了让调用方“更聪明”而把内部实现公开，导致 prompt injection、权限绕过和供应链信息泄露。
+
+第三轮追问：跨 Agent 调用失败后如何定位是哪一层？  
+回答要点：先用 correlation_id 串起请求、Gateway、目标 Agent、artifact 和 trace；再按 protocol_error、schema_violation、auth_denial、timeout、capability_mismatch 分类。考察点是可观测性和 failure taxonomy。陷阱是只看最终自然语言错误，无法判断是协议层、权限层还是目标 Agent 执行层失败。
+
+第四轮追问：协议升级时怎样保护旧调用方？  
+回答要点：envelope 带 `protocol_version` 和 capability version，Gateway 做版本协商、灰度、兼容转换或显式拒绝；对 breaking change 要维护 deprecation window。考察点是生产系统治理。陷阱是认为“都是自然语言”就不需要版本管理。
 
 ## 项目化回答
 
@@ -92,6 +110,6 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [Agent2Agent Protocol](https://github.com/a2aproject/A2A)
-- [Model Context Protocol Specification](https://modelcontextprotocol.io/specification/2025-06-18)
-- [Agent Client Protocol Introduction](https://agentclientprotocol.com/get-started/introduction)
+- [Agent2Agent Protocol](https://github.com/a2aproject/A2A)：用于支持 Agent Card、Task、Message、Artifact 与跨 Agent 任务生命周期的边界说明。
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/specification/2025-06-18)：用于确认 MCP 的 Host、Client、Server、tools、resources、prompts 等核心角色。
+- [Agent Client Protocol Introduction](https://agentclientprotocol.com/get-started/introduction)：用于区分 IDE/Client 到 Agent 的交互协议语境，避免把所有 ACP 都解释成同一种 Agent-to-Agent 协议。

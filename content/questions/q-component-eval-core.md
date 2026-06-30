@@ -33,6 +33,10 @@ flowchart LR
   Report --> Gate[threshold gate]
 ```
 
+图 1：Agent 组件级 Eval 的可重复评测链路。
+
+这张图里，Case 定义输入、期望行为和禁止行为，Fixture 冻结外部依赖与环境，Runner 调用被测组件，Judge 用规则或 rubric 判断输出，Report 给出分数和 failure taxonomy，最后 Gate 决定是否阻断发布。核心是把“不知道哪里坏了”的端到端失败，拆成某个组件契约是否被破坏。图中的 Gate 不一定所有 case 都强阻断，权限、安全、引用、schema 等硬边界应强阻断，探索型质量 case 可以先观察。
+
 ## 系统设计案例
 
 Paper Agent 可以拆四类组件评测：Retriever 评 evidence hit，Citation Verifier 评 claim 是否被证据支持，Context Builder 评约束保留，Output Parser 评 JSON 或 Markdown 格式。端到端答错时，先看哪类 component eval 失败。
@@ -46,6 +50,20 @@ Paper Agent 可以拆四类组件评测：Retriever 评 evidence hit，Citation 
 - Component Eval 和 E2E Eval 区别是什么？前者归因，后者看业务完成。
 - 为什么需要 forbidden_behavior？防止“看似通过但做了危险事”。
 - threshold 怎么定？核心 case 强 gate，探索 case 可观察。
+
+## 多轮追问模拟
+
+第一轮追问：为什么组件评测不能替代 E2E 评测？  
+回答要点：组件评测验证模块契约，适合归因；E2E 评测验证任务闭环、用户体验和跨组件协同。考察点是分层思维。陷阱是组件都过就断言产品可用，忽略路径选择、状态流转和 stop policy。
+
+第二轮追问：fixture 为什么必须冻结？  
+回答要点：不冻结文档快照、mock response、工具版本和随机种子，结果不可比较；今天失败可能是外部 API 波动，不是组件退化。考察点是可重复性。陷阱是直接打真实线上接口，把网络抖动、权限变更和第三方返回混进评测。
+
+第三轮追问：forbidden_behavior 如何写才有价值？  
+回答要点：它要覆盖危险捷径，例如越权调用工具、遗漏强制引用、输出未授权字段、把 untrusted evidence 当系统指令。考察点是负向约束。陷阱是只写 expected output，导致模型用错误路径也能拿高分。
+
+第四轮追问：什么 case 应该进 CI 强门禁？  
+回答要点：安全、权限、合规、引用支持、schema 合法性和线上事故回归 case 应强门禁；风格、解释充分性可以分层阈值。考察点是风险分级。陷阱是所有 case 一刀切，最后要么 CI 太脆，要么门禁太松。
 
 ## 项目化回答
 
@@ -81,6 +99,6 @@ Judge 可以是规则、脚本、人工或 LLM rubric，但硬边界要规则化
 
 ## 来源与延伸阅读
 
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持数据集、评测 runner、实验对比和回归分析的工程实践。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于说明组件输出应和 trace 关联，方便定位 first bad step。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于支持 guardrail case 中 expected 与 forbidden behavior 的设计。

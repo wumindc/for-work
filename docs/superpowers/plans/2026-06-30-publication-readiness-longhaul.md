@@ -146,6 +146,11 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-web-agent-eval-core`
 - [x] `q-web-agent-project-deep`
 - [x] `q-workflow-vs-agent-core`
+- [x] `q-a2a-acp-core`
+- [x] `q-agentic-rag-core`
+- [x] `q-component-eval-core`
+- [x] `q-component-eval-deep`
+- [x] `q-context-layers-core`
 
 AI Agent / RAG topic backlog:
 
