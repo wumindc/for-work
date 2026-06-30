@@ -143,6 +143,14 @@ sequenceDiagram
 
 被问“hybrid 怎么灰度”，可以按只读建议、人工确认执行、低风险自动执行三阶段推进，并保留 fallback 到原 workflow 的能力。指标要看 `routing_accuracy`、`agent_success_delta`、`manual_handoff_rate` 和 `unsafe_action_block_rate`。
 
+## 公开阅读校验
+
+公开读者需要看到这个边界问题的核心不是“谁更先进”，而是“控制流应该归谁”。当路径可枚举、失败分支清楚、动作有事务或合规风险时，workflow 更可信；当任务需要探索、工具结果会改变下一步、路径无法提前写完时，Agent 才有价值。用这个标准，读者才能判断一个 AI 方案是不是把简单流程复杂化了。
+
+生产验收要用 baseline 对比，而不是靠感觉。先让确定 workflow 跑出当前成功率、延迟、人工处理量和失败类型；再让 Agent 在 shadow 或 proposal 模式下运行，比较它是否提高成功率、降低人工成本、保持安全拦截，并且没有显著增加 p95 latency 和 cost_per_task。没有这些证据，就不应该把核心链路交给 Agent 自动控制。
+
+文章还应强调 hybrid 的责任边界：Agent 可以做开放调查、候选生成和修复建议，但高风险提交、支付、删除、退款、发布和权限变更仍应回到 workflow executor、权限网关或人工确认。这样既保留探索能力，也把幂等、审计、回滚和合规留在确定性系统里。
+
 ## 来源与延伸阅读
 
 - [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：官方工程文章，用于支持 workflow 与 agent 的边界判断、复杂度递增和简单优先原则。

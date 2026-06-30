@@ -122,11 +122,12 @@ State file 保存目标、约束、进度、证据和下一步动作，verifier 
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `run_id` | State file | 串联一次长任务 | 复盘任务恢复路径 |
+| `state_version` | 状态版本 | 标识每次状态更新 | 防止旧摘要覆盖新事实 |
+| `hard_constraints` | 约束区 | 保存用户不可违反条件 | 排查约束丢失 |
+| `artifact_refs` | 证据区 | 引用 diff、截图、测试、citation | 验证器读取外部事实 |
+| `verifier_verdict` | 验证结果 | continue/retry/rollback/handoff/stop | 判断是否错误放行 |
+| `schedule_policy` | 调度策略 | 预算、轮次、截止时间、暂停恢复 | 防止无限循环和重复工作 |
 
 ## 深问准备
 
@@ -148,6 +149,16 @@ Verifier 也要分层：格式 verifier 检查结构化输出是否满足 schema
 - Schedule 要设置最大轮次、最大成本、超时、暂停恢复、人工门禁和终止条件，避免无限循环。
 - 恢复演练要覆盖状态文件丢字段、artifact 不可访问、旧摘要覆盖新证据、工具结果过期和用户约束变更。
 - 每次 verifier 放行都要能追到外部证据，不能只保存一句自然语言 verdict。
+
+## 公开阅读校验
+
+公开读者看 State File、Verifier 与 Schedule，要理解它解决的是长任务 Agent 的“可恢复”和“可证明完成”问题。State file 不是聊天记录，也不是自然语言总结，而是任务账本：目标、硬约束、进度、证据、风险、下一步和版本都要可读可比较。Verifier 不是让模型自评，而是读取外部证据后给出可执行 verdict。
+
+一个生产方案至少要说明三件事。第一，状态如何防覆盖：每次更新有 before_version、after_version 和 state_diff。第二，证据如何防丢失：测试日志、截图、diff、citation 和工具 observation 都用 artifact_ref 管理。第三，调度如何防失控：max steps、cost budget、deadline、暂停恢复、人工接管和 stop reason 都要写入 schedule policy。
+
+排障时可以围绕 false accept 复盘：verifier 是否读取了最新 artifact，artifact 是否过期，硬约束是否进入 state，模型是否把未验证假设提升成事实，schedule 是否允许重复执行同一步。能按这些字段复盘，文章才真正讲清了 State File 与 Verifier 的工程价值。
+
+还可以补一个恢复场景：长任务执行到一半断开，恢复时系统先读取 state file，校验 `state_version`、`hard_constraints` 和 `artifact_refs`，再检查最近一次 verifier verdict 是否仍有效。如果测试日志已经过期、代码 diff 被用户改过、截图不可访问或用户新增约束，schedule 应暂停并重新规划，而不是继续执行旧的 next_action。这个例子能帮助读者理解 state file 是任务控制面，不是记忆备份。
 
 ## 来源与延伸阅读
 
