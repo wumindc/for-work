@@ -38,7 +38,9 @@ flowchart LR
   Observation --> Trace[State + Audit Trace]
 ```
 
-这张图可以直接用于面试白板。重点是模型看见的是精简契约，执行层掌握真实凭证和安全策略。
+图 1：工具接口从模型契约到执行契约的安全边界。
+
+图中 Registry 和 Tool Selector 决定模型能看到哪些工具，Validate、Permission 和 Risk Level 决定调用能否进入真实执行。重点是模型看见的是精简契约，执行层掌握真实凭证和安全策略。写操作还要经过 preview/confirmation，Trace 保存参数摘要、权限决策、输出引用和审计证据。
 
 ## 系统设计案例
 
@@ -51,6 +53,20 @@ flowchart LR
 如果出现越权调用，我会检查三层：工具是否不该暴露给当前任务，permission scope 是否过宽，执行器是否漏掉资源归属校验。如果出现模型反复传错参数，先收集 invalid args 样本，找出缺少 required、enum 设计不当还是 description 误导。若工具返回误导性文本，修复 output schema，把结果拆成状态、数据、证据、错误和下一步建议。
 
 对于 prompt injection，不能靠“提醒模型不要听网页指令”解决。工具执行层要绑定可信来源、用户授权、域名策略和敏感动作确认。页面内容可以影响摘要，不应直接扩大工具权限。
+
+## 多轮追问模拟
+
+**追问 1：工具 schema 越详细越好吗？**
+不一定。schema 要足够约束模型输出，但不能把内部实现、权限结构和无关枚举全部暴露给模型。我的口径是：模型可见 schema 只描述任务语义、必填字段、格式、边界和示例；执行层再做业务校验、资源归属和权限判断。考察点是能否区分“模型友好”和“安全可控”。陷阱是以为 schema 详细就能替代执行层校验。
+
+**追问 2：模型调用写工具时，如何防止重复副作用？**
+写工具必须有 `idempotency_key`、preview/apply 两阶段、确认记录和 side-effect trace。重试时先查 `idempotency_key` 对应的结果，不能让模型再次发起真实写入。支付、发券、删库、发邮件这类外部副作用尤其要先查状态，再决定补偿或人工处理。考察点是幂等和补偿意识，陷阱是让模型根据自然语言错误自行决定是否重试。
+
+**追问 3：工具返回值应该多详细？**
+返回给模型的是可行动 observation：状态、关键字段、证据引用、下一步建议和安全限制；完整原始响应放 trace 或 artifact store。敏感字段、堆栈、token、SQL 和内部权限信息不能直接进入上下文。考察点是输出 schema 与脱敏策略，陷阱是把下游 API 原样返回给模型。
+
+**追问 4：多 Agent 共用工具怎么治理？**
+用 Registry 统一 owner、version、risk、permissionScope、schema、health 和 audit policy。不同 Agent 根据身份、任务、租户和当前状态拿到不同工具子集。上线时按 tool version 与 model version 观测 `valid_call_rate`、`permission_denial_rate` 和 `unsafe_call_block_rate`。陷阱是把工具当公共函数库，忽略不同 Agent 的权限差异。
 
 ## 面试官追问
 
@@ -89,5 +105,6 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)：官方文档用于支持工具调用需要通过结构化参数和 schema 约束模型输出。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：官方文档用于说明 Agent 工具是受接口约束的能力边界，而不是任意执行权限。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持工具、guardrail、人类确认和 workflow 边界要组合设计。

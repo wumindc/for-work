@@ -38,7 +38,9 @@ flowchart TD
   Publish --> Trace
 ```
 
-图里的重点是 evidence checker 在 reviewer 前后都能发挥作用。Reviewer 不负责“相信自己”，它负责把问题转成可执行的修订任务。
+图 1：Reflection 从自评改写升级为证据驱动的修订协议。
+
+图中 Claim Inventory 把初稿拆成可验证断言，Evidence Checker 决定断言是否有证据，Reviewer 只负责生成修订任务或风险提示。Reviewer 不负责“相信自己”，它负责把问题转成可执行的修订任务；最终发布由 hard verifier 和 Stop Policy 裁决。这个边界能防止同一模型在同一错误上下文里越修越自信。
 
 ## 系统设计案例
 
@@ -51,6 +53,20 @@ flowchart TD
 线上如果发现答案越来越自信但事实越来越差，我会先检查 reviewer 输入。它是不是只拿到了最终文本，没有拿到证据和约束。再看 rubric，是否明确要求 unsupported claim 降级。最后看 stop policy，是否允许同一问题重复修三次以上。
 
 另一个常见故障是 verifier 太弱，只检查格式不检查事实。比如 schema 合法不代表结论正确。修复时要把 verifier 分层，格式由 schema 管，事实由 citation 管，代码由测试管，安全由策略管。不同指标分开看，才能知道是表达问题、证据问题还是执行问题。
+
+## 多轮追问模拟
+
+**追问 1：让同一个模型自评是不是完全没用？**
+不是没用，但只能作为辅助信号。它适合发现遗漏、表达不清、格式不合、可能需要补证据的地方；不适合作为事实正确性的最终裁判。最终裁判要回到 citation、工具结果、测试、规则或人工确认。考察点是能否把 reflection 从“自信复读”拆成 workflow；陷阱是把模型自评等同于验证。
+
+**追问 2：多模型 reviewer 能解决错误强化吗？**
+只能降低同源偏差，不能替代证据。两个模型如果共享错误 evidence 或没有外部事实源，仍可能用不同语言强化同一错误。我的设计会让 reviewer 使用不同上下文，只看 draft、claim list、evidence map 和 rubric，并让 hard verifier 决定发布。考察点是 reviewer 独立性，陷阱是以为多模型投票天然正确。
+
+**追问 3：什么时候应该停止反思循环？**
+当 retry budget 用完、连续两轮没有新增证据或质量增益、同一 claim 反复 unsupported、高风险动作缺确认、工具状态不明时停止。停止不等于失败，可以输出 unsupported、澄清问题或转人工。考察点是 stop policy，陷阱是认为多跑几轮一定更好。
+
+**追问 4：如何在线上证明 reflection 有帮助？**
+不能只看修订轮数，要看 `claim_support_rate`、`unsupported_claim_rate`、`revision_improvement_rate`、`self_approval_false_positive_rate` 和 `human_handoff_rate`。如果修订后语言更流畅但 unsupported claim 不下降，说明 reflection 在粉饰错误。考察点是指标闭环，陷阱是用主观观感代替回归评测。
 
 ## 面试官追问
 
@@ -89,5 +105,6 @@ Reflection 不适合替代外部事实校验。论文结论、代码正确性、
 
 ## 来源与延伸阅读
 
-- [OpenAI Evals](https://github.com/openai/evals)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [OpenAI Evals](https://github.com/openai/evals)：用于支持把 reflection 结果纳入可回归评测，而不是只依赖模型主观自评。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档用于说明输入、输出和工具 guardrail 可以作为 hard verifier 的一部分。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持 reviewer、guardrail、human-in-the-loop 和 trace 要组合成可控 workflow。

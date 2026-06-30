@@ -32,6 +32,10 @@ flowchart LR
   H --> K[Retriever uses latest valid version]
 ```
 
+图 1：记忆衰退与污染控制的状态转换链路。
+
+图中 Memory Record 先进入 Freshness Scorer，系统根据时间、来源、scope、纠错历史和使用结果判断是否进入正常排序、降权、隔离、归档或新版本链路。关键状态变化是：旧记忆不是被模型“凭感觉少用”，而是被显式标记为 decayed、superseded、quarantined 或 expired；Retriever 只允许使用当前 scope 内、置信度足够且未隔离的版本。
+
 | 控制点 | 作用 | 典型字段 | 失败信号 |
 | :--- | :--- | :--- | :--- |
 | TTL | 控制可用时间 | expiresAt、ttlReason | 过期信息仍被读取 |
@@ -73,6 +77,10 @@ flowchart LR
 - quarantine 中的记录默认不可进入上下文，只能提供给审核或安全评估。
 - 指标要看 stale_memory_rate、conflict_rate、correction_latency、quarantine_release_rate 和 repeated_error_rate。
 
+生产系统还要把“删除”“纠错”“降权”拆开处理。删除通常来自用户隐私要求或合规策略，必须传播到主存储、向量索引、缓存和备份策略；纠错表示旧记录不再作为当前事实，但仍需要保留审计关系；降权则适合时间敏感但未被明确否定的偏好。三者混用会造成两类问题：要么为了安全过度删除，丢掉可解释历史；要么只是降权但没有同步向量索引，旧内容仍被召回。
+
+另一个容易漏掉的点是 memory eval。应该构造带旧偏好、冲突事实、用户纠错和跨项目噪声的回归集，检查系统是否会错误召回旧记忆。评估不只看命中率，还要看 `memory_caused_failure_rate` 和 `correction_propagation_latency`。如果一次纠错后同错仍反复出现，说明衰退策略没有打穿写入、索引和上下文构建链路。
+
 ## 系统设计案例
 
 假设 Paper Agent 会记住用户常看的领域、论文筛选标准和历史总结模板。用户改研究方向后，旧偏好可能继续影响推荐。系统应该给偏好类记忆设置可衰退 confidence，并在新查询与旧偏好冲突时追问：“这次是否仍按旧方向筛选？”
@@ -84,6 +92,8 @@ flowchart LR
 线上看到 Agent 总按旧项目路径回答时，先查被读取的 memory_id。确认它的 scope 是否正确、TTL 是否过期、source 是否来自旧会话，以及最近是否有用户 correction 被漏处理。
 
 止血可以先对该 workspace 禁用相关 memory type，或者把可疑记录放入 quarantine。根因修复通常在 Write Policy、Retriever freshness scoring、缓存失效和用户删除传播这几层。
+
+排障时不要只看“模型为什么这么想”，要先看系统把哪些记忆放进了上下文。trace 里至少应保留 memory_id、召回分数、freshness score、scope match、最终是否注入 prompt、被哪个 answer span 使用。这样才能判断问题是写入策略污染、检索排序错误、上下文构建漏过滤，还是模型忽略了新证据。
 
 ## 常见误区与排障
 
@@ -132,7 +142,8 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK 文档](https://openai.github.io/openai-agents-python/)
-- [Anthropic: Context engineering for agents](https://www.anthropic.com/engineering/context-engineering-for-agents)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [Model Context Protocol 文档](https://modelcontextprotocol.io/docs)
+- [OpenAI Agents SDK Sessions](https://openai.github.io/openai-agents-python/sessions/)：官方文档用于支持 session memory 会把会话历史持久化，因此需要显式生命周期和清理策略。
+- [OpenAI Cookbook: Session memory](https://developers.openai.com/cookbook/examples/agents_sdk/session_memory)：用于说明短期会话记忆可以按 turn 裁剪，支撑“记忆治理不只是自然语言摘要”的观点。
+- [Anthropic: Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)：用于支持上下文选择、隔离和压缩会影响 Agent 行为边界。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于说明 Agent 需要清晰工作流和外部反馈，而不是让模型自行管理全部状态。
+- [Model Context Protocol 文档](https://modelcontextprotocol.io/docs/learn/architecture)：用于解释资源、工具和上下文可以被协议化暴露，支撑 memory scope 与 resource reference 的设计。

@@ -31,6 +31,10 @@ flowchart TD
   I --> J[Annotation and eval set]
 ```
 
+图 1：Paper Agent 从主题到可验证综述的证据管线。
+
+图中 Search API 只负责候选论文召回，真正决定答案可信度的是 Paper parser、Evidence board、Claim extraction 和 Citation verifier。状态变化也很清楚：PDF 被解析成带页码和章节的 evidence span，证据被组织成 claim board，生成结果再经过 verifier 和 annotation 进入 eval 集。这个边界能避免“模型读了 abstract 就开始写综述”的伪精读。
+
 | 模块 | 职责 | 关键字段 | 指标 |
 | :--- | :--- | :--- | :--- |
 | paper parser | 解析 PDF、表格、段落 | page、section、bbox | parse_success_rate |
@@ -72,6 +76,10 @@ flowchart TD
 - retrieval eval 要包含同领域相似论文作为 hard negative。
 - 指标包括 citation_precision、claim_support_rate、hallucination rate、coverage@k、parse_failure_rate 和 annotation_agreement。
 
+生产实现还要区分“检索候选论文”和“支撑最终结论”。候选召回可以依赖 title、abstract、关键词、作者和引用图；最终结论必须回到全文 evidence span，尤其是实验指标、消融结果、数据集限制和失败案例。对综述类输出，建议给每条 claim 绑定 `claim_type`：方法贡献、实验结论、适用边界、相关工作差异、作者自述限制。不同类型的 claim 对证据要求不同，不能用同一种 citation 口径糊过去。
+
+另外，Paper Agent 很适合做人工标注闭环。可以从线上 unsupported claim、用户纠错、verifier 分歧和高影响论文里抽样，形成 golden set。每次 parser、chunker、retriever、reranker 或 generator 改版，都用这套 golden set 回归 `citation_precision` 和 `claim_support_rate`，否则论文综述会在“更流畅”中悄悄变得不可靠。
+
 ## 系统设计案例
 
 用户要求比较三篇 Agent 评测论文。系统先检索论文元数据，解析 PDF，抽取方法、数据集、指标和结论，再建立 evidence board。最终输出对比表，每个结论都引用页码或段落。
@@ -83,6 +91,8 @@ flowchart TD
 常见失败是 PDF 解析错页码、引用了相关但不支持的段落、或把作者结论过度概括。排障先看 evidence_id 是否指向正确页，再检查 rerank 是否选择了 answerable chunk。
 
 如果 hallucination rate 上升，优先检查 claim verifier 和 hard negative，而不是只调生成 prompt。
+
+当用户指出“这篇论文不是这个结论”时，复盘顺序应是：先定位 answer 中的 claim_id，再打开 citation 指向的 page/section/table；如果 span 不支持 claim，检查 rerank 和 verifier；如果 span 支持但答案表述过强，检查生成 prompt 和 claim type；如果 span 是旧版本或 OCR 错误，回到 parser 与 metadata 版本管理。这样才能把论文类错误拆成可修复的工程层，而不是一句“模型幻觉”。
 
 ## 常见误区与排障
 
@@ -131,7 +141,7 @@ Paper Agent 的证据最小单元不是整篇论文，而是带位置的 evidenc
 
 ## 来源与延伸阅读
 
-- [OpenAI Cookbook](https://cookbook.openai.com/)
-- [Semantic Scholar API](https://api.semanticscholar.org/api-docs/)
-- [arXiv API 文档](https://info.arxiv.org/help/api/index.html)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
+- [OpenAI Cookbook](https://cookbook.openai.com/)：用于支持 RAG、检索增强生成和引用验证的工程示例，说明 Paper Agent 应以证据管线组织答案。
+- [Semantic Scholar API](https://api.semanticscholar.org/api-docs/)：用于支持论文元数据、引用关系和检索候选集合的来源设计。
+- [arXiv API 文档](https://info.arxiv.org/help/api/index.html)：用于说明开放论文检索可以通过 API 获取元数据，但全文证据仍要由 parser 和 evidence span 承接。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 Agent 工作流应保持简单可控，并把检索、验证和人工反馈分成清晰步骤。
