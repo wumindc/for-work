@@ -8,11 +8,11 @@ It is advisory by default: it identifies the next content-review backlog without
 ## Summary
 
 - Documents: 310 (118 topics, 192 questions)
-- Publishable: 286
-- Needs revision: 24
+- Publishable: 291
+- Needs revision: 19
 - Blocked: 0
 - Average score: 98
-- Issues: blocker 0, major 24, minor 113
+- Issues: blocker 0, major 19, minor 111
 
 ## Domain Readiness
 
@@ -20,11 +20,11 @@ It is advisory by default: it identifies the next content-review backlog without
 | --- | ---: | ---: | ---: | ---: | ---: |
 | AI Agent 与 RAG | 154 | 152 | 2 | 0 | 98 |
 | Elasticsearch | 9 | 9 | 0 | 0 | 97 |
-| MQ | 9 | 8 | 1 | 0 | 96 |
-| Redis | 17 | 9 | 8 | 0 | 93 |
+| MQ | 9 | 9 | 0 | 0 | 97 |
+| Redis | 17 | 11 | 6 | 0 | 95 |
 | 数据库 | 17 | 17 | 0 | 0 | 98 |
 | Prometheus 与监控体系 | 14 | 14 | 0 | 0 | 98 |
-| Java 并发与 JVM | 20 | 18 | 2 | 0 | 97 |
+| Java 并发与 JVM | 20 | 20 | 0 | 0 | 99 |
 | 分布式与系统设计 | 16 | 16 | 0 | 0 | 98 |
 | Web 工程 | 18 | 18 | 0 | 0 | 98 |
 | AI 工程趋势与实战方案 | 36 | 25 | 11 | 0 | 96 |
@@ -34,10 +34,10 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 113 |
+| thin_depth | 111 |
 | too_short | 11 |
-| thin_sources | 6 |
-| risky_absolute_language | 5 |
+| risky_absolute_language | 3 |
+| thin_sources | 3 |
 | missing_section | 1 |
 | missing_source_intent | 1 |
 
@@ -45,56 +45,56 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | topic | java-jvm | `java-thread-pool-governance` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 2 | topic | java-jvm | `jvm-gc-troubleshooting` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 3 | topic | mq | `mq-reliable-delivery-idempotency` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
-| 4 | topic | redis | `redis-data-types-encoding` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 5 | topic | redis | `redis-distributed-lock-rate-limit` | 84 | needs_revision | major:risky_absolute_language<br>minor:thin_depth |
-| 6 | topic | redis | `redis-hotkey-breakdown-avalanche` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 7 | topic | redis | `redis-replication-sentinel-cluster` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
-| 8 | question | ai-agent-rag | `q-function-calling-core` | 88 | needs_revision | major:missing_section |
-| 9 | question | ai-agent-rag | `q-tool-registry-deep` | 88 | needs_revision | major:missing_source_intent |
-| 10 | topic | ai-engineering-trends | `agent-memory-layering-compression` | 88 | needs_revision | major:too_short |
-| 11 | topic | ai-engineering-trends | `agent-state-file-verifier` | 88 | needs_revision | major:too_short |
-| 12 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 88 | needs_revision | major:too_short |
-| 13 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 88 | needs_revision | major:too_short |
-| 14 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 88 | needs_revision | major:too_short |
-| 15 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 88 | needs_revision | major:too_short |
-| 16 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 88 | needs_revision | major:too_short |
-| 17 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 88 | needs_revision | major:too_short |
-| 18 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 88 | needs_revision | major:too_short |
-| 19 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 88 | needs_revision | major:too_short |
-| 20 | topic | ai-engineering-trends | `skill-packaging-workflow` | 88 | needs_revision | major:too_short |
-| 21 | question | redis | `q-redis-data-types-encoding` | 88 | needs_revision | major:thin_sources |
-| 22 | question | redis | `q-redis-distributed-lock-rate-limit` | 88 | needs_revision | major:risky_absolute_language |
-| 23 | question | redis | `q-redis-lua-transaction-pipeline` | 88 | needs_revision | major:risky_absolute_language |
-| 24 | question | redis | `q-redis-persistence-aof-rdb` | 88 | needs_revision | major:risky_absolute_language |
-| 25 | topic | ai-agent-rag | `agent-core-modules` | 96 | publishable | minor:thin_depth |
-| 26 | topic | ai-agent-rag | `agent-failure-modes` | 96 | publishable | minor:thin_depth |
-| 27 | topic | ai-agent-rag | `agentic-rag` | 96 | publishable | minor:thin_depth |
-| 28 | topic | ai-agent-rag | `browser-observation` | 96 | publishable | minor:thin_depth |
-| 29 | topic | ai-agent-rag | `citation-grounding` | 96 | publishable | minor:thin_depth |
-| 30 | topic | ai-agent-rag | `coding-harness` | 96 | publishable | minor:thin_depth |
-| 31 | topic | ai-agent-rag | `context-compaction` | 96 | publishable | minor:thin_depth |
-| 32 | topic | ai-agent-rag | `context-compression` | 96 | publishable | minor:thin_depth |
-| 33 | topic | ai-agent-rag | `context-layers` | 96 | publishable | minor:thin_depth |
-| 34 | topic | ai-agent-rag | `framework-selection` | 96 | publishable | minor:thin_depth |
-| 35 | topic | ai-agent-rag | `guardrails` | 96 | publishable | minor:thin_depth |
-| 36 | topic | ai-agent-rag | `handoff-pattern` | 96 | publishable | minor:thin_depth |
-| 37 | topic | ai-agent-rag | `hybrid-search` | 96 | publishable | minor:thin_depth |
-| 38 | topic | ai-agent-rag | `langgraph` | 96 | publishable | minor:thin_depth |
-| 39 | topic | ai-agent-rag | `llm-foundation` | 96 | publishable | minor:thin_depth |
-| 40 | topic | ai-agent-rag | `llm-training-alignment` | 96 | publishable | minor:thin_depth |
-| 41 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
-| 42 | topic | ai-agent-rag | `memory-decay` | 96 | publishable | minor:thin_depth |
-| 43 | topic | ai-agent-rag | `multi-agent-roles` | 96 | publishable | minor:thin_depth |
-| 44 | topic | ai-agent-rag | `paper-agent-project` | 96 | publishable | minor:thin_depth |
-| 45 | topic | ai-agent-rag | `planning-methods` | 96 | publishable | minor:thin_depth |
-| 46 | topic | ai-agent-rag | `playwright-actions` | 96 | publishable | minor:thin_depth |
-| 47 | topic | ai-agent-rag | `project-storytelling` | 96 | publishable | minor:thin_depth |
-| 48 | topic | ai-agent-rag | `prompt-injection` | 96 | publishable | minor:thin_depth |
-| 49 | question | ai-agent-rag | `q-agent-definition-deep` | 96 | publishable | minor:thin_depth |
-| 50 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 96 | publishable | minor:thin_depth |
+| 1 | topic | redis | `redis-hotkey-breakdown-avalanche` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 2 | topic | redis | `redis-replication-sentinel-cluster` | 84 | needs_revision | major:thin_sources<br>minor:thin_depth |
+| 3 | question | ai-agent-rag | `q-function-calling-core` | 88 | needs_revision | major:missing_section |
+| 4 | question | ai-agent-rag | `q-tool-registry-deep` | 88 | needs_revision | major:missing_source_intent |
+| 5 | topic | ai-engineering-trends | `agent-memory-layering-compression` | 88 | needs_revision | major:too_short |
+| 6 | topic | ai-engineering-trends | `agent-state-file-verifier` | 88 | needs_revision | major:too_short |
+| 7 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 88 | needs_revision | major:too_short |
+| 8 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 88 | needs_revision | major:too_short |
+| 9 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 88 | needs_revision | major:too_short |
+| 10 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 88 | needs_revision | major:too_short |
+| 11 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 88 | needs_revision | major:too_short |
+| 12 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 88 | needs_revision | major:too_short |
+| 13 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 88 | needs_revision | major:too_short |
+| 14 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 88 | needs_revision | major:too_short |
+| 15 | topic | ai-engineering-trends | `skill-packaging-workflow` | 88 | needs_revision | major:too_short |
+| 16 | question | redis | `q-redis-data-types-encoding` | 88 | needs_revision | major:thin_sources |
+| 17 | question | redis | `q-redis-distributed-lock-rate-limit` | 88 | needs_revision | major:risky_absolute_language |
+| 18 | question | redis | `q-redis-lua-transaction-pipeline` | 88 | needs_revision | major:risky_absolute_language |
+| 19 | question | redis | `q-redis-persistence-aof-rdb` | 88 | needs_revision | major:risky_absolute_language |
+| 20 | topic | ai-agent-rag | `agent-core-modules` | 96 | publishable | minor:thin_depth |
+| 21 | topic | ai-agent-rag | `agent-failure-modes` | 96 | publishable | minor:thin_depth |
+| 22 | topic | ai-agent-rag | `agentic-rag` | 96 | publishable | minor:thin_depth |
+| 23 | topic | ai-agent-rag | `browser-observation` | 96 | publishable | minor:thin_depth |
+| 24 | topic | ai-agent-rag | `citation-grounding` | 96 | publishable | minor:thin_depth |
+| 25 | topic | ai-agent-rag | `coding-harness` | 96 | publishable | minor:thin_depth |
+| 26 | topic | ai-agent-rag | `context-compaction` | 96 | publishable | minor:thin_depth |
+| 27 | topic | ai-agent-rag | `context-compression` | 96 | publishable | minor:thin_depth |
+| 28 | topic | ai-agent-rag | `context-layers` | 96 | publishable | minor:thin_depth |
+| 29 | topic | ai-agent-rag | `framework-selection` | 96 | publishable | minor:thin_depth |
+| 30 | topic | ai-agent-rag | `guardrails` | 96 | publishable | minor:thin_depth |
+| 31 | topic | ai-agent-rag | `handoff-pattern` | 96 | publishable | minor:thin_depth |
+| 32 | topic | ai-agent-rag | `hybrid-search` | 96 | publishable | minor:thin_depth |
+| 33 | topic | ai-agent-rag | `langgraph` | 96 | publishable | minor:thin_depth |
+| 34 | topic | ai-agent-rag | `llm-foundation` | 96 | publishable | minor:thin_depth |
+| 35 | topic | ai-agent-rag | `llm-training-alignment` | 96 | publishable | minor:thin_depth |
+| 36 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
+| 37 | topic | ai-agent-rag | `memory-decay` | 96 | publishable | minor:thin_depth |
+| 38 | topic | ai-agent-rag | `multi-agent-roles` | 96 | publishable | minor:thin_depth |
+| 39 | topic | ai-agent-rag | `paper-agent-project` | 96 | publishable | minor:thin_depth |
+| 40 | topic | ai-agent-rag | `planning-methods` | 96 | publishable | minor:thin_depth |
+| 41 | topic | ai-agent-rag | `playwright-actions` | 96 | publishable | minor:thin_depth |
+| 42 | topic | ai-agent-rag | `project-storytelling` | 96 | publishable | minor:thin_depth |
+| 43 | topic | ai-agent-rag | `prompt-injection` | 96 | publishable | minor:thin_depth |
+| 44 | question | ai-agent-rag | `q-agent-definition-deep` | 96 | publishable | minor:thin_depth |
+| 45 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 96 | publishable | minor:thin_depth |
+| 46 | question | ai-agent-rag | `q-ai-eval-observability-structured` | 96 | publishable | minor:thin_depth |
+| 47 | question | ai-agent-rag | `q-ai-llm-foundation-core` | 96 | publishable | minor:thin_depth |
+| 48 | question | ai-agent-rag | `q-ai-llm-foundation-deep` | 96 | publishable | minor:thin_depth |
+| 49 | question | ai-agent-rag | `q-ai-llm-training-core` | 96 | publishable | minor:thin_depth |
+| 50 | question | ai-agent-rag | `q-ai-llm-training-deep` | 96 | publishable | minor:thin_depth |
 
 ## How To Use
 

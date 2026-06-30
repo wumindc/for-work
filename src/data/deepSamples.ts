@@ -7243,7 +7243,7 @@ export const redisTopics = [
     commonPitfalls: ["只背五种基础类型，不讲编码和复杂度", "用 KEYS/全量 HGETALL/大 ZRANGE 做线上查询", "把 List 当可靠 MQ 使用"],
     questionIds: ["q-redis-data-types-encoding", "q-redis-zset-ranking-feed"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs"],
+    sourceIds: ["redis-docs", "redis-data-types", "redis-commands"],
     deepDive: redisDeepDive({
       hooks: [
         "用商品对象缓存、排行榜、用户标签集合、限流计数器和延迟任务讲数据类型选型。",
@@ -7630,14 +7630,14 @@ export const redisTopics = [
       "限流可以用固定窗口、滑动窗口、令牌桶或漏桶，Redis 负责共享计数和原子更新。",
     ],
     engineeringNotes: [
-      "锁保护的是临界区并发，不保证外部资源绝对一次；重要写入仍要数据库唯一约束或 fencing token。",
+      "锁保护的是临界区并发，不保证外部资源天然只执行一次；重要写入仍要数据库唯一约束或 fencing token。",
       "锁 TTL 要覆盖业务执行时间并考虑超时、续期和进程暂停，不能无限续期。",
       "限流要按用户、租户、接口、IP、模型或任务类型分维度，并定义被限流后的返回和排队策略。",
     ],
     commonPitfalls: ["释放锁不校验 token", "锁过期后旧持有者继续写", "把 Redlock 当银弹", "限流只计数不做降级体验"],
     questionIds: ["q-redis-distributed-lock-rate-limit", "q-redis-lua-transaction-pipeline"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs", "redis-distributed-locks"],
+    sourceIds: ["redis-docs", "redis-distributed-locks", "redis-commands"],
     deepDive: redisDeepDive({
       hooks: [
         "用库存扣减、缓存重建、任务调度、模型 API 限流和 Agent 工具执行并发讲锁与限流。",

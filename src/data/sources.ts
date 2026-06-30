@@ -219,6 +219,18 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "redis-data-types",
+    title: "Redis Documentation: Data types",
+    url: "https://redis.io/docs/latest/develop/data-types/",
+    kind: "official",
+  },
+  {
+    id: "redis-commands",
+    title: "Redis Documentation: Commands",
+    url: "https://redis.io/docs/latest/commands/",
+    kind: "official",
+  },
+  {
     id: "redis-distributed-locks",
     title: "Redis: Distributed Locks with Redis",
     url: "https://redis.io/docs/latest/develop/use/patterns/distributed-locks/",

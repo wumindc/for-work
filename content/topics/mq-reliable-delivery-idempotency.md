@@ -4,7 +4,7 @@
 
 MQ 可靠性题不能只答 ack。面试官要看你能否端到端拆解：本地事务和发消息一致性、producer ack、broker 持久化、副本、consumer ack、retry、DLQ、幂等、补偿和监控。
 
-一句成熟回答是：多数 MQ 实际提供 at-least-once 语义，重复消息是正常情况。系统目标不是幻想绝对不重复，而是让消息最终被可靠处理，并且重复处理不会产生错误业务副作用。
+一句成熟回答是：多数 MQ 实际提供 at-least-once 语义，重复消息是正常情况。系统目标不是幻想端到端天然 exactly-once，而是让消息最终被可靠处理，并且重复处理不会产生错误业务副作用。
 
 ## 一句话定义
 
@@ -135,6 +135,14 @@ sequenceDiagram
 被问“exactly-once 是否解决重复消费”时，可以回答：即使 broker 或流处理层提供 exactly-once 语义，外部数据库、短信、支付接口仍可能重复。业务侧仍要幂等和补偿。
 
 被问“消费积压时能不能加消费者”，要看瓶颈和分区数。如果瓶颈是下游 DB 或外部 API，扩容 consumer 会加剧失败；如果分区不足，加消费者也无效。先看 lag、oldest age、processing p95、retry 和 downstream error。
+
+## 生产验收清单
+
+可靠投递上线前要先做链路级验收，而不是只验证 broker 可用。生产端要证明业务表和 outbox/事务消息在同一一致性边界内，消息字段包含 `event_id`、`business_key`、`event_type`、`version`、`trace_id` 和 `occurred_at`，producer confirm 或发送结果必须能落审计。Relay 要支持重试、限速、幂等发送和 pending event 巡检，避免数据库里已经有事件但长时间没有发出。
+
+消费端验收要覆盖重复、乱序、超时和毒丸消息。每个 handler 都要说明幂等键、状态机版本、下游 idempotency key、ack 时机、可重试错误、不可重试错误和 DLQ 条件。重放 DLQ 前要能按 `dlq_reason`、handler version、trace_id 和业务 id 分类，修复后限速重放，并复用原幂等逻辑。否则 DLQ 只会从“防丢机制”变成“无人处理的失败仓库”。
+
+监控验收要把生产、broker 和消费三段放在同一张事故视图里：`outbox_pending_age`、`produce_error_rate`、`consumer_lag`、`oldest_message_age`、`processing_p95`、`retry_rate`、`dlq_count`、`duplicate_message_rate`、`idempotency_conflict_rate` 和下游错误率。回归场景至少包括 producer 超时后重试、consumer 处理成功但 ack 失败、下游短暂限流、毒丸消息进入 DLQ、DLQ 修复后重放。面试里能讲清这套验收，才算把可靠投递讲成工程闭环。
 
 ## 来源与延伸阅读
 

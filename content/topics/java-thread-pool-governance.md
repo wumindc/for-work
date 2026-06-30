@@ -118,6 +118,7 @@ MQ 消费线程池尤其要谨慎。扩消费者或线程数前，要看 partiti
 
 ## 来源与延伸阅读
 
-- Oracle Java Concurrency 官方教程：用于确认 Java 并发基础语义。
-- Prometheus 官方文档：用于支持线程池指标、告警和看板设计。
-- Kafka/RabbitMQ 官方文档：用于说明消费线程池与 MQ lag、retry、DLQ 的关系。
+- [Oracle Java Tutorials: Concurrency](https://docs.oracle.com/javase/tutorial/essential/concurrency/)：用于确认线程、同步、并发工具和任务执行模型的基础语义。
+- [Java SE 21 API: ThreadPoolExecutor](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html)：用于核对 corePoolSize、maximumPoolSize、workQueue、RejectedExecutionHandler 和生命周期方法的官方定义。
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)：用于支持线程池 active、queue、reject、latency、timeout 等指标的采集、告警和看板设计。
+- [RabbitMQ: Consumer Acknowledgements and Publisher Confirms](https://www.rabbitmq.com/docs/confirms)：用于连接消费线程池、ack、重试和消息积压治理。
