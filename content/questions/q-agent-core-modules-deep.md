@@ -30,6 +30,10 @@ flowchart TB
   Eval --> Report[Risk Report]
 ```
 
+图 1：生产级 Agent 审查的七模块矩阵。图中审查不是看 README，而是围绕 Goal、State、Context、Tools、Loop、Guardrails、Eval 分别找证据，最后输出 Risk Report。每个模块都要能映射到真实 run trace 中的输入、动作、状态变化和 verdict。
+
+这张图的边界是：生产级不是“所有能力都自动化”，而是 supported、unsupported、requiresConfirmation 三类边界说清楚，并且每类都有证据。高风险写操作即使暂不支持，也比假装支持更专业；低风险只读能力也需要 trace 和 regression，否则无法解释失败。
+
 审查的数据流不是看 README，而是看一次真实 run 的 trace。每一步输入、工具参数、observation、状态变化和 verdict 都要能解释。
 
 这里的关键取舍是审查粒度。按模块逐项审查更慢，但能把事故归因到 Goal、State、Tools 或 Eval，适合生产系统复盘。
@@ -48,6 +52,8 @@ flowchart TB
 
 指标包括 `unsafe_action_block_rate`、`tool_error_rate`、`recovery_rate`、`trace_coverage` 和 `regression_pass_rate`。
 
+事故审查时先定影响面：是单个工具权限问题，还是整条 Loop 缺 stop condition；止血优先处理 P0 风险，例如越权、数据泄漏、不可逆写无确认；根因看 run trace、tool schema、permission gate、state_version、guardrail verdict、eval coverage；回归要把事故路径做成 golden trajectory，并在 CI 或发布门禁里跑。
+
 ## 面试官追问
 
 ### 追问 1：没有 Eval 怎么办？
@@ -57,6 +63,17 @@ flowchart TB
 ### 追问 2：哪个模块最容易漏？
 
 State 和 Eval。很多 demo 只靠 messages 和人工感觉。
+
+## 多轮追问模拟
+
+**追问 1：审查一个 Agent 项目时第一眼看什么？**  
+答题要点：先看目标边界和真实 trace，而不是 README；确认 supported、unsupported、requiresConfirmation 是否清楚。考察点是审查入口。陷阱是只看是否接入了工具。
+
+**追问 2：如何给风险分级？**  
+答题要点：P0 是越权、数据泄漏、不可逆写无确认；P1 是状态不可恢复、trace 缺失、eval 不覆盖核心路径；P2 是成本、延迟和维护性。考察点是整改优先级。陷阱是把所有问题都当体验优化。
+
+**追问 3：没有历史失败样本怎么建 Eval？**  
+答题要点：先从高频路径、高风险动作、业务边界和人工验收样例构造 golden set，再逐步加入线上失败和反例。考察点是从零落地评测。陷阱是等事故发生后才建评测。
 
 ## 项目化回答
 
@@ -92,5 +109,7 @@ State 和 Eval。很多 demo 只靠 messages 和人工感觉。
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents Guide](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
+- [OpenAI Agents Guide](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：官方指南用于支持 Agent 需要明确边界、工具、人类确认和评估体系。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明审查应基于可追踪的 tool call、handoff、guardrail 和 span。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档用于支撑输入、工具和输出风险控制是生产级审查重点。
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：工程文章用于补充 workflow、agent、tool use 与评测之间的设计取舍。

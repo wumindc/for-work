@@ -30,6 +30,10 @@ flowchart TD
   H --> I[Application with RAG and tools]
 ```
 
+图 1：LLM 从预训练到应用层工程控制的能力形成链路。图中 pretraining 学通用语言和代码规律，SFT 让模型更稳定地遵循指令，RLHF/DPO 用偏好数据优化回答行为，eval 负责上线门禁，应用层再用 RAG、tools、guardrails 和 verifier 处理业务事实与副作用。
+
+这张图的边界是：alignment 改善行为倾向，但不等于把企业实时知识写进模型，也不等于免除应用层验证。训练阶段解决“模型会不会按某类行为回答”，应用阶段解决“这次回答是否有证据、是否有权限、是否可回滚”。这也是为什么事实类问题通常先看 RAG/tool，而不是第一反应微调。
+
 | 阶段 | 目标 | 数据 | 适合解决 |
 | :--- | :--- | :--- | :--- |
 | pretraining | 学语言和代码规律 | 大规模语料 | 通用能力 |
@@ -82,10 +86,12 @@ Pretraining 让模型学习语言、代码和世界知识的统计规律。super
 
 这类归因能避免把所有问题都丢给训练。
 
+事故处理建议先分影响面：是事实错误、格式不稳定、安全边界失效，还是模型升级回归；止血可以回滚模型版本、关闭新 prompt、降低高风险自动化或强制走工具/RAG；根因要查 eval case、required_evidence、training_data_version、prompt version、model version 和 guardrail verdict；回归要把失败样本写入 golden set，覆盖事实、格式、安全、拒答过度和工具调用五类场景。
+
 ## 常见误区与排障
 
 - 认为微调可以更新所有业务知识。
-- 把 alignment 当作绝对安全保证。
+- 把 alignment 当作充分安全保证。
 - 没有 eval 就上线新模型。
 - 训练数据不脱敏。
 - 不区分事实错误、格式错误和安全错误。
@@ -104,7 +110,7 @@ Pretraining 让模型学习语言、代码和世界知识的统计规律。super
 
 ## 深入技术细节
 
-训练阶段要和应用阶段分清。Pretraining 学到的是通用语言建模能力，SFT 让模型更稳定地遵循指令和输出格式，RLHF/DPO 让模型在偏好比较中更接近人类选择。它们都不能保证某个企业知识点永远正确，因为参数更新周期、训练数据版本和业务权限模型都跟线上事实不同。
+训练阶段要和应用阶段分清。Pretraining 学到的是通用语言建模能力，SFT 让模型更稳定地遵循指令和输出格式，RLHF/DPO 让模型在偏好比较中更接近人类选择。它们都不能保证某个企业知识点长期正确，因为参数更新周期、训练数据版本和业务权限模型都跟线上事实不同。
 
 业务里最重要的是 failure attribution。一个失败样本要先标注 `failure_type`：retrieval_miss、wrong_citation、format_error、unsafe_answer、tool_error、instruction_conflict、domain_style_mismatch。只有大量样本集中在 domain_style_mismatch 或 stable_format_error 时，fine-tune 才可能比 prompt/schema 更合算。否则微调会把检索、权限或工具问题掩盖掉。
 
@@ -123,7 +129,8 @@ Eval case 至少包含 `case_id`、`input`、`expected_behavior`、`required_evi
 
 ## 来源与延伸阅读
 
-- [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
-- [OpenAI Evals](https://platform.openai.com/docs/guides/evals)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)
+- [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)：官方文档用于说明微调适合稳定格式、风格和任务行为，不适合作为实时事实数据库。
+- [OpenAI Evals](https://platform.openai.com/docs/guides/evals)：官方文档用于支持用 golden set、rubric 和回归指标管理模型上线风险。
+- [InstructGPT / RLHF paper](https://arxiv.org/abs/2203.02155)：论文用于说明用人类反馈训练模型遵循指令和偏好的基本范式。
+- [Direct Preference Optimization paper](https://arxiv.org/abs/2305.18290)：论文用于支持 DPO 作为偏好优化方法，与 RLHF 在实现路径上的差异。
+- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)：官方文档用于说明 prompt 与训练、RAG、工具之间的工程边界。

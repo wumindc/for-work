@@ -95,6 +95,14 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-playwright-actions-core`
 - [x] `q-state-management-core`
 - [x] `q-state-management-deep`
+- [x] `q-web-agent-project-core`
+- [x] `q-agent-core-modules-core`
+- [x] `q-agent-core-modules-deep`
+
+AI Agent / RAG topic backlog:
+
+- [x] `hybrid-search`
+- [x] `llm-training-alignment`
 
 For each question:
 

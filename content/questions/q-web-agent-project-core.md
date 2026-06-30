@@ -31,6 +31,10 @@ flowchart TD
   F -->|fail| H[Recovery]
 ```
 
+图 1：Web Agent MVP 的最小闭环。图中 `Observation builder` 把网页变成结构化状态，`Action planner` 只生成受 schema 约束的动作，`Policy gate` 按风险决定是否允许执行，`Browser executor` 负责 Playwright 等确定性动作，`Verifier` 用 expected_state 判断业务结果，失败才进入 `Recovery`。
+
+这张图的核心边界是：模型负责提出动作意图，宿主系统负责执行、权限、等待、验证和回放。MVP 阶段不应该让模型直接操作任意网站，也不应该把“click 没抛异常”当成功证据。真正对外展示时，每一步都要能从 trace 还原到 observation、action、selector、screenshot_ref 和 verifier verdict。
+
 数据流要把模型决策和宿主执行分开。模型选择动作，宿主负责权限、selector、等待和验证。
 
 ## 可画图
@@ -49,6 +53,8 @@ MVP 可以是“登录后的内部订单查询”。用户输入订单号，Agen
 
 指标包括 task_success_rate、step_success_rate、selector_failure_rate、recovery_success_rate、unsafe_action_block_rate 和 latency_p95。
 
+事故处理可以按四步拆开：影响面先确认是单个页面模板、某类控件，还是所有动态页面都失败；止血可以降低自动执行权限，把提交、删除、支付、外部发送切成 `requiresConfirmation`，并限制 recovery 重试次数；根因看 observation 是否缺元素、locator candidates 是否漂移、Playwright actionability 是否失败、verifier 是否过宽、页面文本是否有 prompt injection；回归则用固定 fixture 覆盖慢加载、modal、disabled、selector drift、注入文本和重复提交。
+
 ## 面试官追问
 
 - observation 应包含什么？
@@ -56,6 +62,17 @@ MVP 可以是“登录后的内部订单查询”。用户输入订单号，Agen
 - 如何评测页面任务？
 - 动态页面怎么处理？
 - 如何防 prompt injection？
+
+## 多轮追问模拟
+
+**追问 1：为什么 MVP 不做任意网站全自动？**  
+答题要点：任意网站页面结构、权限、登录态、验证码和副作用都不可控；MVP 应先选择低风险、模板稳定、结果可验证的内部流程。考察点是产品边界。陷阱是把 demo 成功当成生产能力。
+
+**追问 2：如何证明 Web Agent 真的完成了任务？**  
+答题要点：不能只看 click/fill 成功，要检查 URL、DOM、toast、表格行、下载文件、后端 mock 或业务字段；每一步都进入 trace。考察点是 verifier 设计。陷阱是 action 无异常就返回成功。
+
+**追问 3：网页里的 prompt injection 怎么处理？**  
+答题要点：页面文本只能作为 untrusted evidence；它不能改变 system goal、tool permission、risk policy 或用户确认要求；高风险动作需要 policy gate 和人工确认。考察点是信任边界。陷阱是让页面内容覆盖开发者约束。
 
 ## 项目化回答
 
@@ -92,6 +109,8 @@ MVP 评测要用固定 fixture，而不是人工点两次页面。指标包括 `
 
 ## 来源与延伸阅读
 
-- [Playwright Locators](https://playwright.dev/docs/locators)
-- [Playwright Auto-waiting](https://playwright.dev/docs/actionability)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
+- [Playwright Locators](https://playwright.dev/docs/locators)：官方文档用于说明 role、label、text、test id 等稳定定位方式，支撑 selector 设计优先级。
+- [Playwright Actionability](https://playwright.dev/docs/actionability)：官方文档用于解释 auto-wait 只能保证元素可操作，不能替代业务 verifier。
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：官方文档用于支持 action trace、截图和 DOM snapshot 回放失败步骤。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档用于说明输入、工具和输出侧 guardrail 应参与高风险动作控制。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明 observation、action、verdict 应纳入可审计 trace。
