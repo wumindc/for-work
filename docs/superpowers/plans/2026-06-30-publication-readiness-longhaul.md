@@ -284,6 +284,13 @@ Post-publish thin-depth deepening:
 - [x] `agent-state-file-verifier`
 - [x] `ai-code-review-pipeline`
 - [x] `codex-claude-context-workflow`
+- [x] `computer-use-agent-benchmark`
+- [x] `design-assets-for-ai-coding`
+- [x] `enterprise-agent-solution-map`
+- [x] `loop-engineering-agent-runtime`
+- [x] `rag-document-ingestion-stack`
+- [x] `self-growing-knowledge-base`
+- [x] `skill-packaging-workflow`
 
 For each question:
 
