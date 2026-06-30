@@ -102,6 +102,14 @@ flowchart TD
 - 追问跳过失败消息：默认不能直接跳过，除非 DLQ 有审计、补偿和重放策略。
 - 追问 Kafka/RocketMQ 差异：Kafka 强调 partition 内顺序，RocketMQ FIFO 按 message group 提供顺序语义。
 
+## 公开阅读校验
+
+这道题的高分答案要先限定承诺：“我保证业务 key 内的局部顺序，不承诺全局顺序。”然后把实现拆成四层：Producer 使用稳定 key；Broker 保证 partition 或 message group 内顺序；Consumer group 同一时刻只让一个消费者处理该顺序域；业务层用 version、状态机约束和幂等抵御重复、重试和旧消息。这样能避免把“同 key 路由”误说成完整方案。
+
+如果面试官追问项目细节，可以补充上线验证：监控 `partition_lag`、`rebalance_count`、`hot_key_count`、`ordering_violation_count`、`offset_commit_latency` 和 `idempotency_conflict_count`；发布前用同一 `order_id` 的 create、pay、ship、cancel 事件做回放，验证失败重试、rebalance 和消费者重启不会让后续状态提前提交。这个回答比“Kafka 分区内有序”更能体现工程经验。
+
+还要明确一个边界：失败消息是否能跳过取决于业务语义。状态机强依赖前序事件时不能直接跳过，只能暂停该 key、有限重试、进入 DLQ 后人工修复并重放；如果事件是最终值覆盖，且带 version 或时间戳，可以通过拒绝旧版本来降低顺序要求。高分答案要把“严格顺序”和“版本幂等替代顺序”的取舍说出来。
+
 ## 来源与延伸阅读
 
 - [RocketMQ Ordered Message](https://rocketmq.apache.org/docs/featureBehavior/03fifomessage/)：用于说明 RocketMQ 的顺序语义围绕 message group/FIFO 组织，并区分顺序范围和并发能力。

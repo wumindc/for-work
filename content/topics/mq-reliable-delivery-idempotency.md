@@ -144,6 +144,16 @@ sequenceDiagram
 
 监控验收要把生产、broker 和消费三段放在同一张事故视图里：`outbox_pending_age`、`produce_error_rate`、`consumer_lag`、`oldest_message_age`、`processing_p95`、`retry_rate`、`dlq_count`、`duplicate_message_rate`、`idempotency_conflict_rate` 和下游错误率。回归场景至少包括 producer 超时后重试、consumer 处理成功但 ack 失败、下游短暂限流、毒丸消息进入 DLQ、DLQ 修复后重放。面试里能讲清这套验收，才算把可靠投递讲成工程闭环。
 
+## 公开阅读校验
+
+这篇文章的核心判断要非常明确：MQ 可靠性不是“消息一定只处理一次”，而是“每一段失败都可恢复，重复处理不会破坏业务”。因此对外发布时建议固定使用 at-least-once、idempotency、retry、DLQ、compensation 这组词，少用“端到端天然只处理一次”这类过度承诺。Kafka、RabbitMQ、RocketMQ 都有各自的确认、持久化和重试能力，但外部数据库、支付、短信、搜索索引这些副作用仍然需要业务幂等。
+
+最能体现水平的是把失败窗口讲全。生产端可能出现本地事务成功但事件未发布、producer 超时但 broker 已写入、broker 持久化失败、consumer 处理成功但 ack 失败、重试打爆下游、DLQ 无人处理。每个窗口都要有对应措施：outbox 或事务消息、producer confirm、broker 持久化和副本、业务幂等、指数退避、死信治理和补偿任务。这样文章不会停留在“加 ack 和重试”的浅层答案。
+
+幂等设计要落到数据结构。常见做法是对 `event_id` 或 `business_key + event_type + version` 建唯一约束，处理状态从 `processing` 到 `succeeded` 或 `failed` 可追踪；对于支付、发券、库存扣减等外部副作用，还要把 idempotency key 传给下游，或在本地保存下游调用结果。幂等记录的 TTL 不能短于消息最大重试和人工重放窗口，否则历史重放会绕过去重。
+
+项目表达可以这样收束：“我们默认消息会重复，把重复作为正常输入处理；只有业务状态、幂等记录和下游副作用都成功，消费者才 ack。任何进入 DLQ 的消息都能解释来源、失败原因、修复动作和重放结果。”这句话既适合面试，也适合公开文章读者判断方案是否真的可上线。
+
 ## 来源与延伸阅读
 
 - [RabbitMQ Publisher Confirms and Consumer Acknowledgements](https://www.rabbitmq.com/docs/confirms)：用于说明 producer confirm 和 consumer ack 的确认语义。

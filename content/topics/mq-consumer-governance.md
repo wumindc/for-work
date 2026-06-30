@@ -131,6 +131,18 @@ Runbook 也要写清楚负责人。告警触发后先冻结重放，再确认错
 - 追问慢下游：限流、降并发、暂停消费、延迟重试，保护下游优先。
 - 追问 DLQ 重放：先分类修复，再审批限速重放，消费者必须幂等。
 
+## 公开阅读校验
+
+这篇文章对外发布时，要避免把消费治理讲成“消费者线程数调优”。更严谨的表述是：消费端治理由进度确认、失败分类、下游保护、毒丸隔离、死信处置和重放审计共同组成。读者应该能从文中看出三条边界：第一，业务副作用完成前不能提交 ack 或 offset；第二，retry 只适合临时错误，永久错误必须被隔离；第三，积压处理优先保护下游，而不是一味提高消费并发。
+
+如果用于项目复盘，可以补一句可验证的生产口径：“我们把 `consumer_lag`、`oldest_message_age`、`handler_latency_p95`、`downstream_error_rate`、`retry_rate`、`dlq_count` 和 `rebalance_count` 放到同一张看板里，告警先判断积压是生产突增、下游变慢、消费发布异常、热点 partition 还是 poison message。”这句话能把抽象治理落到可观测指标。
+
+还要明确 DLQ 的运营责任。DLQ 消息进入后应保留原 payload、headers、trace_id、handler version、error_code、retry_count 和 `dlq_reason`，并能按 topic、consumer group、业务 key 和时间范围检索。重放必须支持 dry-run、审批、限速、灰度和审计结果。没有这些能力时，DLQ 只是把主链路错误搬到另一个队列，并没有真正提升可靠性。
+
+面试中最容易被追问的是“积压时要不要扩容”。推荐回答是先看瓶颈位置：如果 lag 按所有 partition 均匀增长，且下游延迟正常，可以扩消费者或提高并发；如果 lag 集中在单个 partition，大概率是热点 key 或毒丸消息；如果下游 p95 和错误率同时升高，扩消费者会放大故障，应先降并发、暂停部分分区或延长 retry。这个判断链路比“加机器”更像真实生产经验。
+
+还可以补一个反例帮助读者记忆：某次消费者发布后 schema 校验失败，所有新格式消息都进入 retry，团队只扩容 consumer，结果下游被无效重试打满，DLQ 也快速膨胀。正确处理应该是先暂停异常版本或异常 partition，确认 schema_version 和错误码，再把可修复消息限速重放。这类反例能把治理重点从“吞吐”拉回“分类、隔离和恢复”。
+
 ## 来源与延伸阅读
 
 - [Kafka Consumer configs 官方文档](https://kafka.apache.org/documentation/#consumerconfigs)：用于确认 consumer group、offset、poll 与提交相关配置的语义边界。

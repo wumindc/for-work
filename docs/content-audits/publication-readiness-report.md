@@ -12,7 +12,7 @@ It is advisory by default: it identifies the next content-review backlog without
 - Needs revision: 0
 - Blocked: 0
 - Average score: 100
-- Issues: blocker 0, major 0, minor 36
+- Issues: blocker 0, major 0, minor 29
 
 ## Domain Readiness
 
@@ -20,7 +20,7 @@ It is advisory by default: it identifies the next content-review backlog without
 | --- | ---: | ---: | ---: | ---: | ---: |
 | AI Agent 与 RAG | 154 | 154 | 0 | 0 | 100 |
 | Elasticsearch | 9 | 9 | 0 | 0 | 100 |
-| MQ | 9 | 9 | 0 | 0 | 97 |
+| MQ | 9 | 9 | 0 | 0 | 100 |
 | Redis | 17 | 17 | 0 | 0 | 100 |
 | 数据库 | 17 | 17 | 0 | 0 | 100 |
 | Prometheus 与监控体系 | 14 | 14 | 0 | 0 | 98 |
@@ -34,62 +34,62 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 36 |
+| thin_depth | 29 |
 
 ## First 50 Revision Targets
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | topic | mq | `mq-consumer-governance` | 96 | publishable | minor:thin_depth |
-| 2 | topic | mq | `mq-ordering-partitioning` | 96 | publishable | minor:thin_depth |
-| 3 | topic | mq | `mq-reliable-delivery-idempotency` | 96 | publishable | minor:thin_depth |
-| 4 | topic | mq | `mq-transactional-messaging` | 96 | publishable | minor:thin_depth |
-| 5 | topic | mq | `mq-use-cases-boundary` | 96 | publishable | minor:thin_depth |
-| 6 | question | mq | `q-mq-ordering` | 96 | publishable | minor:thin_depth |
-| 7 | question | mq | `q-mq-transaction-message` | 96 | publishable | minor:thin_depth |
-| 8 | topic | prometheus-observability | `observability-alerting-slo-burn-rate` | 96 | publishable | minor:thin_depth |
-| 9 | topic | prometheus-observability | `observability-cardinality-capacity-cost` | 96 | publishable | minor:thin_depth |
-| 10 | topic | prometheus-observability | `observability-dashboard-runbook-incident` | 96 | publishable | minor:thin_depth |
-| 11 | topic | prometheus-observability | `observability-incident-tracing` | 96 | publishable | minor:thin_depth |
-| 12 | topic | prometheus-observability | `observability-structured-logging-correlation` | 96 | publishable | minor:thin_depth |
-| 13 | topic | prometheus-observability | `prometheus-metrics-promql` | 96 | publishable | minor:thin_depth |
-| 14 | question | prometheus-observability | `q-observability-incident-tracing` | 96 | publishable | minor:thin_depth |
-| 15 | topic | redis | `redis-expiration-eviction-memory` | 96 | publishable | minor:thin_depth |
-| 16 | topic | redis | `redis-lua-transaction-pipeline` | 96 | publishable | minor:thin_depth |
-| 17 | topic | system-design | `distributed-idempotency-retry-timeout` | 96 | publishable | minor:thin_depth |
-| 18 | topic | system-design | `distributed-transaction-saga-outbox` | 96 | publishable | minor:thin_depth |
-| 19 | question | system-design | `q-distributed-idempotency-retry-timeout` | 96 | publishable | minor:thin_depth |
-| 20 | question | system-design | `q-distributed-transaction-saga-outbox` | 96 | publishable | minor:thin_depth |
-| 21 | topic | system-design | `system-capacity-planning-hotspot` | 96 | publishable | minor:thin_depth |
-| 22 | topic | system-design | `system-consistency-consensus-leader-election` | 96 | publishable | minor:thin_depth |
-| 23 | topic | system-design | `system-disaster-recovery-multi-region` | 96 | publishable | minor:thin_depth |
-| 24 | topic | system-design | `system-load-balancing-routing` | 96 | publishable | minor:thin_depth |
-| 25 | topic | system-design | `system-rate-limit-circuit-breaker-bulkhead` | 96 | publishable | minor:thin_depth |
-| 26 | topic | system-design | `system-service-discovery-config` | 96 | publishable | minor:thin_depth |
-| 27 | question | web-engineering | `q-web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
-| 28 | question | web-engineering | `q-web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
-| 29 | topic | web-engineering | `web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
-| 30 | topic | web-engineering | `web-auth-session-token-oauth` | 96 | publishable | minor:thin_depth |
-| 31 | topic | web-engineering | `web-browser-security-cors-csrf-xss` | 96 | publishable | minor:thin_depth |
-| 32 | topic | web-engineering | `web-cdn-cache-upload-download` | 96 | publishable | minor:thin_depth |
-| 33 | topic | web-engineering | `web-frontend-backend-contract-observability` | 96 | publishable | minor:thin_depth |
-| 34 | topic | web-engineering | `web-gateway-bff-api-versioning` | 96 | publishable | minor:thin_depth |
-| 35 | topic | web-engineering | `web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
-| 36 | topic | web-engineering | `web-websocket-sse-realtime` | 96 | publishable | minor:thin_depth |
-| 37 | topic | ai-agent-rag | `a2a-acp` | 100 | publishable |  |
-| 38 | topic | ai-agent-rag | `agent-core-modules` | 100 | publishable |  |
-| 39 | topic | ai-agent-rag | `agent-definition` | 100 | publishable |  |
-| 40 | topic | ai-agent-rag | `agent-failure-modes` | 100 | publishable |  |
-| 41 | topic | ai-agent-rag | `agentic-rag` | 100 | publishable |  |
-| 42 | topic | ai-agent-rag | `browser-observation` | 100 | publishable |  |
-| 43 | topic | ai-agent-rag | `chatgpt-runtime` | 100 | publishable |  |
-| 44 | topic | ai-agent-rag | `citation-grounding` | 100 | publishable |  |
-| 45 | topic | ai-agent-rag | `coding-harness` | 100 | publishable |  |
-| 46 | topic | ai-agent-rag | `component-eval` | 100 | publishable |  |
-| 47 | topic | ai-agent-rag | `context-compaction` | 100 | publishable |  |
-| 48 | topic | ai-agent-rag | `context-compression` | 100 | publishable |  |
-| 49 | topic | ai-agent-rag | `context-layers` | 100 | publishable |  |
-| 50 | topic | ai-agent-rag | `framework-selection` | 100 | publishable |  |
+| 1 | topic | prometheus-observability | `observability-alerting-slo-burn-rate` | 96 | publishable | minor:thin_depth |
+| 2 | topic | prometheus-observability | `observability-cardinality-capacity-cost` | 96 | publishable | minor:thin_depth |
+| 3 | topic | prometheus-observability | `observability-dashboard-runbook-incident` | 96 | publishable | minor:thin_depth |
+| 4 | topic | prometheus-observability | `observability-incident-tracing` | 96 | publishable | minor:thin_depth |
+| 5 | topic | prometheus-observability | `observability-structured-logging-correlation` | 96 | publishable | minor:thin_depth |
+| 6 | topic | prometheus-observability | `prometheus-metrics-promql` | 96 | publishable | minor:thin_depth |
+| 7 | question | prometheus-observability | `q-observability-incident-tracing` | 96 | publishable | minor:thin_depth |
+| 8 | topic | redis | `redis-expiration-eviction-memory` | 96 | publishable | minor:thin_depth |
+| 9 | topic | redis | `redis-lua-transaction-pipeline` | 96 | publishable | minor:thin_depth |
+| 10 | topic | system-design | `distributed-idempotency-retry-timeout` | 96 | publishable | minor:thin_depth |
+| 11 | topic | system-design | `distributed-transaction-saga-outbox` | 96 | publishable | minor:thin_depth |
+| 12 | question | system-design | `q-distributed-idempotency-retry-timeout` | 96 | publishable | minor:thin_depth |
+| 13 | question | system-design | `q-distributed-transaction-saga-outbox` | 96 | publishable | minor:thin_depth |
+| 14 | topic | system-design | `system-capacity-planning-hotspot` | 96 | publishable | minor:thin_depth |
+| 15 | topic | system-design | `system-consistency-consensus-leader-election` | 96 | publishable | minor:thin_depth |
+| 16 | topic | system-design | `system-disaster-recovery-multi-region` | 96 | publishable | minor:thin_depth |
+| 17 | topic | system-design | `system-load-balancing-routing` | 96 | publishable | minor:thin_depth |
+| 18 | topic | system-design | `system-rate-limit-circuit-breaker-bulkhead` | 96 | publishable | minor:thin_depth |
+| 19 | topic | system-design | `system-service-discovery-config` | 96 | publishable | minor:thin_depth |
+| 20 | question | web-engineering | `q-web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
+| 21 | question | web-engineering | `q-web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
+| 22 | topic | web-engineering | `web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
+| 23 | topic | web-engineering | `web-auth-session-token-oauth` | 96 | publishable | minor:thin_depth |
+| 24 | topic | web-engineering | `web-browser-security-cors-csrf-xss` | 96 | publishable | minor:thin_depth |
+| 25 | topic | web-engineering | `web-cdn-cache-upload-download` | 96 | publishable | minor:thin_depth |
+| 26 | topic | web-engineering | `web-frontend-backend-contract-observability` | 96 | publishable | minor:thin_depth |
+| 27 | topic | web-engineering | `web-gateway-bff-api-versioning` | 96 | publishable | minor:thin_depth |
+| 28 | topic | web-engineering | `web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
+| 29 | topic | web-engineering | `web-websocket-sse-realtime` | 96 | publishable | minor:thin_depth |
+| 30 | topic | ai-agent-rag | `a2a-acp` | 100 | publishable |  |
+| 31 | topic | ai-agent-rag | `agent-core-modules` | 100 | publishable |  |
+| 32 | topic | ai-agent-rag | `agent-definition` | 100 | publishable |  |
+| 33 | topic | ai-agent-rag | `agent-failure-modes` | 100 | publishable |  |
+| 34 | topic | ai-agent-rag | `agentic-rag` | 100 | publishable |  |
+| 35 | topic | ai-agent-rag | `browser-observation` | 100 | publishable |  |
+| 36 | topic | ai-agent-rag | `chatgpt-runtime` | 100 | publishable |  |
+| 37 | topic | ai-agent-rag | `citation-grounding` | 100 | publishable |  |
+| 38 | topic | ai-agent-rag | `coding-harness` | 100 | publishable |  |
+| 39 | topic | ai-agent-rag | `component-eval` | 100 | publishable |  |
+| 40 | topic | ai-agent-rag | `context-compaction` | 100 | publishable |  |
+| 41 | topic | ai-agent-rag | `context-compression` | 100 | publishable |  |
+| 42 | topic | ai-agent-rag | `context-layers` | 100 | publishable |  |
+| 43 | topic | ai-agent-rag | `framework-selection` | 100 | publishable |  |
+| 44 | topic | ai-agent-rag | `function-calling` | 100 | publishable |  |
+| 45 | topic | ai-agent-rag | `guardrails` | 100 | publishable |  |
+| 46 | topic | ai-agent-rag | `handoff-pattern` | 100 | publishable |  |
+| 47 | topic | ai-agent-rag | `hybrid-search` | 100 | publishable |  |
+| 48 | topic | ai-agent-rag | `langgraph` | 100 | publishable |  |
+| 49 | topic | ai-agent-rag | `llm-foundation` | 100 | publishable |  |
+| 50 | topic | ai-agent-rag | `llm-training-alignment` | 100 | publishable |  |
 
 ## How To Use
 

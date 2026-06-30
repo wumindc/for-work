@@ -143,6 +143,16 @@ Outbox 表建议包含 `event_id`、`aggregate_id`、`event_type`、`payload`、
 
 上线前至少检查五件事。第一，业务表和 outbox 写入是否在同一个 local transaction 内完成，失败时是否整体回滚。第二，relay 是否有批量扫描上限、按 `next_retry_at` 调度、指数退避和 dead-letter 标记，避免坏消息阻塞全表。第三，消费者是否用 `event_id` 或业务唯一键做幂等，并把重复消费当作成功返回。第四，监控是否覆盖 oldest_pending_age、publish_lag、retry_count、DLQ_count 和 duplicate_consume_count。第五，补偿脚本是否可审计，能按 trace_id 解释某个业务对象从提交到消费的完整链路。
 
+## 公开阅读校验
+
+这篇文章对外发布时要避免把事务消息讲成分布式事务。无论是 RocketMQ transaction message 还是 Transactional Outbox，目标都是把“本地事务和消息发布之间的不可恢复双写窗口”变成可查询、可重试、可回查、可补偿的最终一致链路。它不能让业务库、MQ 和消费者副作用瞬间满足全局 ACID，也不能取消消费者幂等。
+
+Outbox 的生产级细节在 relay 状态机。`pending`、`publishing`、`published`、`failed`、`dead_letter` 等状态要能在进程重启后恢复；多个 relay worker 抢任务时要靠分片、乐观锁或数据库锁避免重复处理；发布成功但更新状态失败时允许重复发布，因此消费者必须按 `event_id` 幂等。表清理也要设计归档周期，否则高频事件会把业务库拖慢。
+
+事务消息的生产级细节在状态回查。broker 回查 producer 时，producer 必须查询业务主库中的订单、支付流水或唯一业务键，而不是查缓存、日志或内存变量。返回 commit、rollback 或 unknown 都要有可解释规则；unknown 不能无限期堆积，要有最大回查次数、人工巡检和补偿任务。这个细节能区分“背过 half message”与“真的能上线”。
+
+如果读者要把这套能力写进项目，可以描述三个验收指标：`oldest_pending_age` 证明 outbox 不会长时间卡住，`transaction_check_count` 和 `unknown_transaction_count` 证明回查链路可观测，`duplicate_consume_count` 和 `idempotency_conflict_count` 证明重复投递被业务层收敛。这样回答会比“用了事务消息保证一致性”更准确。
+
 ## 来源与延伸阅读
 
 - [RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：官方文档用于支持 half message、事务提交/回滚和事务状态回查这条事务消息链路。

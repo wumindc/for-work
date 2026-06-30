@@ -311,6 +311,13 @@ Post-publish thin-depth deepening:
 - [x] `java-memory-model-volatile-happens-before`
 - [x] `java-thread-pool-governance`
 - [x] `jvm-gc-troubleshooting`
+- [x] `mq-consumer-governance`
+- [x] `mq-ordering-partitioning`
+- [x] `mq-reliable-delivery-idempotency`
+- [x] `mq-transactional-messaging`
+- [x] `mq-use-cases-boundary`
+- [x] `q-mq-ordering`
+- [x] `q-mq-transaction-message`
 
 For each question:
 
@@ -334,7 +341,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `es-use-cases-boundary`
   - [x] `es-inverted-index-mapping`
   - [x] `q-es-index-shard-write`
-- [ ] MQ transaction and ordering questions.
+- [x] MQ low-score questions and topics.
   - [x] `q-mq-transaction-message`
   - [x] `q-mq-ordering`
   - [x] `mq-transactional-messaging`
