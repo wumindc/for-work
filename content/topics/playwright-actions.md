@@ -26,6 +26,10 @@ flowchart LR
   Verifier --> Trace[Action Trace]
 ```
 
+图 1：Playwright 动作封装把模型意图转成受控 action，再经过风险门禁、定位、执行、验证、恢复和 trace 记录。
+
+这张图的重点是把“点击一下”拆成多个工程边界。模型只负责表达目标，Schema 层把目标约束成可校验字段，Risk Gate 判断是否需要确认，Locator Resolver 把语义目标映射到稳定 locator，Executor 才调用 Playwright。Verifier 和 Recovery Policy 是闭环的关键：动作 API 没报错只说明浏览器操作执行了，不说明业务状态已经达成；Trace 则让失败路径能被回放和归因。
+
 动作工具的返回值应该是结构化 observation，不是一句“clicked”。这样模型才能根据结果继续，而工程师也能复盘失败路径。
 
 ## 架构与运行机制
@@ -106,6 +110,6 @@ Playwright 封装要把动作拆成 intent、resolution、execution、verificati
 
 ## 来源与延伸阅读
 
-- [Playwright Auto-waiting](https://playwright.dev/docs/actionability)：理解 actionability checks 与 timeout。
-- [Playwright Locators](https://playwright.dev/docs/api/class-locator)：理解 locator 的重试语义。
-- [Playwright Actions](https://playwright.dev/docs/input)：理解 fill、click、select 等输入动作。
+- [Playwright Auto-waiting](https://playwright.dev/docs/actionability)：用于支持 actionability checks 只能证明元素可操作，不能替代业务 expected_state verifier。
+- [Playwright Locators](https://playwright.dev/docs/api/class-locator)：用于支持 role、label、text、test id 等 locator 策略比裸 CSS/XPath 更适合长期维护。
+- [Playwright Actions](https://playwright.dev/docs/input)：用于支持 fill、click、select、keyboard、mouse 等动作应被封装成受控工具，而不是让模型直接拼浏览器脚本。

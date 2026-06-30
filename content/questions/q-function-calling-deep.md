@@ -46,6 +46,8 @@ flowchart TB
   Verifier --> Trace
 ```
 
+图 1：Function Calling 位于模型到工具运行时的协议层，而完整 Agent 还要外接目标、状态、循环、验证、安全、trace 和 eval。
+
 这张图里，Function Calling 只是 `Model -> ToolCall -> Runtime` 这一段。Agent 的难点在循环外壳：状态怎么恢复，下一步怎么选，什么时候停止，失败怎么重试，风险动作怎么拦截，最终结果怎么评测。
 
 ### 3. 补工程细节
@@ -138,7 +140,7 @@ flowchart LR
 
 ### 追问 1：Function Calling 是不是 Agent 的必要条件？
 
-不是绝对必要，但在现代工具型 Agent 中非常常见。Agent 可以通过文本协议调用工具，但结构化 tool call 更容易校验、审计和恢复。
+不一定是必要条件，但在现代工具型 Agent 中非常常见。Agent 可以通过文本协议调用工具，但结构化 tool call 更容易校验、审计和恢复。
 
 ### 追问 2：什么时候不该用 Agent？
 
@@ -147,6 +149,17 @@ flowchart LR
 ### 追问 3：如何证明从工具调用升级到 Agent 是值得的？
 
 用 baseline 对比。比较 workflow 和 Agent 在 task_success_rate、avg_steps、latency、cost、recovery_rate 和人工接管率上的差异。如果收益不能覆盖复杂度，就不要升级。
+
+## 多轮追问模拟
+
+追问 1：Function Calling 能保证工具参数安全吗？
+答：只能保证参数形状更可校验，不能保证业务安全。宿主还要做权限、资源归属、对象状态、金额阈值、幂等和审计校验。考察点是协议边界；陷阱是把 strict schema 当成安全系统。
+
+追问 2：什么情况下 Function Calling 加 workflow 比 Agent 更好？
+答：路径稳定、规则清楚、强合规、强事务或高风险写操作更适合 workflow。模型可以负责分类、抽取、解释或生成候选参数，但控制流应由确定性状态机掌握。考察点是架构取舍；陷阱是为了“智能”把固定流程做复杂。
+
+追问 3：多步工具调用如何判断已经完成？
+答：需要 Goal + Success Criteria、State Store 和 Verifier。工具成功只说明某一步执行完成，任务完成要看最终状态、约束是否满足、是否触发风险策略、是否还有未处理子任务。考察点是停止条件；陷阱是把最后一次 tool success 当成 task success。
 
 ## 项目化回答
 
@@ -182,6 +195,6 @@ Function Calling 与完整 Agent 的差异可以从 control plane 看。Function
 
 ## 来源与延伸阅读
 
-- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)：用于理解 Function Calling 的协议边界。
-- [OpenAI Agents SDK](https://platform.openai.com/docs/guides/agents-sdk)：用于理解 Agent、tools、handoff、guardrails 和 tracing。
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于 workflow 与 agent 的选择原则。
+- [OpenAI Function Calling](https://developers.openai.com/api/docs/guides/function-calling)：用于支持 Function Calling 主要解决结构化 tool call 表达和参数生成，不等同于完整 Agent 控制系统。
+- [OpenAI Agents](https://developers.openai.com/api/docs/guides/agents)：用于支持完整 Agent 还需要 tools、handoff、guardrails、tracing 和运行时组织。
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow 与 agent 的选择要按任务复杂度、控制需求和人工反馈成本来取舍。

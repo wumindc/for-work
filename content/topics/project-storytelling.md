@@ -28,6 +28,10 @@ flowchart TD
   F --> G[Interview follow-up answers]
 ```
 
+图 1：项目讲述从问题界定进入架构、机制、指标、失败案例和取舍，最后落到可被连续追问的回答。
+
+图中每一层都对应面试官会追问的证据。Problem framing 证明项目不是随手 demo，Architecture 和 data flow 证明系统真的跑起来，metrics 证明效果口径，failure case 证明你处理过失败，tradeoff 证明你知道边界。最后的 follow-up answers 不是背稿，而是把这些证据组织成可以按模块展开的回答。
+
 | 讲述层 | 要回答的问题 | 证据材料 | 常见追问 |
 | :--- | :--- | :--- | :--- |
 | STAR | 为什么做、影响谁 | 场景和约束 | 需求是否真实 |
@@ -81,6 +85,8 @@ flowchart TD
 
 这种回答比“我优化了 prompt”更可信，因为它有根因、有数据流、有指标、有回归措施。
 
+事故复盘可以按四步讲：影响面先说明哪些用户路径或样本失败，例如“综述答案中事实 claim 的 citation_precision 下降”；止血先限制高风险输出，例如遇到证据不足时降级为待确认答案；根因再落到具体模块，例如 rerank 只按相似度排序，没有判断证据是否能回答问题；回归则把失败样本加入 eval set，并要求后续版本在相同 claim-to-evidence 检查中通过。这种讲法能把项目从“我做过”变成“我知道它为什么会坏、怎么防止再坏”。
+
 ## 常见误区与排障
 
 - 把项目讲成产品宣传页。
@@ -130,7 +136,7 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
-- [OpenAI Cookbook](https://cookbook.openai.com/)
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持项目讲述要区分 workflow、agent、tool use 和人工反馈，而不是把所有 AI 项目都包装成自治 Agent。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持项目表达中的 trace、run、step、tool call 和失败复盘应有可审计证据。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于支持高风险动作、安全边界和人工确认是 Agent 项目讲述中必须交代的工程层。
+- [OpenAI Cookbook](https://cookbook.openai.com/)：用于支持把项目经验落到可复现案例、评测样本和实现细节，而不是停留在口号。

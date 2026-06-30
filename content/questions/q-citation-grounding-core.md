@@ -31,6 +31,10 @@ flowchart TD
   F -->|unsupported| H[Revise or retrieve]
 ```
 
+图 1：Citation grounding 把检索证据包、带引用生成、claim 抽取和证据验证连成闭环，并把 unsupported claim 送回修订或补检索。
+
+图里的关键边界是 evidence pack 和 citation 的粒度。Retrieved evidence 只说明系统拿到了相关材料，Evidence pack 要进一步携带 evidence_id、span、权限和时间戳；Draft with citations 只是一版草稿，Claim extractor 和 Verifier 才判断每个事实断言是否被证据直接支持。unsupported 路径必须回到 Revise or retrieve，不能静默保留看起来合理的结论。
+
 数据流里，citation 不是装饰。它必须能定位到 evidence span，并且 verifier 能判断 claim 是否被该 span 支持。
 
 ## 可画图
@@ -48,6 +52,17 @@ flowchart TD
 如果引用很多但仍然答错，先抽样做 claim-to-evidence 检查。常见原因是检索命中主题相近文档，rerank 没看 answerability，或模型把相邻段落过度推断。
 
 指标包括 citation_precision、claim_support_rate、unsupported_claim_rate、hallucination_rate 和 no_answer_accuracy。
+
+## 多轮追问模拟
+
+追问 1：citation precision 和 answer accuracy 有什么区别？
+答：answer accuracy 看最终答案是否正确，citation precision 看被引用证据是否直接支持对应 claim。答案可能碰巧正确但引用错，也可能引用相关文档却不支持具体数字或结论。考察点是证据链粒度；陷阱是把“有引用”当成“有依据”。
+
+追问 2：证据不足时为什么不能让模型“合理推断”？
+答：因为 grounding 的目标是把未知事实保持为未知，而不是让模型补全。证据不足时应拒答、说明不确定、请求更多信息或补检索；高风险场景还要优先正确拒答。考察点是拒答边界；陷阱是为了回答覆盖率牺牲可信度。
+
+追问 3：工具调用结果能不能作为 citation？
+答：可以，但要把 tool name、参数 hash、返回时间、权限范围和原始结果引用保存下来。否则后续无法判断工具结果是否过期、是否属于当前用户权限、是否被模型误解。考察点是动态证据治理；陷阱是只把静态文档当证据。
 
 ## 面试官追问
 
@@ -92,6 +107,6 @@ Verifier 的判断要分 supported、partial、unsupported、contradicted。unsu
 
 ## 来源与延伸阅读
 
-- [Anthropic Claude Citations](https://docs.anthropic.com/en/docs/build-with-claude/citations)
-- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [Anthropic Claude Citations](https://docs.anthropic.com/en/docs/build-with-claude/citations)：用于支持回答中的关键 claim 应绑定可定位的证据来源，而不是只在末尾列链接。
+- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)：用于支持 grounding 要从上下文选择、压缩、证据保留和生成约束一起设计。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持 citation precision、claim support 和 hallucination regression 需要进入评测集与实验对比。

@@ -27,6 +27,10 @@ flowchart TD
   E --> F
 ```
 
+图 1：Agent Eval 和可观测性要从 run trace 进入组件评测、轨迹评测和端到端评测，再汇入发布回归门禁。
+
+这张图的边界是：Trace store 是事实来源，eval 不是事后写一张分数表。Component eval 解释检索、rerank、tool schema 或 guardrail 哪一层坏了；trajectory eval 解释每一步工具选择、状态更新和安全策略是否合理；end-to-end eval 只回答任务最终是否完成。三层结果汇入 Regression gate，才能把线上失败样本变成下一次发布会被拦住的回归样本。
+
 数据流是线上失败样本进入样本库，人工或 verifier 标注期望行为，成为下一轮回归。
 
 ## 可画图
@@ -42,6 +46,17 @@ Web Agent 的 eval 不只看最终是否成功，还看每一步 observation、s
 如果线上成功率下降，按 trace 分桶：检索失败、工具失败、状态污染、安全拦截、模型输出错误。指标包括 task_success_rate、step_success_rate、tool_error_rate、citation_precision、latency_p95 和 cost_per_success。
 
 工程取舍在于评测深度和发布速度。只做端到端成功率成本低，但定位慢；组件 eval 和轨迹 eval 更费样本设计，却能说明是检索、工具、模型还是策略失败。生产环境通常把高风险路径放进强门禁，低风险体验优化走抽样监控，避免每次小改动都拖慢发布。
+
+## 多轮追问模拟
+
+追问 1：golden set 只用人工手写样本够不够？
+答：不够。人工样本适合覆盖协议边界和安全边界，但真实问题通常来自线上失败、长尾页面、工具异常和用户输入分布变化。更稳的做法是把历史失败、线上抽样、红队样本和人工设计边界样本合并，并给每个样本记录来源、版本、期望行为和风险等级。考察点是样本治理；陷阱是把 eval 当一次性测试集。
+
+追问 2：为什么需要 trajectory eval，端到端成功率不够吗？
+答：端到端成功率只能告诉你最后成没成，不能解释中间是否走了危险路径。比如最终答案正确，但中间访问了越权工具、重复提交表单或忽略了 verifier，这些都需要轨迹评测发现。考察点是 Agent 控制流；陷阱是只看最终结果，漏掉安全和可恢复性。
+
+追问 3：trace 全量保存会有什么风险？
+答：trace 可能包含用户输入、文件内容、工具参数、业务 ID、PII 和密钥片段，所以需要 redaction、引用式存储、访问控制和审计。高敏数据保存 hash、artifact ref 或脱敏摘要，调试时再按权限取原文。考察点是生产可观测性边界；陷阱是为了调试方便直接落明文。
 
 ## 面试官追问
 
@@ -86,6 +101,6 @@ Agent Eval 要把 run 拆成可回放的事件流。一个 trace 至少包含 `r
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [LangSmith Observability](https://docs.smith.langchain.com/observability)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持 Agent run、step、tool call 和结果需要进入结构化 trace，才能支撑失败归因。
+- [LangSmith Observability](https://docs.smith.langchain.com/observability)：用于支持线上监控要按 trace、metadata、反馈和错误分桶，而不是只看最终答案。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持离线 eval、回归数据集和实验对比应成为发布门禁的一部分。
