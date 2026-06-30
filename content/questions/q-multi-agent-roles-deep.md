@@ -35,6 +35,10 @@ flowchart TD
   H -->|no| C
 ```
 
+图 1：是否拆成多 Agent 的决策树：先看 baseline 失败类型，再看收益是否覆盖成本。
+
+这张图不是从“角色清单”开始，而是从单 Agent baseline 开始。只有当 trace 显示规划、质量、安全等 failure bucket 稳定出现时，才新增 Planner、Reviewer 或 Security role。新增角色后必须回到 Measure lift，比较成功率、延迟、成本、handoff_failure_rate 和 state_conflict_rate。若 success lift 不能覆盖额外成本，就回退到单 Agent 或 workflow。这样能避免为了“架构更高级”而增加无用协作。
+
 运行上要先有 baseline，再根据 trace 归因拆分。没有失败证据就拆 Agent，通常会增加系统噪声。
 
 ## 可画图
@@ -60,6 +64,20 @@ flowchart TD
 - 什么任务适合 workflow 而不是 Agent？
 - reviewer 不独立时怎么办？
 - 如何控制多 Agent 的成本上限？
+
+## 多轮追问模拟
+
+第一轮追问：单 Agent baseline 应该怎么建？  
+回答要点：固定任务集、工具、prompt、模型和 eval，记录成功率、失败类型、成本、延迟和 trace。考察点是先有证据再拆架构。陷阱是没有 baseline 就说多 Agent 更强，无法证明收益。
+
+第二轮追问：什么时候用 workflow 而不是多 Agent？  
+回答要点：步骤固定、状态明确、工具调用顺序稳定、判断规则可编码时优先 workflow；需要开放式规划、专家视角或独立审查时再考虑多 Agent。考察点是确定性流程与智能协作的边界。陷阱是把任何多步骤任务都拆成多个 Agent。
+
+第三轮追问：Reviewer 为什么必须独立？  
+回答要点：Reviewer 要有独立 evidence、rubric 和检查清单，不能只看 Executor 的解释；否则会复述同一偏差。考察点是审查有效性。陷阱是 Reviewer 和 Executor 共享同一错误上下文，审查形同虚设。
+
+第四轮追问：多 Agent 成本失控怎么止血？  
+回答要点：设置 max_handoffs、per-role token budget、deadline、manager-only fallback、任务取消和角色合并；线上先回退单 Agent 或 workflow。考察点是运行治理。陷阱是只追求质量提升，不限制 handoff 和重试。
 
 ## 项目化回答
 
@@ -96,6 +114,6 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
-- [OpenAI Agents Orchestration](https://developers.openai.com/api/docs/guides/agents/orchestration)
-- [LangChain Multi-agent](https://docs.langchain.com/oss/python/langchain/multi-agent)
+- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)：用于支持控制权转移、handoff 边界和多 Agent 协作方式。
+- [OpenAI Agents Orchestration](https://developers.openai.com/api/docs/guides/agents/orchestration)：用于说明 agent 编排、角色分工和工具化专家的工程取舍。
+- [LangChain Multi-agent](https://docs.langchain.com/oss/python/langchain/multi-agent)：用于支持 supervisor、handoff、multi-agent pattern 等实现模式。

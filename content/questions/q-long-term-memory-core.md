@@ -35,6 +35,10 @@ flowchart TD
   K --> C
 ```
 
+图 1：长期记忆系统的写入、读取、上下文注入和纠错闭环。
+
+这张图把长期记忆拆成两个方向。写入方向从 Task event 到 Candidate Extractor，再由 Write Policy 决定 accept、reject 或 ask confirmation，防止临时信息、敏感数据和模型猜测被永久保存。读取方向从 New task 开始，Retriever 先按 user、workspace、project、memory_type 做 metadata filter，再结合 embedding、recency、importance 和 confidence 排序。Context Builder 只注入少量高价值记忆，Trace and correction 则把错误命中、用户纠错和删除请求反馈给写入策略。
+
 运行时要把写入、读取和纠错分开治理。写入决定系统未来会相信什么，读取决定当前任务会看见什么，纠错决定错误记忆能否被及时降权或删除。
 
 ## 可画图
@@ -60,6 +64,20 @@ flowchart TD
 - 历史记录很大时，retrieval 怎么分层？
 - 旧记忆与当前指令冲突时优先级怎么定？
 - 如何证明长期记忆确实提升了任务成功率？
+
+## 多轮追问模拟
+
+第一轮追问：长期记忆和普通 RAG 最大区别是什么？  
+回答要点：RAG 主要服务外部事实证据，长期记忆服务用户、工作区和任务连续性；二者来源、权限、更新和验证方式不同。考察点是语义边界。陷阱是把用户偏好、历史决策和事实知识都塞进同一个向量库。
+
+第二轮追问：什么信息不应该写入长期记忆？  
+回答要点：临时授权、敏感凭据、一次性调试状态、未经验证的模型推断、跨租户内容和过期项目规则。考察点是 Write Policy。陷阱是“多记总比少记好”，导致旧记忆污染后续任务。
+
+第三轮追问：旧记忆和当前用户指令冲突怎么办？  
+回答要点：当前明确指令优先，系统策略优先，外部事实证据优先；旧记忆只能作为参考，必要时降权、追问或标记 superseded。考察点是优先级和冲突处理。陷阱是让历史偏好覆盖当前任务。
+
+第四轮追问：用户删除一条记忆后，系统要做哪些同步？  
+回答要点：写 tombstone，更新结构化 store、向量索引、缓存和审计日志，并确保未来 retrieval 不再返回该 memory_id。考察点是删除语义。陷阱是 UI 删除了，向量索引仍可召回。
 
 ## 项目化回答
 
@@ -96,6 +114,6 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)：用于支持短期、长期与语义记忆的概念边界。
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：用于说明状态持久化、checkpoint 和可恢复执行如何支撑记忆读取。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持长期记忆收益、错误命中和回归样本的评测闭环。
