@@ -208,6 +208,11 @@ AI Agent / RAG topic backlog:
 - [x] `rerank`
 - [x] `sandbox`
 - [x] `skills`
+- [x] `chatgpt-runtime`
+- [x] `component-eval`
+- [x] `context-layers`
+- [x] `long-term-memory`
+- [x] `openai-agents-sdk`
 
 For each question:
 
