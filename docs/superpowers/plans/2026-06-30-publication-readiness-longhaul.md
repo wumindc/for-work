@@ -84,6 +84,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-langgraph-deep`
 - [x] `q-planning-methods-deep`
 - [x] `q-react-loop-deep`
+- [x] `q-reflection-review-core`
 - [x] `q-reflection-review-deep`
 - [x] `q-browser-observation-core`
 - [x] `q-browser-observation-deep`
@@ -156,6 +157,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-guardrails-core`
 - [x] `q-guardrails-deep`
 - [x] `q-long-term-memory-core`
+- [x] `q-mcp-fundamentals-core`
 - [x] `q-mcp-fundamentals-deep`
 - [x] `q-multi-agent-roles-deep`
 - [x] `q-prompt-injection-core`
@@ -258,6 +260,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `redis-cache-consistency`
   - [x] `redis-persistence-aof-rdb`
 - [ ] Prometheus and observability low-score questions.
+  - [x] `observability-incident-tracing`
   - [x] `q-observability-incident-tracing`
   - [x] `q-prometheus-metrics-promql`
 - [ ] Java/JVM blocked documents.
@@ -271,6 +274,8 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-web-http-cache-session-auth`
 - [ ] AI engineering trend documents.
   - [x] `local-ai-inference-stack`
+  - [x] `q-local-ai-inference-stack-core`
+  - [x] `q-local-ai-inference-stack-deep`
 
 Each batch should preserve domain terminology and avoid importing AI-specific phrases where traditional engineering terms are more precise.
 

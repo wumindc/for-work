@@ -2,179 +2,137 @@
 
 ## 面试定位
 
-这道题关联 Local-first 模型服务与兼容 API，难度 3/5，出现频率 medium。面试官真正想看的是：你能否把概念回答升级成架构、数据流、指标、取舍和真实故障处理。
-回答主轴可以从「Local-first 模型服务与兼容 API」切入：Local-first AI 工程栈通过本地模型服务、OpenAI-compatible API、本地向量索引和本地 ASR 降低成本、延迟和隐私风险。
-
-**第一句话建议**
-我会先划清边界，再解释运行机制，最后用一个系统设计案例说明数据流、失败模式、指标和取舍。
-
-**不要只答**
-- 只看成本不看质量
-- 没有 fallback
-- 本地服务无监控和限流
+这道题考的不是“本地模型是不是更便宜”，而是你能否判断任务边界：哪些请求应该留在本地，哪些请求可以本地优先但允许云端 fallback，哪些请求一开始就应该走云模型或托管服务。成熟回答要同时覆盖隐私、延迟、成本、质量、硬件水位、模型能力、观测和回退策略。
 
 ## 30 秒回答
 
-我会先划边界：Local-first AI 工程栈通过本地模型服务、OpenAI-compatible API、本地向量索引和本地 ASR 降低成本、延迟和隐私风险。；本地优先不是永远更好；兼容 API 降低切换成本；要评估质量、延迟、内存和隐私。
+Local-first AI 适合三类场景：第一，数据敏感或离线环境，例如本地代码、企业文档、桌面自动化、语音转写和个人知识库；第二，低延迟和高频调用场景，例如补全、摘要、轻量分类、本地检索和工具参数生成；第三，成本可控但质量要求中等的批处理任务。它不是默认更优，复杂推理、强事实准确、长上下文、多模态高质量生成和需要统一审计的企业流程，通常要保留云端或专用服务 fallback。
 
-回答时必须主动补数据流、关键字段、失败模式、指标和取舍，否则很容易停留在背概念。
+## 标准回答
+
+我会先把请求分级，而不是直接说“本地跑”。可以分成三档：
+
+- `local_only`：敏感数据不能离开设备或内网，典型是代码仓库、客户资料、会议音频、内部文档、终端命令上下文。
+- `local_first`：优先本地执行，失败、质量不足、上下文过长或硬件水位过高时转云端。
+- `cloud_required`：需要更强模型、更长上下文、托管合规审计、团队协作记录或外部工具生态。
+
+这个分级背后的工程判断是：本地优先降低了网络延迟、API 成本和数据外发风险，但会引入模型能力波动、硬件占用、版本碎片、冷启动、量化质量下降和运维可观测不足。回答时要把这些代价一起讲出来，才不像是在追热点。
 
 ## 架构与运行机制
 
-### 标准回答骨架
-
-- 我会先划边界：Local-first AI 工程栈通过本地模型服务、OpenAI-compatible API、本地向量索引和本地 ASR 降低成本、延迟和隐私风险。；本地优先不是永远更好；兼容 API 降低切换成本；要评估质量、延迟、内存和隐私。
-- 再讲运行机制：Rapid-MLX 类项目展示了 Apple Silicon 本地推理和 OpenAI-compatible server 的实用价值。；企业侧常把敏感数据、本地检索、语音识别或小模型工具调用放在本地。。
-- 工程实现要落到可执行设计：网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。；需要 cloud fallback、模型能力探测和请求分级。。
-- 如果被要求画设计，可以按这个结构展开：。
-- 最后补风险、指标和取舍：只看成本不看质量；没有 fallback；本地服务无监控和限流；跟踪 local_hit_rate；跟踪 fallback_rate；跟踪 latency_p95；跟踪 cost_per_task；跟踪 quality_delta。
-- Local-first AI 工程栈通过本地模型服务、OpenAI-compatible API、本地向量索引和本地 ASR 降低成本、延迟和隐私风险。
-- Rapid-MLX 类项目展示了 Apple Silicon 本地推理和 OpenAI-compatible server 的实用价值。
-- 企业侧常把敏感数据、本地检索、语音识别或小模型工具调用放在本地。
-- 把核心对象、状态变化、执行顺序和异常路径讲出来，避免只说结论。
-
-
-### 数据流怎么讲
-
-可以按用户目标、模型、上下文、状态、工具、执行循环、评测、安全和可观测性来讲。数据流是用户任务进入编排层，Context Builder 汇总系统指令、用户约束、RAG 证据、短期状态和工具结果，模型输出结构化动作，宿主程序执行工具并把 observation 写回 State 和 Trace。
-
-
-### 落地实现细节
-
-- 网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。
-- 需要 cloud fallback、模型能力探测和请求分级。
-- 按任务风险和能力需求把请求分成 local_only、cloud_allowed、cloud_required。
-- 网关记录 model_id、backend、latency、tokens、memory、quality_verdict 和 fallback_reason。
-- 本地服务加并发限制、队列、健康检查和冷启动预热。
-- 用同一批 eval case 比较本地模型和云模型的质量、延迟和成本。
-- 关键接口要有 schema、version、timeout、retry、幂等键和审计字段。
-- 关键状态要能恢复，关键动作要能回放，关键结果要有验证器或指标证明。
-
-## 可画图
-
 ```mermaid
 flowchart LR
-  Q[面试问题] --> Boundary[先划边界]
-  Boundary --> Mechanism[解释机制]
-  Mechanism --> Design[落到系统设计]
-  Design --> Incident[补事故排障]
-  Incident --> Tradeoff[总结取舍]
+  Request[User Request] --> Classifier[Request Classifier]
+  Classifier -->|local_only| Local[Local Model Runtime]
+  Classifier -->|local_first| Gateway[Compatible API Gateway]
+  Gateway --> Local
+  Gateway -->|fallback| Cloud[Cloud Model API]
+  Local --> Verifier[Quality / Safety Verifier]
+  Cloud --> Verifier
+  Verifier --> State[Trace + Metrics + Cache]
+  Verifier --> Answer[Answer / Tool Args]
 ```
 
-图 1：这类题不要直接背结论，先划清边界，再沿机制、设计、事故和取舍回答。
+图 1：Local-first AI 的关键不是把云模型替换掉，而是在网关层做请求分级、能力探测、质量验证和 fallback。`local_only` 保护敏感数据，`local_first` 追求成本与延迟收益，`cloud_required` 承认本地模型能力边界。
+
+运行机制可以拆成四步。第一步，Classifier 根据数据敏感性、任务类型、上下文长度、目标质量和用户策略给请求打路由标签。第二步，Gateway 选择本地运行时，例如 MLX、llama.cpp、Ollama、Rapid-MLX 这类 OpenAI-compatible server，尽量保持上层调用协议稳定。第三步，Verifier 检查输出是否满足 schema、引用、测试或业务规则。第四步，把 `model_id`、`backend`、`latency_ms`、`tokens`、`memory_peak_mb`、`fallback_reason`、`quality_verdict` 写进 trace。
 
 ## 系统设计案例
 
-### 面试可展开的系统设计
+以本地 Coding Agent 为例，读代码、生成小 patch、解释错误日志和检索项目文档可以走本地模型，因为数据敏感、上下文来自本机、调用频率高。涉及复杂重构、跨仓库推理、需要最新外部资料、需要更强代码模型或多轮失败后，就走云端 fallback。
 
-典型设计题是企业内部 Agent、Coding Agent、Paper Agent 或 Web Agent：外层 deterministic workflow 管理权限、预算、审批和最终提交，内层 Agent loop 处理开放探索，Eval Gate 根据 golden case、轨迹评分、工具结果和人工反馈决定是否继续。
+核心数据流是：IDE 或桌面应用提交任务，入口层识别 workspace 和 data scope，网关选择 local_only、local_first 或 cloud_required，模型运行时产出回答或工具参数，Verifier 检查 schema、测试、引用和安全策略，最后把结果、route decision 和 fallback_reason 写入 Trace。这样回答既讲清楚请求怎么流动，也讲清楚每个环节失败后在哪里被发现。
 
-**答题时建议画出的模块**
-- 入口层：参数校验、权限、租户、幂等和 request_id。
-- 业务服务层：决定同步流程、异步流程、缓存读写、数据库回源、下游调用或降级返回。
-- 执行层：封装存储访问、外部调用和异步任务，统一 timeout、retry、error code 和审计。
-- 状态层：保存任务状态、业务状态、checkpoint 和版本。
-- 观测层：指标、日志、trace、回放和 regression case。
+落地模块可以这样设计：
 
-**数据流**
-- 请求进入系统后生成唯一标识，并把用户约束和业务上下文落入状态。
-- 业务服务读取缓存、数据库、异步事件或下游状态，选择执行路径。
-- 执行结果以结构化结果写回状态，同时上报指标。
-- 保护策略判断是否完成、重试、降级、补偿或转人工。
+- 入口层：识别 workspace、用户策略、数据敏感等级、任务类型和最大预算。
+- 网关层：暴露 OpenAI-compatible API，让上层 Agent 不感知具体后端。
+- 本地运行时：负责模型加载、量化版本、上下文窗口、并发队列和健康检查。
+- 质量门禁：对代码任务跑测试或静态检查；对 RAG 回答检查引用；对工具参数做 schema validation。
+- 回退策略：本地超时、OOM、质量 verdict 失败、上下文过长、连续两轮无改进时转云端或转人工。
+- 观测层：记录本地命中率、fallback 率、延迟、成本节省、质量差异和硬件水位。
+
+这个设计的重点是“兼容 API + 路由策略 + verifier”，而不是只把模型下载到本机。
 
 ## 真实问题与排障
 
-真实线上问题一般从任务成功率、工具调用成功率、invalid args、上下文漂移、幻觉率、引用准确率、token 成本、延迟、guardrail block rate 和 human handoff rate 看起。回答时要把模型问题、检索问题、工具问题、状态问题和权限问题分开归因。
+Local-first 常见事故有四类。第一类是质量退化：本地模型能答但答案不准，排查要看 eval case、量化版本、prompt 模板、上下文截断和 verifier 失败原因。第二类是资源问题：内存、显存、CPU 或 Apple Silicon unified memory 被打满，表现为延迟上升、并发排队、系统卡顿。第三类是 fallback 失效：云端备用模型没有相同 schema 或工具能力，导致切换后结果格式不兼容。第四类是隐私边界破损：本应 local_only 的请求被错误路由到云端。
 
-**现场排障回答法**
-- 先说影响面：成功率、错误率、延迟、积压、成本或质量指标是否异常。
-- 按数据流分段定位，不要一上来就改参数或调 prompt。
-- 查看最近发布、配置变更、数据分布变化、下游限流和资源水位。
-- 先止血再根因：降级、回滚、限流、暂停高风险动作、隔离异常租户或重放失败样本。
-- 最后把样本沉淀为 eval/regression case，并补齐监控告警。
-
-**重点指标**
-- local_hit_rate
-- fallback_rate
-- latency_p95
-- cost_per_task
-- quality_delta
+排障顺序是先看影响面，再按链路定位。指标包括 `local_hit_rate`、`fallback_rate`、`quality_delta`、`latency_p95`、`oom_count`、`queue_wait_ms`、`tokens_per_second`、`privacy_policy_denied_count`。止血动作可以是限制并发、降低上下文长度、禁用某个本地模型版本、强制高风险请求走云端或把敏感任务锁定在 local_only。
 
 ## 多轮追问模拟
 
-### 追问 1：如何设计本地模型和云模型混合的兼容 API 网关？
+### 追问 1：哪些任务不适合 Local-first？
 
-**回答要点**：我会先回到适用边界，再解释机制和工程代价：。回答时不能只说概念，要把选择标准、失败模式和可观测指标一起讲出来。
+**回答要点**：强事实准确、复杂推理、超长上下文、高质量多模态生成、需要统一审计和团队协作记录的任务，不应只靠本地模型。可以本地做预处理、检索或草稿，但最终要有云端模型、规则 verifier 或人工审核。
 
-**考察点**：边界判断、工程取舍
+**考察点**：是否能主动承认本地模型能力边界。
 
-### 追问 2：如果把它落到 pe-coding-agent 项目里，你会怎么设计？
+**陷阱**：只用隐私和成本论证，把质量、审计和可维护性忽略掉。
 
-**回答要点**：我会按输入、状态、执行、验证和指标展开：网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。；需要 cloud fallback、模型能力探测和请求分级。；按任务风险和能力需求把请求分成 local_only、cloud_allowed、cloud_required。；网关记录 model_id、backend、latency、tokens、memory、quality_verdict 和 fallback_reason。；本地服务加并发限制、队列、健康检查和冷启动预热。；用同一批 eval case 比较本地模型和云模型的质量、延迟和成本。。项目表达里要说明模块边界、数据流、错误恢复和上线后的指标，而不是只说用了某个框架。
+### 追问 2：如何防止敏感请求错误 fallback 到云端？
 
-**考察点**：系统设计、项目证据
+**回答要点**：请求进入网关时先打 `data_scope` 和 `routing_policy`，`local_only` 请求在策略层禁止云端 fallback；trace 记录 policy verdict；高风险字段做脱敏或摘要；配置变更要有审计和回归测试。
 
-### 追问 3：线上出问题时，你会看哪些日志、trace 或指标？
+**考察点**：是否把隐私边界做成硬策略，而不是提示词约定。
 
-**回答要点**：我会先按失败类型归因，再看 trace 中的输入、状态、工具参数、返回结果、耗时、成本和 verdict；重点指标包括 local_hit_rate；fallback_rate；latency_p95；cost_per_task；quality_delta。如果问题来自设计边界，还要回到 schema、权限、上下文和评测集，而不是只调 prompt。
+**陷阱**：说“提示模型不要上传敏感数据”，这不是可靠的工程控制。
 
-**考察点**：trace、指标归因
+### 追问 3：怎么证明本地优先真的值得？
 
-### 延伸追问 1：如何设计本地模型和云模型混合的兼容 API 网关？
+**回答要点**：用同一批 golden cases 比较本地和云端的质量、延迟、成本、失败率和人工接管率。上线后看 `cost_per_task` 是否下降、`latency_p95` 是否改善、`quality_delta` 是否在可接受范围内、fallback 是否集中在少数任务类型。
 
-回答时继续沿着边界、架构、数据流、指标、失败模式和取舍展开。可以落到这些项目证据：可以关联项目证据：pe-coding-agent；网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。；需要 cloud fallback、模型能力探测和请求分级。
+**考察点**：是否能用评测和线上指标证明取舍，而不是只讲体验。
 
-### 延伸追问 2：如果把它落到 pe-coding-agent 项目里，你会怎么讲？
+**陷阱**：只看 token 成本下降，不看质量下降和排障成本。
 
-回答时继续沿着边界、架构、数据流、指标、失败模式和取舍展开。可以落到这些项目证据：可以关联项目证据：pe-coding-agent；网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。；需要 cloud fallback、模型能力探测和请求分级。
+### 追问 4：本地模型服务卡住时怎么处理？
 
-### 延伸追问 3：这个点最常见的失败模式是什么，怎么用 eval 或 trace 证明？
+**回答要点**：先隔离影响面，降低并发或暂停该 backend；健康检查失败时从本地模型路由池摘除；local_first 请求转云端，local_only 请求进入队列或提示不可用；同时记录模型版本、内存峰值、上下文长度、队列等待和失败样本。
 
-回答时继续沿着边界、架构、数据流、指标、失败模式和取舍展开。可以落到这些项目证据：可以关联项目证据：pe-coding-agent；网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。；需要 cloud fallback、模型能力探测和请求分级。
+**考察点**：是否有运行时治理和降级策略。
 
-## 项目化回答与取舍
+**陷阱**：把本地模型当成单用户脚本，没有健康检查、队列、超时和熔断。
 
-**项目证据怎么挂钩**
-- 可以关联项目证据：pe-coding-agent
-- 网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。
-- 需要 cloud fallback、模型能力探测和请求分级。
+## 项目化回答
 
-**取舍总结**
-AI Agent 的取舍是开放任务能力换来了不确定性、成本、延迟和治理复杂度。面试追问通常会围绕 workflow 与 agent 边界、memory 与 RAG 区别、function calling 是否等于 agent、eval 怎么证明不是 demo、如何做安全边界展开。
-
-**收尾句**
-这类问题最后要回到可验证结果：设计上有什么边界，线上看什么指标，失败后怎么恢复，哪些场景不该用这个方案。这样回答才经得起连续追问。
+我会把 Local-first 落成一个“模型路由网关”，而不是在业务代码里散落 `if local then ...`。上层 Agent 调同一套 OpenAI-compatible API；网关根据任务策略选择 MLX、Ollama、llama.cpp、Rapid-MLX 或云模型；Verifier 决定结果是否可用；Trace 记录每次路由和 fallback。这样项目里既能保护本地数据，也能在本地模型能力不足时有清晰恢复路径。
 
 ## 深挖技术细节
 
-- 网关记录 model_id、backend、latency_ms、tokens、memory_usage、fallback_reason、quality_verdict。
-- 需要 cloud fallback、模型能力探测和请求分级。
-- 按任务风险和能力需求把请求分成 local_only、cloud_allowed、cloud_required。
-- 网关记录 model_id、backend、latency、tokens、memory、quality_verdict 和 fallback_reason。
-- 本地服务加并发限制、队列、健康检查和冷启动预热。
-- 用同一批 eval case 比较本地模型和云模型的质量、延迟和成本。
-- Local-first AI 工程栈通过本地模型服务、OpenAI-compatible API、本地向量索引和本地 ASR 降低成本、延迟和隐私风险。
-- Rapid-MLX 类项目展示了 Apple Silicon 本地推理和 OpenAI-compatible server 的实用价值。
-- 企业侧常把敏感数据、本地检索、语音识别或小模型工具调用放在本地。
-- 关键数据结构要带版本、状态、trace、超时、重试和审计字段。
-- 关键链路要说明同步路径、异步路径、失败路径和补偿路径。
+本地优先要落到几个具体技术点。模型运行时要记录模型格式、量化版本、context window、tokens/s、内存峰值和加载时间；兼容 API 要覆盖 streaming、tool call、JSON schema、usage、错误码和 timeout；向量索引要记录 embedding 模型、维度、索引版本和召回阈值；语音或文档解析链路要记录输入格式、切片策略和质量校验结果。
+
+请求路由可以用规则和评测结果共同驱动。规则负责硬边界，例如 `local_only` 禁止外发；评测结果负责软优化，例如某个本地模型在代码解释任务上通过率高，就优先给它；如果 RAG 引用校验失败或工具参数 schema 不通过，就触发 fallback 或转人工。这样本地优先不是静态配置，而是可观测、可回归、可调整的策略。
 
 ## 边界条件与反例
 
-反例一：如果业务需要强事务一致性，不能只靠缓存、搜索索引或异步读模型承载最终正确性。
+反例一：需要强事实准确和最新外部知识的问答，只靠本地模型容易过期或幻觉，应该接检索、云模型或人工审核。
 
-反例二：如果没有指标、trace 和回归样例，方案在线上出问题时只能靠猜，不能证明稳定性。
+反例二：企业审计要求统一留痕时，个人电脑上的本地模型虽然保护了数据外发，但可能缺少集中审计、权限和留存策略。
 
-反例三：为了追求低延迟而省略权限、幂等、超时或降级，会把局部性能优化变成系统性风险。
+反例三：低配设备上强行跑大模型，会把延迟和系统资源占用转嫁给用户，体验不一定比云端好。
+
+反例四：本地模型只兼容 chat 接口，不兼容工具调用和结构化输出时，不适合直接承载需要可靠 tool args 的 Agent。
 
 ## 深问准备
 
-被追问时优先沿四条线展开：为什么需要这个方案、关键数据结构是什么、失败后如何止血和定位、最终用什么指标证明修复有效。
+- 准备一个分级策略：local_only、local_first、cloud_required 各自对应哪些业务。
+- 准备一个 fallback 事故：本地模型质量不足、OOM 或 schema 不兼容时如何止血。
+- 准备一组指标：local_hit_rate、fallback_rate、quality_delta、latency_p95、cost_per_task。
+- 准备一个隐私边界：哪些字段可以脱敏外发，哪些请求必须停在本地。
+- 准备一个 eval 方案：用同一批 golden cases 比较本地和云端结果。
 
-- 准备一个线上事故：影响面、止血、根因、修复、回归。
-- 准备一个系统设计：入口、状态、执行、存储、观测。
-- 准备一个取舍：一致性、延迟、吞吐、成本和可维护性。
+## 常见错误
+
+- 只讲省钱，不讲质量回归和模型能力边界。
+- 本地模型服务没有健康检查、并发限制和超时。
+- OpenAI-compatible 只兼容接口路径，不兼容工具调用、streaming、错误码和 usage 字段。
+- local_only 和 local_first 混在一起，导致敏感请求被错误外发。
+- 没有 golden cases，无法证明本地模型在目标任务上够用。
 
 ## 来源与延伸阅读
 
-- [Rapid-MLX](https://github.com/raullenchai/Rapid-MLX)：用于确认官方语义边界、命令行为和工程约束。
+- [MLX](https://github.com/ml-explore/mlx)：用于确认 Apple Silicon 本地机器学习运行时的工程定位。
+- [llama.cpp](https://github.com/ggml-org/llama.cpp)：用于确认本地 LLM 推理、量化和服务器化能力。
+- [Ollama OpenAI compatibility](https://docs.ollama.com/openai)：用于确认本地模型服务通过兼容 API 降低上层集成成本。
+- [Rapid-MLX](https://github.com/raullenchai/Rapid-MLX)：用于确认 Apple Silicon 本地推理服务和 OpenAI-compatible server 的实战形态。

@@ -36,7 +36,7 @@ flowchart LR
   Verifier --> Final[Final Answer + Revision Trace]
 ```
 
-这张图的讲法是：reviewer 只提出质量判断和修订方向，真正的事实补充来自检索、工具或测试。最终答案必须经过 verifier，而不是由自评直接放行。
+图 1：Reflection reviewer 只提出质量判断和修订方向，真正的事实补充来自检索、工具或测试。最终答案必须经过 verifier，而不是由自评直接放行。
 
 ## 系统设计案例
 
@@ -52,9 +52,41 @@ flowchart LR
 
 ## 面试官追问
 
-- 如果 reviewer 和 verifier 冲突，你信谁？我会优先信 verifier，因为它连接外部证据、规则或测试。reviewer 只能解释可能原因。
-- Reflection 应该每次都跑吗？不一定。高风险写操作、长答案、代码修改和低置信度检索适合触发，短问答可以用轻量规则。
-- 怎么防止成本失控？用 retry budget、触发阈值、缓存 reviewer 结果和 early stop。
+下面用多轮追问模拟展开，重点检验 reviewer 与 verifier 的边界、触发策略、收益指标和停止条件。
+
+## 多轮追问模拟
+
+### 追问 1：如果 reviewer 和 verifier 冲突，你信谁？
+
+**回答要点**：我会优先信 verifier。Reviewer 是模型或规则驱动的质量判断，它可以指出“可能缺少证据”或“结构不完整”；Verifier 连接外部事实、测试、schema、citation、权限策略或人工审批，才是硬门禁。冲突时不应直接放行，也不应让 reviewer 覆盖 verifier，而是把 verifier 的失败结果写回修订循环。
+
+**考察点**：是否理解 reflection 是质量控制信号，不是事实来源。
+
+**陷阱**：让 reviewer 自己给自己放行，容易把同一上下文里的错误反复合理化。
+
+### 追问 2：Reflection 应该每次都跑吗？
+
+**回答要点**：不需要。触发策略要和风险、成本、延迟绑定：长答案、代码修改、低置信度检索、高风险工具调用、外部写操作、用户要求严谨时适合触发；短问答、低风险格式转换可以用轻量规则或抽样审查。关键是有 `trigger_reason`、`max_rounds`、`no_improvement_stop` 和成本预算。
+
+**考察点**：是否能把 reflection 从 prompt 技巧升级为运行时策略。
+
+**陷阱**：全量 reflection 会把简单任务拖慢，也可能增加无效成本；完全不跑又会让复杂任务缺少质量闭环。
+
+### 追问 3：怎么衡量 Reflection 真有用？
+
+**回答要点**：看结果指标，而不是只看 reviewer 分数。RAG 场景看 `unsupported_claim_rate`、citation pass rate；代码场景看 test pass rate、回归失败率；工具场景看 permission violation、invalid args 和 recovery success。综合看 `verifier_pass_rate`、`revision_success_rate`、`avg_revision_rounds`、`cost_per_passed_answer` 和 `self_approval_false_positive_rate`。
+
+**考察点**：是否能用评测和线上指标证明模块收益。
+
+**陷阱**：只展示“回答变长了、语气更好了”，但没有证明事实更准、测试更多通过或事故更少。
+
+### 追问 4：Reflection 循环卡住怎么办？
+
+**回答要点**：先看每一轮是否有新增证据或 verifier 结果改善。如果只是反复改写，就触发 no-improvement stop；如果缺证据，就回到检索或工具；如果 verifier 持续失败，就转人工或降级。trace 里要记录每轮输入、verdict、问题类型、修订差异和停止原因。
+
+**考察点**：是否有停止条件、降级策略和可观测闭环。
+
+**陷阱**：把最大轮数设得很高但没有改进判定，会让系统把错误答案润色得更像正确答案。
 
 ## 项目化回答
 
@@ -87,5 +119,5 @@ Reflection 不适合无限轮次。多轮自评可能把错误答案润色得更
 
 ## 来源与延伸阅读
 
-- [OpenAI Evals](https://github.com/openai/evals)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [OpenAI Evals](https://github.com/openai/evals)：用于支撑“用可复现评测而不是主观自评证明质量提升”的结论。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支撑 Agent 设计中把规划、工具、评估与安全边界拆成工程模块的做法。
