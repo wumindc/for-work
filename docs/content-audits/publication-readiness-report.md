@@ -12,7 +12,7 @@ It is advisory by default: it identifies the next content-review backlog without
 - Needs revision: 0
 - Blocked: 0
 - Average score: 99
-- Issues: blocker 0, major 0, minor 111
+- Issues: blocker 0, major 0, minor 103
 
 ## Domain Readiness
 
@@ -34,62 +34,62 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 111 |
+| thin_depth | 103 |
 
 ## First 50 Revision Targets
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | topic | ai-agent-rag | `context-layers` | 96 | publishable | minor:thin_depth |
-| 2 | topic | ai-agent-rag | `framework-selection` | 96 | publishable | minor:thin_depth |
-| 3 | topic | ai-agent-rag | `guardrails` | 96 | publishable | minor:thin_depth |
-| 4 | topic | ai-agent-rag | `handoff-pattern` | 96 | publishable | minor:thin_depth |
-| 5 | topic | ai-agent-rag | `hybrid-search` | 96 | publishable | minor:thin_depth |
-| 6 | topic | ai-agent-rag | `langgraph` | 96 | publishable | minor:thin_depth |
-| 7 | topic | ai-agent-rag | `llm-foundation` | 96 | publishable | minor:thin_depth |
-| 8 | topic | ai-agent-rag | `llm-training-alignment` | 96 | publishable | minor:thin_depth |
-| 9 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
-| 10 | topic | ai-agent-rag | `memory-decay` | 96 | publishable | minor:thin_depth |
-| 11 | topic | ai-agent-rag | `multi-agent-roles` | 96 | publishable | minor:thin_depth |
-| 12 | topic | ai-agent-rag | `paper-agent-project` | 96 | publishable | minor:thin_depth |
-| 13 | topic | ai-agent-rag | `planning-methods` | 96 | publishable | minor:thin_depth |
-| 14 | topic | ai-agent-rag | `playwright-actions` | 96 | publishable | minor:thin_depth |
-| 15 | topic | ai-agent-rag | `project-storytelling` | 96 | publishable | minor:thin_depth |
-| 16 | topic | ai-agent-rag | `prompt-injection` | 96 | publishable | minor:thin_depth |
-| 17 | question | ai-agent-rag | `q-agent-definition-deep` | 96 | publishable | minor:thin_depth |
-| 18 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 96 | publishable | minor:thin_depth |
-| 19 | question | ai-agent-rag | `q-ai-eval-observability-structured` | 96 | publishable | minor:thin_depth |
-| 20 | question | ai-agent-rag | `q-ai-llm-foundation-core` | 96 | publishable | minor:thin_depth |
-| 21 | question | ai-agent-rag | `q-ai-llm-foundation-deep` | 96 | publishable | minor:thin_depth |
-| 22 | question | ai-agent-rag | `q-ai-llm-training-core` | 96 | publishable | minor:thin_depth |
-| 23 | question | ai-agent-rag | `q-ai-llm-training-deep` | 96 | publishable | minor:thin_depth |
-| 24 | question | ai-agent-rag | `q-langgraph-deep` | 96 | publishable | minor:thin_depth |
-| 25 | question | ai-agent-rag | `q-planning-methods-core` | 96 | publishable | minor:thin_depth |
-| 26 | question | ai-agent-rag | `q-planning-methods-deep` | 96 | publishable | minor:thin_depth |
-| 27 | question | ai-agent-rag | `q-react-loop-core` | 96 | publishable | minor:thin_depth |
-| 28 | question | ai-agent-rag | `q-workflow-vs-agent-core` | 96 | publishable | minor:thin_depth |
-| 29 | topic | ai-agent-rag | `rag-pipeline` | 96 | publishable | minor:thin_depth |
-| 30 | topic | ai-agent-rag | `react-loop` | 96 | publishable | minor:thin_depth |
-| 31 | topic | ai-agent-rag | `reflection-review` | 96 | publishable | minor:thin_depth |
-| 32 | topic | ai-agent-rag | `rerank` | 96 | publishable | minor:thin_depth |
-| 33 | topic | ai-agent-rag | `sandbox` | 96 | publishable | minor:thin_depth |
-| 34 | topic | ai-agent-rag | `short-term-memory` | 96 | publishable | minor:thin_depth |
-| 35 | topic | ai-agent-rag | `skills` | 96 | publishable | minor:thin_depth |
-| 36 | topic | ai-agent-rag | `swe-bench` | 96 | publishable | minor:thin_depth |
-| 37 | topic | ai-agent-rag | `tool-error-recovery` | 96 | publishable | minor:thin_depth |
-| 38 | topic | ai-agent-rag | `tool-permissions` | 96 | publishable | minor:thin_depth |
-| 39 | topic | ai-agent-rag | `tool-registry` | 96 | publishable | minor:thin_depth |
-| 40 | topic | ai-agent-rag | `tool-schema` | 96 | publishable | minor:thin_depth |
-| 41 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
-| 42 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
-| 43 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
-| 44 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
-| 45 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
-| 46 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
-| 47 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
-| 48 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
-| 49 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
-| 50 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
+| 1 | topic | ai-agent-rag | `mcp-fundamentals` | 96 | publishable | minor:thin_depth |
+| 2 | topic | ai-agent-rag | `memory-decay` | 96 | publishable | minor:thin_depth |
+| 3 | topic | ai-agent-rag | `multi-agent-roles` | 96 | publishable | minor:thin_depth |
+| 4 | topic | ai-agent-rag | `paper-agent-project` | 96 | publishable | minor:thin_depth |
+| 5 | topic | ai-agent-rag | `planning-methods` | 96 | publishable | minor:thin_depth |
+| 6 | topic | ai-agent-rag | `playwright-actions` | 96 | publishable | minor:thin_depth |
+| 7 | topic | ai-agent-rag | `project-storytelling` | 96 | publishable | minor:thin_depth |
+| 8 | topic | ai-agent-rag | `prompt-injection` | 96 | publishable | minor:thin_depth |
+| 9 | question | ai-agent-rag | `q-agent-definition-deep` | 96 | publishable | minor:thin_depth |
+| 10 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 96 | publishable | minor:thin_depth |
+| 11 | question | ai-agent-rag | `q-ai-eval-observability-structured` | 96 | publishable | minor:thin_depth |
+| 12 | question | ai-agent-rag | `q-ai-llm-foundation-core` | 96 | publishable | minor:thin_depth |
+| 13 | question | ai-agent-rag | `q-ai-llm-foundation-deep` | 96 | publishable | minor:thin_depth |
+| 14 | question | ai-agent-rag | `q-ai-llm-training-core` | 96 | publishable | minor:thin_depth |
+| 15 | question | ai-agent-rag | `q-ai-llm-training-deep` | 96 | publishable | minor:thin_depth |
+| 16 | question | ai-agent-rag | `q-langgraph-deep` | 96 | publishable | minor:thin_depth |
+| 17 | question | ai-agent-rag | `q-planning-methods-core` | 96 | publishable | minor:thin_depth |
+| 18 | question | ai-agent-rag | `q-planning-methods-deep` | 96 | publishable | minor:thin_depth |
+| 19 | question | ai-agent-rag | `q-react-loop-core` | 96 | publishable | minor:thin_depth |
+| 20 | question | ai-agent-rag | `q-workflow-vs-agent-core` | 96 | publishable | minor:thin_depth |
+| 21 | topic | ai-agent-rag | `rag-pipeline` | 96 | publishable | minor:thin_depth |
+| 22 | topic | ai-agent-rag | `react-loop` | 96 | publishable | minor:thin_depth |
+| 23 | topic | ai-agent-rag | `reflection-review` | 96 | publishable | minor:thin_depth |
+| 24 | topic | ai-agent-rag | `rerank` | 96 | publishable | minor:thin_depth |
+| 25 | topic | ai-agent-rag | `sandbox` | 96 | publishable | minor:thin_depth |
+| 26 | topic | ai-agent-rag | `short-term-memory` | 96 | publishable | minor:thin_depth |
+| 27 | topic | ai-agent-rag | `skills` | 96 | publishable | minor:thin_depth |
+| 28 | topic | ai-agent-rag | `swe-bench` | 96 | publishable | minor:thin_depth |
+| 29 | topic | ai-agent-rag | `tool-error-recovery` | 96 | publishable | minor:thin_depth |
+| 30 | topic | ai-agent-rag | `tool-permissions` | 96 | publishable | minor:thin_depth |
+| 31 | topic | ai-agent-rag | `tool-registry` | 96 | publishable | minor:thin_depth |
+| 32 | topic | ai-agent-rag | `tool-schema` | 96 | publishable | minor:thin_depth |
+| 33 | topic | ai-agent-rag | `trace-replay` | 96 | publishable | minor:thin_depth |
+| 34 | topic | ai-agent-rag | `trajectory-eval` | 96 | publishable | minor:thin_depth |
+| 35 | topic | ai-agent-rag | `web-agent-eval` | 96 | publishable | minor:thin_depth |
+| 36 | topic | ai-agent-rag | `web-agent-project` | 96 | publishable | minor:thin_depth |
+| 37 | topic | ai-agent-rag | `workflow-vs-agent` | 96 | publishable | minor:thin_depth |
+| 38 | topic | ai-engineering-trends | `agent-state-file-verifier` | 96 | publishable | minor:thin_depth |
+| 39 | topic | ai-engineering-trends | `ai-code-review-pipeline` | 96 | publishable | minor:thin_depth |
+| 40 | topic | ai-engineering-trends | `codex-claude-context-workflow` | 96 | publishable | minor:thin_depth |
+| 41 | topic | ai-engineering-trends | `computer-use-agent-benchmark` | 96 | publishable | minor:thin_depth |
+| 42 | topic | ai-engineering-trends | `design-assets-for-ai-coding` | 96 | publishable | minor:thin_depth |
+| 43 | topic | ai-engineering-trends | `enterprise-agent-solution-map` | 96 | publishable | minor:thin_depth |
+| 44 | topic | ai-engineering-trends | `loop-engineering-agent-runtime` | 96 | publishable | minor:thin_depth |
+| 45 | topic | ai-engineering-trends | `rag-document-ingestion-stack` | 96 | publishable | minor:thin_depth |
+| 46 | topic | ai-engineering-trends | `self-growing-knowledge-base` | 96 | publishable | minor:thin_depth |
+| 47 | topic | ai-engineering-trends | `skill-packaging-workflow` | 96 | publishable | minor:thin_depth |
+| 48 | topic | database | `db-backup-recovery-migration` | 96 | publishable | minor:thin_depth |
+| 49 | topic | database | `db-index-execution-plan` | 96 | publishable | minor:thin_depth |
+| 50 | topic | database | `db-lock-deadlock-troubleshooting` | 96 | publishable | minor:thin_depth |
 
 ## How To Use
 

@@ -119,6 +119,14 @@ Guardrails 上线前要做三类验收。第一类是策略覆盖：输入侧至
 
 第三类是指标闭环：上线后同时看漏拦和误拦。`unsafe_tool_call_block_rate` 高不一定是好事，可能说明工具暴露过宽；`false_positive_rate` 高会伤害任务完成率；`pii_leak_count` 和 `policy_bypass_attempts` 是安全事故信号；`human_handoff_rate` 要按 risk_level 分桶。面试里能讲出这套验收，说明你把 Guardrails 当成安全工程，而不是把它当成提示词技巧。
 
+## 公开阅读校验
+
+面向公开读者时，Guardrails 要避免写成“模型会拒绝危险请求”。更严谨的表达是：模型可以参与风险分类，但最终执行边界由 policy engine、ACL、工具运行时和人工确认共同决定。文章应明确输入拦截、上下文隔离、工具执行前校验、输出发布前检查、人工审批和审计回放各自负责什么，避免把所有安全问题压进一个 system prompt。
+
+生产系统还需要区分 fail-open 和 fail-closed。读操作失败可以返回 empty state 或 unsupported，写操作策略服务不可用时应默认拒绝或进入人工确认。高风险工具要有 preview snapshot、参数 hash、审批 ID、执行前再校验和 rollback plan。若用户确认的是“给 A 转账 100 元”，执行时变成“给 B 转账 1000 元”，旧 approval 必须自动失效。
+
+复盘样本要覆盖真实绕过方式：恶意网页要求模型忽略规则、RAG 文档诱导调用删除工具、用户把敏感信息藏在附件里、模型生成 unsupported claim、工具返回中夹带新指令。每个事故样本都要沉淀为 eval fixture，并记录 `policy_version`、`decision_reason`、`model_risk_score`、`deterministic_rule_result` 和最终动作。这样 Guardrails 才能持续迭代，而不是上线一次后靠运气。
+
 ## 来源与延伸阅读
 
 - [OpenAI: A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于 guardrails、tools、handoff 与安全设计。

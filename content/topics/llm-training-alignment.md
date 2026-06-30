@@ -127,6 +127,16 @@ Eval case 至少包含 `case_id`、`input`、`expected_behavior`、`required_evi
 - 如果追问“什么时候不用微调”，要列出证据缺失、实时状态、权限过滤、工具失败和 prompt 未收敛这些反例。
 - 如果追问“微调上线怎么防回归”，要讲固定 golden set、领域样本、红队安全样本、灰度流量、回滚模型和版本化 trace。
 
+## 公开阅读校验
+
+训练与对齐的公开内容要避免给读者一种错觉：只要微调或 RLHF，系统就会更正确。更严谨的边界是，训练改变模型行为分布，不能替代实时事实、权限系统、工具执行和上线监控。事实更新快、需要 citation、受租户权限约束的知识，优先走 RAG 或工具；稳定格式、领域表达和固定流程失败，才可能进入 SFT 或偏好优化候选。
+
+上线前应先做 failure attribution，而不是直接攒训练集。把错误按 `failure_type` 分桶后，如果主要是 retrieval_miss、wrong_permission、stale_data 或 tool_error，训练通常治标不治本；如果主要是 stable_format_error、domain_style_mismatch、instruction_following_gap，才评估微调收益。训练样本必须记录来源、脱敏状态、reviewer、质量分和数据版本，否则模型变好或变坏都无法解释。
+
+发布验收要包含回滚路径：同一批 golden cases、红队样本、真实灰度流量和长尾语言样本同时比较 base model、candidate fine-tune 和当前线上模型。指标看 `format_pass_rate`、`preference_win_rate`、`hallucination_rate`、`safety_refusal_precision`、`over_refusal_rate`、`regression_fail_count`、`cost_delta` 和 `latency_delta`。如果候选模型只在主观偏好上升，却让安全拒答或事实引用退化，就不应发布。
+
+数据治理也要写进流程。训练集应有可追溯授权、PII 脱敏记录、重复样本检测和污染检查；高风险行业样本要有人审标签，不能把线上坏答案直接回灌成“偏好数据”。否则所谓对齐会把事故固化进模型。
+
 ## 来源与延伸阅读
 
 - [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)：官方文档用于说明微调适合稳定格式、风格和任务行为，不适合作为实时事实数据库。
