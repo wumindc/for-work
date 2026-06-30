@@ -31,6 +31,10 @@ flowchart TD
   E --> F[Tradeoff]
 ```
 
+图 1：Agent 项目叙事的工程证据链。图中从 Problem framing 开始，先界定用户、输入输出和非目标；再进入 Architecture、Data flow、Metrics、Failure case 和 Tradeoff。每一层都要能落到模块、字段、trace 或指标，而不是停在“用了某个模型/框架”的描述。
+
+这张图的边界是：简历项目不必伪装成完整生产系统，但必须可验证。好的叙事会主动说明 supported、unsupported 和 requiresConfirmation；讲清模型只是决策模块，真正的工程深度来自 Context、State、Tools、Guardrails、Eval、Trace 和失败复盘。
+
 数据流讲得越清楚，追问越容易接。面试官问到任何模块，都可以回到 trace、schema、指标和失败样本。
 
 ## 可画图
@@ -49,6 +53,8 @@ flowchart TD
 
 这种回答比“优化 prompt 后好了”更可信，因为它有根因、指标和回归样本。
 
+事故复盘也要讲成闭环：影响面先说明是 citation 错、工具误用、状态丢失、成本超预算，还是高风险动作未确认；止血可以禁用相关工具、收紧检索范围、降级到只读模式或增加人工确认；根因要查 trace、context_refs、tool_args、verifier_verdict、metric sample 和失败输入；回归要把失败样本加入 golden cases，并说明指标如何变化。
+
 ## 面试官追问
 
 - 这个项目为什么不是 demo？
@@ -56,6 +62,17 @@ flowchart TD
 - 如何评测效果？
 - 上线真实用户还缺什么？
 - 失败案例怎么复盘？
+
+## 多轮追问模拟
+
+**追问 1：这个项目为什么不是 demo？**
+答题要点：能给出真实输入输出、模块边界、trace、eval 样本、失败案例和 unsupported 清单；不是只展示一次成功视频。考察点是工程验证。陷阱是只说接了 RAG 或 LangGraph。
+
+**追问 2：最难的工程点是什么？**
+答题要点：选一个链路说细，例如 claim-to-evidence、tool permission、state recovery、trajectory eval；讲字段、失败样本和指标。考察点是深挖能力。陷阱是回答“调 prompt 比较难”。
+
+**追问 3：上线还缺什么？**
+答题要点：权限、审计、监控、成本控制、数据更新、人工审核、回滚方案、真实用户反馈闭环。考察点是生产意识。陷阱是把离线项目说成全量生产可用。
 
 ## 项目化回答
 
@@ -92,6 +109,7 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [LangSmith Observability](https://docs.smith.langchain.com/observability)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持项目叙事中的 trace、tool call、handoff 和 guardrail 证据链。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：官方指南用于补充 Agent 项目应说明目标、工具、人类确认、评估和上线边界。
+- [LangSmith Observability](https://docs.smith.langchain.com/observability)：官方文档用于说明线上 Agent 项目需要 run trace、调试和可观测证据。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：官方文档用于支持用数据集、评测器和实验结果证明项目质量。

@@ -33,6 +33,10 @@ flowchart LR
   Agent --> Trace[trajectory]
 ```
 
+图 1：SWE-bench 风格的 Coding Agent 评测闭环。图中 GitHub issue 与 repository snapshot 构成输入，Agent 生成 patch，harness 统一应用补丁并运行 unit tests，最终输出 resolved/failed；同时保留 trajectory，便于解释失败来自搜索、阅读、补丁、测试还是停止条件。
+
+这张图的关键边界是：SWE-bench 不只是“跑测试”，而是把真实仓库、真实 issue、base commit、patch、test harness 和失败日志放到同一评测协议里。它比算法题更接近工程，但仍不能替代代码审查、安全评估和产品需求确认。
+
 ## 系统设计案例
 
 公司内部可以把线上 bug 转成 SWE-style case。输入是 bug 描述、base commit 和测试命令。Agent 生成 patch 后，harness 运行回归测试。若通过测试但改了无关模块，review rubric 仍扣分。
@@ -41,11 +45,24 @@ flowchart LR
 
 resolved_rate 低时先分桶。定位失败看搜索和上下文读取。patch 编译失败看构建日志。测试超时看环境和依赖。通过率高但人工不满意，说明测试和 review 覆盖不足。指标看 `resolved_rate`、`patch_apply_rate`、`test_pass_rate` 和 `irrelevant_diff_rate`。
 
+事故处理要先看影响面：是 patch apply 失败、依赖安装失败、测试超时、测试未覆盖，还是 trajectory 不可复盘。止血可以冻结依赖镜像、隔离 flaky case、把环境失败从模型失败里分离、禁止修改测试文件。根因要查 instance_id、base_commit、patch、test_patch、exit_code、stderr、failure_bucket 和 trajectory_ref。回归要把失败样例加入私有 SWE-style eval，并保留 review rubric。
+
 ## 面试官追问
 
 - SWE-bench 和 LeetCode 区别？真实 repository、真实 issue、真实 tests。
 - tests passed 够不够？不够，还要看可维护性和未测行为。
 - 企业怎么借鉴？把线上 bug、回归测试和 review rubric 做成私有 eval。
+
+## 多轮追问模拟
+
+**追问 1：SWE-bench 和 LeetCode 最大区别是什么？**
+答题要点：SWE-bench 是真实仓库、真实 issue、base commit、patch 和测试 harness；LeetCode 多是孤立函数题。考察点是真实工程评测。陷阱是只说“题更难”。
+
+**追问 2：resolved_rate 能否代表生产可用？**
+答题要点：只能说明 benchmark 环境下通过目标测试；生产还要看安全、维护性、diff scope、公共 API、未测边界和 review verdict。考察点是指标边界。陷阱是把排行榜分数当上线保证。
+
+**追问 3：企业如何借鉴 SWE-bench？**
+答题要点：把线上 bug 沉淀为 base commit、问题描述、回归测试、harness、失败分桶和 review rubric。考察点是私有 eval 落地。陷阱是只搬公开 benchmark。
 
 ## 项目化回答
 
@@ -81,6 +98,7 @@ Harness 的价值是让不同 Agent 在相同环境里比较。它统一 checkou
 
 ## 来源与延伸阅读
 
-- [SWE-bench official site](https://www.swebench.com/)
-- [SWE-bench paper](https://arxiv.org/abs/2310.06770)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [SWE-bench official site](https://www.swebench.com/)：官方站点用于说明 SWE-bench 以真实 GitHub issue 和仓库快照评估代码修复能力。
+- [SWE-bench paper](https://arxiv.org/abs/2310.06770)：论文用于支持 benchmark 的数据来源、任务定义、patch 评测和局限性。
+- [SWE-bench GitHub](https://github.com/SWE-bench/SWE-bench)：开源仓库用于补充实例结构、harness 和评测流程实现。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明 search-read-edit-test 轨迹需要进入可复盘 trace。
