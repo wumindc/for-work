@@ -36,7 +36,11 @@ flowchart TD
   A --> O
 ```
 
+图 1：多 Agent 的角色契约、共享状态与仲裁链路。Orchestrator 负责创建任务图和分派角色，Agent Registry 描述能力和权限，Shared State 保存中间产物，Arbiter 处理冲突并把结论交回 Orchestrator。
+
 运行机制是中心化调度更稳。Orchestrator 创建 task_id，Planner 拆任务，Executor 产出 artifact，Reviewer 给 verdict，Arbiter 处理分歧，最终结果和中间 trace 进入 eval。
+
+这张图的关键不是“模型变多”，而是每个 role 有清晰 contract。Planner 不直接写最终答案，Executor 不绕过 Reviewer，Reviewer 不能覆盖 artifact，Security 只能输出 policy finding。只有这些写入边界和仲裁规则清楚，多 Agent 才是工程拆分，而不是多个聊天机器人互相催促。
 
 ## 可画图
 
@@ -61,6 +65,17 @@ flowchart TD
 - reviewer 与 arbiter 有什么区别？
 - 如何防止 Agent 之间无限 handoff？
 - 多 Agent 的收益如何用 eval 证明？
+
+## 多轮追问模拟
+
+追问 1：多 Agent 一定比单 Agent 更好吗？
+答：不是。只有任务可拆、角色输出能独立验证、工具权限差异明显或需要审查隔离时，多 Agent 才可能带来收益。短任务、强耦合状态、低风险单步工具调用，单 Agent 或固定 workflow 更稳。考察点是适用边界；陷阱是把模型数量当成能力提升。
+
+追问 2：Reviewer 为什么要独立？
+答：Reviewer 要有自己的 rubric、evidence 和输出 schema，否则只是 Executor 的复述。最好让 Reviewer 读 artifact、source refs 和任务约束，而不是只读 Executor 的自我总结。考察点是审查有效性；陷阱是 reviewer 和 executor 共用同一上下文导致确认偏差。
+
+追问 3：Shared State 怎么避免互相覆盖？
+答：用 owner、version、write_scope 和 reducer。Researcher 写 source list，Writer 写 draft，Citation Checker 写 citation verdict，Arbiter 才能合并冲突。每次写入带 task_id、role_id 和 trace_id，方便回滚和复盘。考察点是状态治理；陷阱是让所有 Agent 写同一个自由文本字段。
 
 ## 项目化回答
 
@@ -97,6 +112,6 @@ Shared State 必须有版本和 owner。Researcher 可以写 source list，Write
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
-- [LangChain Multi-agent](https://docs.langchain.com/oss/python/langchain/multi-agent)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)：官方文档用于支持多 Agent 之间需要结构化转交，而不是自由聊天。
+- [LangChain Multi-agent](https://docs.langchain.com/oss/python/langchain/multi-agent)：用于支持 supervisor、handoff、tool-calling 等多 Agent 组织模式的取舍。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持多 Agent 系统必须有 trace 才能定位角色输出、handoff 和工具调用责任。
