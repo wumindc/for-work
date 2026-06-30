@@ -148,11 +148,13 @@ Redis 原子性题要区分 MULTI/EXEC 事务、Lua 脚本原子执行和 Pipeli
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `script_name` | Lua 脚本 | 标识业务脚本语义 | 定位慢脚本或错误脚本 |
+| `script_sha` | Lua 脚本 | Redis 脚本缓存标识 | 处理 NOSCRIPT 与版本漂移 |
+| `keys[]` | Lua 参数 | 显式声明访问 key | Cluster 校验同 slot |
+| `argv[]` | Lua 参数 | 传入阈值、token、TTL 等变量 | 复盘参数错误 |
+| `return_code` | 脚本结果 | 表达 success/limited/conflict/error | 客户端降级和告警 |
+| `pipeline_batch_id` | Pipeline | 标识一批命令 | 定位批量失败位置 |
+| `command_index` | Pipeline 响应 | 标识第几个命令失败 | 支持幂等重试 |
 
 ## 深问准备
 
@@ -161,6 +163,16 @@ Redis 原子性题要区分 MULTI/EXEC 事务、Lua 脚本原子执行和 Pipeli
 - 反例要明确，例如强事务事实源不能交给缓存或搜索读模型。
 - 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
 - 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
+
+## 公开阅读校验
+
+这篇文章要让读者分清三件事：MULTI/EXEC 是命令排队和顺序执行，Lua 是服务端脚本原子执行，Pipeline 是减少网络往返。Pipeline 不提供原子性，Redis 事务也不提供关系数据库式自动回滚。把三者混成“Redis 事务方案”，是面试里很容易暴露的浅层理解。
+
+Lua 的生产边界要写清。脚本适合短小的 check-and-set、释放锁、限流扣减、库存预占等组合命令；不适合长循环、大范围扫描、复杂计算和跨 slot 多 key 操作。脚本执行期间会阻塞 Redis 主线程，慢脚本会影响所有请求，所以要监控 `eval_latency_p95`、slowlog、blocked clients 和脚本错误率。
+
+Cluster 模式下要特别说明 key 的 slot 约束。Lua 脚本访问多个 key 时，这些 key 必须落在同一个 slot，常用 hash tag 保证相关 key 同槽。上线前要用集群环境回归，而不是只在单机 Redis 上验证脚本。否则本地通过，生产直接 CROSSSLOT。
+
+Pipeline 的验收重点是批量大小和失败恢复。批量太小收益不明显，批量太大会增加响应包、连接占用和尾延迟；某个命令失败时，客户端要能定位 command index，并保证重试是幂等的。公开文章里能讲清这些细节，读者才会信这是生产经验，而不是命令速查。
 
 ## 来源与延伸阅读
 

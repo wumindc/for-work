@@ -109,6 +109,16 @@ Saga 的验收重点是“每一步都有状态，每个失败都有去向”。
 
 对账验收要能回答三类问题：业务状态和事件状态是否一致，事件消费结果和下游状态是否一致，用户可见状态和后台真实状态是否一致。典型 SQL 或任务会扫描 paid but coupon_missing、outbox_sent but consumer_missing、saga_pending_too_long、compensation_failed 等集合。每个集合都有 owner、SLA、修复脚本和审计记录。面试里讲出这套对账，会比只说“最终一致”可信得多。
 
+## 公开阅读校验
+
+这篇文章公开阅读时，要先强调“本地事务边界”。数据库本地事务只能保护同一个资源里的状态；MQ、HTTP、外部支付、搜索索引、短信、第三方权益都不在同一个本地事务里。Outbox、事务消息、Saga、TCC 都是在不同约束下管理这个边界，不是让跨服务系统天然变成全局 ACID。
+
+Outbox 的专业表述是“业务状态和待发布事件同事务写入，发布可重复，消费必须幂等”。如果只说“写 outbox 表再发 MQ”，还不够。还要讲 Relay/CDC 如何扫描、如何标记状态、如何限速重试、如何归档，发布成功但状态更新失败时为什么会重复事件，以及消费者如何通过 `event_id` 或业务唯一键收敛重复。
+
+Saga 的专业表述是“状态机 + 补偿 + 对账 + 用户可见状态”。补偿并不等于自动回滚；不可逆动作要后置或人工确认，补偿失败要进入人工队列或对账任务。用户端要能看到处理中、失败可重试、人工处理等状态，否则最终一致就会变成用户无法理解的黑盒等待。
+
+项目验收可以固定三张表或三类视图：outbox pending/failed 视图、Saga step terminal/pending 视图、一致性 checker 视图。指标上关注 `oldest_pending_age`、`event_publish_lag`、`duplicate_event_count`、`saga_stuck_count`、`compensation_failed_count` 和 `inconsistent_count`。这些指标能证明最终一致性不是口号，而是可运营机制。
+
 ## 来源与延伸阅读
 
 - [Transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html)：用于解释业务状态与待发布事件同本地事务提交的模式边界。

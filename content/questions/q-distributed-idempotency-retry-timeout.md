@@ -104,6 +104,16 @@ flowchart LR
 4. 限流、熔断、降级怎么配合？
 5. Agent 工具如何保证幂等？
 
+## 公开阅读校验
+
+这道题高分答案的第一句话应该是“先定义失败模型”。网络超时、请求重复、下游过载、部分成功、响应丢失和状态未知是分布式系统的常态。只有先承认这些失败，幂等、重试、超时、限流、熔断和降级才有设计依据。
+
+幂等部分要讲业务意图和 fingerprint。`Idempotency-Key` 或业务 key 不能只是 request_id；它要能让客户端超时后带着同一个意图重试。服务端要比较 `request_hash`，同 key 同参数返回同一结果，同 key 不同参数返回 conflict，处理中状态返回 processing 或查询入口。
+
+重试部分要讲预算。可重试错误包括网络抖动、临时 5xx、429 且允许退避；不可重试错误包括权限、参数、余额、业务规则失败。每次重试都消耗端到端 deadline，不能每一层各自重试。能说出 retry budget、jitter、retry_source 和最大尝试次数，会比“指数退避”四个字更可信。
+
+如果面向公开读者，还要补“如何证明修好了”：故障注入同 key 重复、同 key 不同参数、下游超时、响应丢失、429、MQ 重投，观察 `duplicate_skip_count`、`idempotency_conflict_count`、`unknown_result_count`、`retry_success_rate` 和 `degrade_count` 是否符合预期。这样答案才有工程验收闭环。
+
 ## 来源与延伸阅读
 
 - [IETF Idempotency-Key Draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)：用于支撑非幂等 HTTP 写请求通过 key 识别重试意图、服务端管理 key 生命周期和请求 fingerprint 的设计。
