@@ -52,6 +52,20 @@ flowchart LR
 
 ## 面试官追问
 
+### 第一轮追问：hybrid search 在哪一层解决问题？
+
+BM25 负责精确词、编号、错误码和术语匹配，向量召回负责语义相近表达，metadata filter 负责权限、租户、时间和业务范围。三者组合是为了让召回既能覆盖自然语言问题，也不丢失精确约束。
+
+### 第二轮追问：chunk 设计如何影响证据链？
+
+先按标题、章节、语义边界和表格边界切分，再补 parent-child chunk 或 sliding window。核心不是把块切得越小越好，而是让召回块可定位、上下文块可解释、引用能回到原文。
+
+### 第三轮追问：引用质量怎么验证？
+
+不能只检查答案里有没有链接，要做 claim-to-evidence 校验：每个关键 claim 是否被引用证据支持，引用页码和 chunk id 是否能回到原文，unsupported claim 是否进入失败样本集。
+
+## 多轮追问模拟
+
 ### 追问 1：为什么要 hybrid search？
 
 BM25 擅长精确词、编号和错误码，向量擅长语义相似，metadata filter 处理权限和业务约束。
@@ -63,6 +77,14 @@ BM25 擅长精确词、编号和错误码，向量擅长语义相似，metadata 
 ### 追问 3：引用如何评测？
 
 看 claim 是否真的被 cited evidence 支持，而不是只检查链接存在。
+
+### 追问 4：如果答案错了，你先修检索还是修 prompt？
+
+先看 trace，不直接猜。正确 evidence 没进 topK，优先修 ingest、chunk、metadata、hybrid search 或 embedding；正确 evidence 进了 topK 但 rerank 丢掉，修 reranker 和特征；证据进入 context 但答案仍错，才重点看 prompt、context budget、generator 和 verifier。这样能把问题定位到组件，而不是把所有错误都归因给模型。
+
+### 追问 5：企业知识库 RAG 如何避免权限泄漏？
+
+权限过滤要发生在召回前或召回中，chunk 必须带 `permission_scope`、tenant、doc_version 和 source。不能把无权限 chunk 放进上下文后再过滤答案，因为模型可能已经利用了证据。线上要监控 `permission_filter_hit_count`、`permission_leak_count` 和无权限访问审计，并把越权样本加入回归集。
 
 ## 项目化回答
 
@@ -95,5 +117,5 @@ RAG 的核心是 evidence pipeline。离线侧要把文档解析成可追踪的 
 
 ## 来源与延伸阅读
 
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
-- [Elastic Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html)
+- [OpenAI: A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持 Agent/RAG 系统里的 evidence、tools、eval 与 guardrails 组合思路。
+- [Elastic Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html)：用于说明 keyword/BM25 查询、filter 与向量检索组合时的搜索 API 边界。

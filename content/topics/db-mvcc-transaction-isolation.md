@@ -117,8 +117,17 @@ MVCC 的核心是让读事务看到一个一致快照，而不是被写事务直
 
 这也能帮助你在系统设计题里避免把所有一致性问题都塞进数据库事务，而是按事实源、读模型、事件和补偿分层。
 
+## 生产验收清单
+
+事务和锁治理上线前要先做 SQL 访问路径审计。所有核心写接口要列出事务内 SQL、访问表顺序、索引命中、预计行数、锁对象、事务超时和重试策略。批量任务、库存扣减、状态流转、Outbox 写入这类高冲突路径要统一访问顺序，避免 A 事务先锁订单再锁库存、B 事务先锁库存再锁订单造成死锁。事务内禁止远程 HTTP、MQ publish、模型 API 和用户交互等待。
+
+死锁和锁等待要有可观测闭环。应用日志要记录 `transaction_id`、`request_id`、`business_key`、`retry_count` 和 `isolation_level`；数据库侧要能拿到 deadlock log、lock wait、blocked SQL、blocking SQL 和锁对象；指标侧看 `lock_wait_time`、`deadlock_count`、`transaction_duration_p95`、`retry_success_rate` 和 `rows_examined`。如果只能看到接口慢，而看不到锁等待和阻塞关系，排障会停在猜测。
+
+回归用例至少覆盖四类场景：并发扣减同一资源不超卖，死锁回滚后有限重试且幂等，Outbox 发布失败后 Relay 可补发且消费者去重，长事务或慢查询不会拖垮核心写入。面试里把这套验收讲出来，就能自然说明 MVCC、锁、事务隔离、Outbox 和 MQ 并不是孤立知识点，而是一条生产一致性链路。
+
 ## 来源与延伸阅读
 
-- PostgreSQL MVCC 官方文档：用于确认多版本并发控制和快照语义。
-- MySQL InnoDB Index Types 官方文档：用于说明索引选择如何影响锁范围和执行路径。
-- RocketMQ Transaction Message 官方文档：用于支持事务消息和 Outbox 对比。
+- [PostgreSQL Documentation: Multiversion Concurrency Control](https://www.postgresql.org/docs/current/mvcc.html)：官方文档，用于确认 MVCC、多版本可见性和快照读语义边界。
+- [MySQL 8.4 Reference Manual: InnoDB Locking](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking.html)：官方文档，用于说明行锁、间隙锁、意向锁和锁冲突排查。
+- [MySQL 8.4 Reference Manual: InnoDB Index Types](https://dev.mysql.com/doc/refman/8.4/en/innodb-index-types.html)：官方文档，用于支持“索引选择影响扫描范围和锁范围”的工程判断。
+- [Apache RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：官方文档，用于对比本地事务、事务消息、Outbox 和跨系统最终一致性边界。

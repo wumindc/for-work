@@ -35,7 +35,7 @@ flowchart LR
   SortAgg --> Result
 ```
 
-图里要区分两条路径：全文检索主要走倒排索引和 BM25 打分；排序聚合主要依赖 doc values。mapping 影响这两条路径的行为和成本。
+图 1：ES 写入、分词、倒排索引、doc values 与查询路径。图里要区分两条路径：全文检索主要走倒排索引和 BM25 打分；排序聚合主要依赖 doc values。mapping 影响这两条路径的行为和成本。
 
 ## 架构与运行机制
 
@@ -86,6 +86,8 @@ sequenceDiagram
 
 这个案例能说明：全文检索、过滤、排序和聚合不是一条路径，mapping 决定它们是否稳定。
 
+图 2：商品搜索查询链路。图中 `match title + filters + sort` 会同时触发 query analyzer、倒排索引候选召回、BM25 scoring 和 doc values 排序聚合；如果 title、brand、sku、price 的 mapping 设计错误，问题会表现为召回不准、排序慢或聚合内存高。
+
 ## 真实问题与排障
 
 如果搜索结果不准，先看 analyzer：索引时和查询时分词是否一致。再看 mapping：字段是不是 text/keyword 用错。然后看 query：match、term、filter、boost 是否符合预期。最后用 profile 看耗时瓶颈。
@@ -133,6 +135,14 @@ Lucene segment 是不可变的。refresh 让新 segment 可见，merge 合并小
 被问“term query 查 text 为什么不准”，回答：text 字段索引时被 analyzer 分词，term query 不分析查询词，必须精确匹配 token；全文检索应用 match，精确过滤应用 keyword。
 
 被问“ES 和向量检索怎么结合”，回答：BM25 负责错误码、函数名、ID 和精确短语，向量负责语义泛化，metadata filter 保证权限和版本，RRF/rerank 控制最终证据质量。
+
+## 生产验收清单
+
+Mapping 上线前要做字段评审表。每个字段都要写明来源、类型、是否搜索、是否过滤、是否排序、是否聚合、是否高基数、是否需要 analyzer、是否需要 multi-field。例如 `title` 可以是 `text` + `title.keyword`，`sku`、`trace_id`、`status` 应是 `keyword`，`price` 是 numeric，`created_at` 是 date。生产环境要谨慎使用 dynamic mapping，至少用 index template 限制字段类型和字段数量，避免日志或 JSON 扩展字段把 mapping 撑爆。
+
+查询验收要用真实样本，而不是只看接口 200。关键词、错误码、中文短语、大小写、同义词、精确 ID、空结果和超长输入都要覆盖；`_analyze` 验证分词，`profile` 验证慢查询路径，slow log 观察真实耗时。聚合和排序要确认走 doc values，而不是在 text 字段上打开 fielddata。RAG hybrid search 场景还要验证 BM25、vector、metadata filter 和 rerank 的组合，避免无权限文档或旧版本文档进入候选。
+
+索引重建验收要包含 alias 切换、回滚和数据一致性。mapping 改错后通常不能原地修，应该新建索引、bulk/reindex、校验 doc count 和抽样结果，再通过 alias 原子切换。上线后看 `mapping_fields_count`、`zero_result_rate`、`query_latency_p95`、`fielddata_memory`、`segment_count`、`refresh_time` 和 `index_lag`。这些指标能证明 mapping 设计不是一次性配置，而是持续治理。
 
 ## 来源与延伸阅读
 
