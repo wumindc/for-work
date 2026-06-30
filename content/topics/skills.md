@@ -135,6 +135,18 @@ Skill Router 要处理优先级和冲突。如果多个 Skill 命中，应按显
 
 被问“如何证明 Skill 提升质量”，用 golden tasks 对比启用前后的 `task_success_rate`、`eval_pass_rate`、`tool_error_rate`、`latency_p95` 和 `user_revision_rate`。如果 Skill 只让回答变长却不提升通过率，就不算有效。
 
+## 公开阅读校验
+
+公开文章讲 Skill，要避免把它写成“提示词合集”。读者真正关心的是：这个能力包在什么场景被触发、加载哪些材料、允许用哪些工具、失败时如何退出、产物如何验证。Skill 的价值不是让 Agent 看起来更懂，而是把重复任务沉淀成可版本化、可审计、可回放的执行流程。
+
+评审一个 Skill 是否成熟，可以看四个证据。第一，trigger 有正例和反例，避免无关任务误触发。第二，instruction 是可执行步骤，不只是原则。第三，references、templates、scripts 和 examples 按 scope 渐进加载，避免上下文膨胀。第四，eval 有 golden tasks、失败样例和回归指标。缺少这些证据时，Skill 更像经验文档，不像可交付能力。
+
+还要说明 Skill 与 Tool、Workflow、MCP 的边界。Tool 是动作接口，Workflow 是确定控制流，MCP 更偏外部资源和工具协议，Skill 则是“何时用什么步骤和材料完成任务”的过程知识。一个 Skill 可以调用工具，也可以引用 MCP 暴露的资源，但它不能绕过权限、审计和验证。这个边界对企业落地很重要，否则 Skill 会被误用成越权捷径。
+
+Skill 的运行效果也要能被运营。平台应记录每次命中的 `trigger_reason`、加载了哪些 reference、用了哪些工具、在哪一步失败、最终验证是否通过。如果某个 Skill 频繁触发却产物被人工大改，可能是 trigger 过宽；如果工具错误率升高，可能是 tool contract 不清；如果输出高度模板化，可能是 examples 太少或 eval 只检查格式。把这些数据收集起来，Skill 才能像产品能力一样迭代。
+
+对团队协作来说，Skill 还需要所有权和发布流程。每个 Skill 应有 owner、version、changelog、兼容范围和回滚方式；高风险 Skill 的变更要经过 golden tasks 回归。这样一个团队改了代码审查 Skill，不会悄悄影响文档生成、邮件发送或财务审批场景。这个治理视角能把文章从概念介绍推进到平台设计。
+
 ## 来源与延伸阅读
 
 - [Anthropic: Writing effective tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents)：支撑“能力封装需要围绕 Agent 可理解的接口、样例和评测迭代”的观点。

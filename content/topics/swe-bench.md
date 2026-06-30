@@ -117,6 +117,14 @@ Harness 是评测可信度的核心。它负责应用 patch、安装依赖、运
 
 如果追问“企业内部怎么做 SWE-style eval”，可以从线上 bug、客服工单、历史 PR 和回归测试构建样本。每个样本固定 repo version 和 test command，保留失败日志和人工 verdict。指标看 `resolved_rate`、`patch_apply_rate`、`cost_per_resolved`、`irrelevant_diff_rate` 和 `regression_escape_rate`。
 
+## 公开阅读校验
+
+公开读者看 SWE-bench 文章时，不应只得到“这是一个代码榜单”的印象。更重要的是理解它提供了一种 coding agent 评测范式：固定仓库快照、限定环境、让 Agent 生成 patch、由 harness 应用并运行测试，再结合 trajectory 和 review 判断质量。榜单数字只是结果，真正可复用的是这个可重复评测闭环。
+
+文章还要明确 resolved rate 的边界。测试通过说明 patch 满足指定测试，但不自动证明补丁可维护、没有安全问题、没有过拟合，也不说明它能处理企业内部的私有框架和 CI 约束。把 SWE-bench 用作发布门禁时，应补充 hidden tests、diff review、轨迹审查和异常样本人工复核，尤其要检查是否修改测试、删除断言或引入无关依赖。
+
+企业内部落地时，最有价值的不是照搬公开样本，而是把历史线上 bug、回归测试、真实 PR 和 CI 失败沉淀成私有 SWE-style eval。每个 case 要固定 base commit、依赖镜像、测试命令、允许工具和网络策略。这样评测才能回答“我们的 coding agent 在我们的工程约束下是否变好”，而不是只回答“它在公开 benchmark 上排名如何”。
+
 ## 来源与延伸阅读
 
 - [SWE-bench 官方网站](https://www.swebench.com/)：用于确认 benchmark family、leaderboard 口径和不同子集的定位。

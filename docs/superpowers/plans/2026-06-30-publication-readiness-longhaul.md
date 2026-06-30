@@ -268,6 +268,14 @@ Post-publish thin-depth deepening:
 - [x] `react-loop`
 - [x] `reflection-review`
 - [x] `rerank`
+- [x] `sandbox`
+- [x] `short-term-memory`
+- [x] `skills`
+- [x] `swe-bench`
+- [x] `tool-error-recovery`
+- [x] `tool-permissions`
+- [x] `tool-registry`
+- [x] `tool-schema`
 
 For each question:
 
