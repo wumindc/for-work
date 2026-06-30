@@ -239,9 +239,15 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-db-mvcc-transaction-isolation`
 - [ ] Redis questions with missing sources.
   - [x] `q-redis-cache-consistency`
+  - [x] `q-redis-hotkey-breakdown-avalanche`
+- [ ] Prometheus and observability low-score questions.
+  - [x] `q-observability-incident-tracing`
+  - [x] `q-prometheus-metrics-promql`
 - [ ] Java/JVM blocked documents.
   - [x] `q-java-thread-pool-governance`
+  - [x] `q-jvm-gc-troubleshooting`
 - [ ] System-design blocked documents.
+  - [x] `q-distributed-idempotency-retry-timeout`
 - [ ] AI engineering trend documents.
   - [x] `local-ai-inference-stack`
 

@@ -6,7 +6,7 @@
 
 ## 30 秒回答
 
-我会先把四类问题区分开：热 key 是少数 key QPS 过高；击穿是热点 key 失效后大量并发回源；穿透是查询不存在的数据导致缓存永远 miss；雪崩是大量 key 同时失效或 Redis 整体不可用，导致大面积回源。
+我会先把四类问题区分开：热 key 是少数 key QPS 过高；击穿是热点 key 失效后大量并发回源；穿透是查询不存在的数据或非法请求持续 miss 并打到 DB；雪崩是大量 key 同时失效或 Redis 整体不可用，导致大面积回源。
 
 处理要按机制来：热 key 用热点发现、本地缓存、key 拆分和限流；击穿用 singleflight、互斥重建、stale value、预热和 TTL 抖动；穿透用参数校验、Bloom filter 和短 TTL 空值缓存；雪崩用 TTL jitter、分批失效、回源限流、熔断、降级和多级缓存。
 
@@ -97,9 +97,32 @@ flowchart TD
 5. 雪崩时为什么先限流降级？答先保护 DB 和核心链路，再恢复缓存。
 6. 如何做回归？答压测热点 key 过期、随机 id 穿透、批量过期、Redis 高延迟和 DB rate limit。
 
+## 多轮追问模拟
+
+1. 追问：热 key 怎么发现，为什么不能只看 Redis 总 QPS？
+   - 回答要点：总 QPS 和平均 CPU 会掩盖单 key、单分片、单接口的集中压力。生产上要结合客户端采样、代理层聚合、Redis slowlog/command stats、trace 中的 key hash、业务前缀和接口维度。指标里不要放完整 key，可以放 `cache_key_hash`、`key_prefix` 和实体类型，避免高基数和敏感信息泄露。
+   - 考察点：是否能把“热点”落到可观测字段。
+   - 常见坑：只说“看 Redis CPU”，无法定位是哪类 key 或哪条业务路径。
+
+2. 追问：击穿时为什么不是所有请求都等分布式锁？
+   - 回答要点：所有请求等待锁会占住应用线程并推高 p95；锁过期、误释放、旧请求最后写回还可能覆盖新值。更稳的策略是同一 key 少量请求回源，其它请求短等待、返回 stale value、快速失败或降级。锁协议要包含 owner token、过期时间、最大等待时间和 source_version。
+   - 考察点：候选人是否知道锁只是重建协调手段，不是完整方案。
+   - 常见坑：把分布式锁当成万能解法。
+
+3. 追问：空值缓存什么时候能用，什么时候不能用？
+   - 回答要点：只有 DB 明确返回 `not_found` 的合法 key 才适合短 TTL 空值缓存；`timeout`、`rate_limited`、`permission_denied`、`internal_error` 不能缓存为空。否则会把临时故障、权限变化或下游错误写成“数据不存在”，导致恢复后仍然读错。
+   - 考察点：能否区分穿透治理和错误缓存污染。
+   - 常见坑：DB 查不到或查失败都写空值。
+
+4. 追问：雪崩现场先做什么，为什么不是先重建所有缓存？
+   - 回答要点：第一目标是保护 DB 和核心链路：入口限流、暂停批量删除、返回 stale value、关闭非核心模块、给回源队列限速、预热少量核心 key。等 DB 和 Redis p95 稳定后再分批重建。立刻全量重建可能继续放大回源和网络压力。
+   - 考察点：事故止血和恢复顺序。
+   - 常见坑：根因未明时一边高并发回源一边全量预热。
+
 ## 来源与延伸阅读
 
-- Redis 官方文档：用于确认 key、TTL、slowlog 和数据结构语义。
-- Redis 分布式锁官方文档：用于确认锁过期、owner value 和释放校验边界。
-- Prometheus 官方文档：用于支持缓存命中率、回源 QPS、延迟和降级告警。
-- OpenTelemetry 官方文档：用于支持 trace 中记录 cache_status、fallback_reason 和 source_version。
+- [Redis `EXPIRE`](https://redis.io/docs/latest/commands/expire/)：用于确认 TTL、过期时间和过期策略是击穿、雪崩治理的基础输入。
+- [Redis `SLOWLOG GET`](https://redis.io/docs/latest/commands/slowlog-get/)：用于支持从慢命令和异常 key 访问路径中定位热点、慢查询和大 key 风险。
+- [Redis Distributed Locks](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)：用于确认分布式锁需要随机 value、过期时间和释放校验，不能被当成万能缓存方案。
+- [Redis Latency Diagnosis](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/latency/)：用于支持 Redis latency、网络、慢命令和整体故障排查。
+- [Prometheus Alerting Rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)：用于支持 cache miss、fallback QPS、Redis p95、DB p95 和降级告警。

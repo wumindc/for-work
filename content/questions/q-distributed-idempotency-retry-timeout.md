@@ -74,6 +74,28 @@ flowchart LR
 
 这句话能很好地收束幂等、重试、超时和降级四个关键词。
 
+## 多轮追问模拟
+
+1. 追问：幂等键应该由客户端生成还是服务端生成？
+   - 回答要点：要看业务入口。客户端重试同一次业务意图时，客户端或上游应携带稳定 key，例如订单号 + 操作类型，服务端负责校验 `request_hash`、状态机和过期策略；如果服务端生成但客户端超时前拿不到 key，后续重试就无法和原请求关联。服务端仍要把 key 绑定业务实体，不能只信任随机字符串。
+   - 考察点：是否理解幂等键是业务意图标识，不是普通 request_id。
+   - 常见坑：每次重试都生成新 key，导致幂等完全失效。
+
+2. 追问：调用超时后，结果未知时怎么处理？
+   - 回答要点：超时只表示调用方没拿到响应，不代表下游没执行。处理方式包括查询下游状态、幂等重试返回同一结果、把本地状态标记为 processing、后台补偿确认、用户侧展示处理中。对资金、权益、工具执行这类副作用，不能直接当失败再发一次无幂等写操作。
+   - 考察点：是否理解 unknown 状态是分布式系统的常态。
+   - 常见坑：超时就本地回滚，同时下游已经成功，造成双边状态不一致。
+
+3. 追问：如何避免重试风暴？
+   - 回答要点：重试要有错误分类、指数退避、jitter、最大次数、总超时预算和 retry budget；限流、熔断和降级要能在下游慢时快速减少压力。还要避免网关、客户端、服务端、MQ 消费者多层同时重试，生产里应记录 `retry_source` 和 `retry_count`，统一策略。
+   - 考察点：能否把“重试提升成功率”和“重试放大故障”同时讲清楚。
+   - 常见坑：对所有 4xx/5xx、权限错误和参数错误都重试。
+
+4. 追问：MQ 消费为什么也要做幂等？
+   - 回答要点：消息系统通常会出现重复投递、消费者失败重启、确认丢失或再均衡后重复处理。消费者应基于业务 key 或 message id 做去重，副作用写入要有唯一约束、状态机版本或幂等记录。确认消息前后都要考虑失败窗口：先 ack 再写可能丢消息，先写再 ack 可能重复处理。
+   - 考察点：是否能把 API 幂等扩展到异步链路。
+   - 常见坑：认为 MQ 保证“只消费一次”，所以业务层不做去重。
+
 ## 深问准备
 
 1. 幂等键怎么设计？
@@ -84,5 +106,8 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- RabbitMQ confirms 官方文档：用于理解重复和确认边界。
-- Prometheus 官方文档：用于支持 retry/timeout 指标。
+- [IETF Idempotency-Key Draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)：用于支撑非幂等 HTTP 写请求通过 key 识别重试意图、服务端管理 key 生命周期和请求 fingerprint 的设计。
+- [RabbitMQ Confirms and Acknowledgements](https://www.rabbitmq.com/docs/confirms)：用于说明确认、失败窗口和重复处理边界，支撑“消费者仍需业务幂等”的结论。
+- [Apache Kafka Delivery Semantics](https://kafka.apache.org/documentation/#semantics)：用于理解 at-least-once、重复处理和端到端语义不能只靠消息系统解决。
+- [Apache Kafka Producer Configs: `enable.idempotence`](https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence)：用于区分生产者幂等和业务幂等，避免把底层去重误认为业务副作用安全。
+- [Prometheus Alerting Rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)：用于支持 `retry_rate`、`timeout_rate`、`idempotency_conflict_count`、`degrade_count` 的告警和回归验证。
