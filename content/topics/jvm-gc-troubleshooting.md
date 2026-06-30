@@ -94,6 +94,12 @@ AI Agent/RAG 系统里也常见类似问题：长 prompt、全量 trace、embedd
 
 这类项目表达要强调不是“GC 调参成功”，而是用证据链证明根因、止血、修复和回归。
 
+## 公开阅读校验
+
+公开文章里，GC 排障最需要防止“参数崇拜”。读者应该先学会建立时间线：业务 p95、error rate、allocation rate、heap used after GC、Full GC、线程池队列、下游延迟和发布变更谁先变化。只有时间线说明 GC 是直接原因时，才讨论收集器、堆大小和 pause target；如果队列、下游或大对象先变化，GC 往往只是结果。文章还要提醒 dump 和 JFR 的采集风险，避免事故中为了取证制造二次故障。
+
+证据采集要有分级策略。普通抖动先看 metrics、GC log 和少量 thread dump；需要定位分配热点时再开短窗口 JFR；怀疑泄漏且实例容量允许时才采 heap dump。dump 前要确认磁盘空间、实例是否可摘流、文件是否包含敏感数据、采集后如何加密和清理。这个流程能把“拿证据”和“保护线上容量”同时说清楚。
+
 ## 边界条件与反例
 
 反例一：没有证据直接调大堆。可能把短停顿变成长停顿，把小 dump 变成巨大 dump。
@@ -111,6 +117,10 @@ AI Agent/RAG 系统里也常见类似问题：长 prompt、全量 trace、embedd
 3. 为什么不能只调大堆？答停顿、dump、恢复时间和根因掩盖。
 4. JFR 和 heap dump 区别？答 JFR 看时间线和分配，heap dump 看对象图和引用链。
 5. Agent 系统有什么 JVM 风险？答长上下文、大 trace、大 JSON、批量 embedding 和无界缓存。
+
+更深一层可以追问“如何证明修复有效”。回答要包含优化前后的同一压测脚本、相同流量模型、`gc_pause_p95`、`heap_used_after_gc`、`allocation_rate`、业务 p95、错误率和对象保留路径对比。如果只是线上观察短时间不报警，不能证明泄漏或对象 churn 已经解决。
+
+如果追问容器环境，还要补充 RSS 与 JVM 指标的差异。容器被 OOMKill 可能不是 Java heap 满，而是 direct memory、线程栈、metaspace、mmap、JIT code cache 或 native library 占用叠加超过 cgroup 限制。生产看板要同时看 heap、non-heap、direct buffer、thread count、process RSS 和容器 memory limit，否则容易把非堆问题误判成 GC 参数问题。
 
 ## 来源与延伸阅读
 

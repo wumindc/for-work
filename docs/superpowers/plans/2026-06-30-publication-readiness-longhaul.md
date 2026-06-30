@@ -304,6 +304,13 @@ Post-publish thin-depth deepening:
 - [x] `es-use-cases-boundary`
 - [x] `q-es-query-optimization`
 - [x] `q-es-rag-hybrid-search`
+- [x] `java-classloading-spi`
+- [x] `java-completablefuture-async-timeout`
+- [x] `java-concurrent-collections-cas`
+- [x] `java-locks-aqs-synchronized-reentrantlock`
+- [x] `java-memory-model-volatile-happens-before`
+- [x] `java-thread-pool-governance`
+- [x] `jvm-gc-troubleshooting`
 
 For each question:
 
@@ -360,7 +367,12 @@ Work after the first AI Agent / RAG batch:
   - [x] `observability-incident-tracing`
   - [x] `q-observability-incident-tracing`
   - [x] `q-prometheus-metrics-promql`
-- [ ] Java/JVM blocked documents.
+- [x] Java/JVM low-score topics and blocked documents.
+  - [x] `java-classloading-spi`
+  - [x] `java-completablefuture-async-timeout`
+  - [x] `java-concurrent-collections-cas`
+  - [x] `java-locks-aqs-synchronized-reentrantlock`
+  - [x] `java-memory-model-volatile-happens-before`
   - [x] `java-thread-pool-governance`
   - [x] `jvm-gc-troubleshooting`
   - [x] `q-java-thread-pool-governance`
