@@ -30,6 +30,10 @@ flowchart TD
   F --> G[Fixture regression]
 ```
 
+图 1：Web Agent 失败 trace 从逐步复盘到回归夹具的闭环。Trace 先按 observation、action、execution、verifier 分层检查，归入错误桶后再沉淀成 fixture regression，确保同类页面变化不会在下一次发布后重新逃逸。
+
+这张图的边界是：trace replay 不是单纯“看日志”，而是把失败动作还原到可验证状态。每一步都要能回答当时页面长什么样、Agent 看到了什么、选择了什么 selector、期望状态是什么、实际业务状态是什么，以及修复后如何自动重放。
+
 数据流里 trace 不是日志堆积，而是可回放的状态序列。每一步都要能解释 Agent 为什么这么做。
 
 ## 可画图
@@ -55,6 +59,17 @@ Agent 在表单页点击了“取消”而不是“提交”。Trace 显示 obse
 - 如何处理随机弹窗？
 - fixture 怎么构建？
 - 失败回放和线上隐私如何平衡？
+
+## 多轮追问模拟
+
+追问 1：如何区分 selector 失败和模型规划失败？
+答：先看 observation 是否包含正确目标元素，再看模型选择的 action 是否指向正确语义，最后看 final_selector 是否能稳定定位。如果目标元素存在但 selector 找不到，多半是定位策略问题；如果模型选择了错误按钮，就是规划或上下文理解问题。考察点是分层归因；陷阱是把所有浏览器失败都归咎于模型能力。
+
+追问 2：为什么 click 成功不能代表任务成功？
+答：click 只证明浏览器动作被执行，不证明业务状态变化。取消订阅、提交表单、保存设置这类任务要检查 URL、DOM、mock server 状态、后台记录或 verifier verdict。考察点是结果验证；陷阱是把自动化动作成功当成业务成功。
+
+追问 3：线上 trace 如何兼顾可复盘和隐私？
+答：采集层先做 redaction，大对象只存 artifact ref、hash 和短 TTL；PII、token、支付信息和业务敏感文本要脱敏或加密。高风险失败可保留更多受控证据，普通成功样本抽样即可。考察点是观测边界；陷阱是为了调试把完整 DOM、截图和账号信息长期明文存储。
 
 ## 项目化回答
 
@@ -91,6 +106,6 @@ Trace Replay 要把失败样本转成 fixture。保存页面快照、网络 mock
 
 ## 来源与延伸阅读
 
-- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)
-- [Playwright Tracing API](https://playwright.dev/docs/api/class-tracing)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：用于支持失败复盘需要可视化回放每一步 action、DOM、截图和网络状态。
+- [Playwright Tracing API](https://playwright.dev/docs/api/class-tracing)：用于支持 trace 采集应成为测试和回归流程的一部分，而不是只在人工调试时临时打开。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持 Agent 运行过程中的输入、工具调用和结果都应进入结构化 trace，便于归因和回放。

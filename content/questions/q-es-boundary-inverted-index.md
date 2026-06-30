@@ -38,6 +38,10 @@ flowchart LR
   SortAgg --> Result
 ```
 
+图 1：Elasticsearch 从文本分析到相关性排序、过滤聚合的索引链路。Document 的 text 字段先经过 Analyzer 变成 terms 并写入倒排索引，Query 也经过查询分析后访问 postings list；keyword、numeric 等结构化字段通过 doc values 支撑排序和聚合，最终和 BM25 score 一起影响结果。
+
+这张图的边界是：倒排索引解决“词到文档集合”和相关性排序，不负责数据库事务；doc values 解决“文档到字段值”的列式访问，不替代倒排索引；B+ 树适合有序 key 的点查和范围查，与 ES 的全文相关性模型是互补关系。
+
 ## 系统设计案例
 
 商品搜索中，`title` 做 text 支持分词检索，`brand` 和 `category_id` 做 keyword 支持过滤聚合，`price` 做 numeric 支持范围和排序。`title.keyword` 可以作为 multi-field 支持精确匹配。
@@ -48,19 +52,22 @@ flowchart LR
 
 指标包括 `query_latency_p95`、`segment_count`、`heap_usage`、`fielddata_evictions`、`refresh_time` 和 `merge_time`。
 
+事故复盘可以按影响面、止血、根因和回归四步展开。影响面先看是某个字段、某类 query、某个索引模板，还是全部搜索质量下降；止血可以回滚 alias、临时降级 boost、关闭错误字段聚合或恢复旧 mapping；根因常见于 analyzer 改动、dynamic mapping 误判、text/keyword 用错、同义词版本不一致或 fielddata 被误开；回归要固定 `_analyze` 样本、profile 样本、慢查询样本和 relevance query set。
+
 ## 面试官追问
 
-### 追问 1：term query 查 text 字段为什么可能不符合预期？
+下面把倒排索引、mapping 和查询语义按多轮追问模拟展开。
 
-term query 不分析输入，而 text 字段索引时已经分词，查询词不一致就匹配不到。
+## 多轮追问模拟
 
-### 追问 2：text 和 keyword 怎么选？
+追问 1：term query 查 text 字段为什么可能不符合预期？
+答：term query 不分析输入，而 text 字段索引时已经经过 analyzer 分词和归一化。查询输入如果没有变成相同 term，就匹配不到。排查要用 `_analyze` 比较索引侧和查询侧 token。考察点是 analyzer 边界；陷阱是把 term query 当成“精确查原文”。
 
-需要全文检索用 text，需要精确过滤、聚合、排序用 keyword。常用 multi-field 同时支持两种需求。
+追问 2：text 和 keyword 怎么选？
+答：需要全文检索、相关性排序、分词匹配时用 text；需要精确过滤、聚合、排序、去重时用 keyword。商品 title 常用 multi-field：`title` 做 text，`title.keyword` 做精确匹配或聚合。考察点是 mapping 设计；陷阱是所有字符串都 dynamic 成一种类型。
 
-### 追问 3：doc values 做什么？
-
-doc values 是列式存储，用于排序、聚合和脚本访问，避免把大量字段数据放进 heap。
+追问 3：doc values 和倒排索引有什么不同？
+答：倒排索引是从 term 到 doc，服务全文召回和相关性；doc values 是从 doc 到字段值的列式结构，服务排序、聚合和脚本访问。两者解决的问题不同。考察点是底层数据结构；陷阱是把 ES 的所有查询能力都归因于倒排索引。
 
 ## 项目化回答
 
@@ -96,5 +103,5 @@ B+ 树索引适合从有序 key 到 row 的点查、范围查和排序，例如 
 
 ## 来源与延伸阅读
 
-- [Elastic Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/index.html)
-- [Elastic Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html)
+- [Elastic Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/index.html)：用于支持 ES 的索引、mapping、查询和聚合能力要按官方数据模型理解，不能只用“倒排索引快”概括。
+- [Elastic Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html)：用于支持 match、filter、sort、aggregation 等查询语义需要区分 query context 和 filter context。

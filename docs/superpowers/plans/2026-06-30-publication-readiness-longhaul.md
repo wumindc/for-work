@@ -137,11 +137,15 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-tool-permissions-deep`
 - [x] `q-travel-agent-project-core`
 - [x] `q-web-agent-eval-core`
+- [x] `q-web-agent-project-deep`
 
 AI Agent / RAG topic backlog:
 
+- [x] `context-compaction`
 - [x] `hybrid-search`
+- [x] `langgraph`
 - [x] `llm-training-alignment`
+- [x] `planning-methods`
 
 For each question:
 
@@ -156,6 +160,7 @@ For each question:
 Work after the first AI Agent / RAG batch:
 
 - [ ] Elasticsearch low-score questions.
+  - [x] `q-es-boundary-inverted-index`
   - [x] `q-es-rag-hybrid-search`
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`

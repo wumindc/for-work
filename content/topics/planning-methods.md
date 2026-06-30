@@ -30,6 +30,10 @@ flowchart LR
   Replanner --> Plan
 ```
 
+图 1：规划方法在 Agent 中形成 planner、executor、verifier、replanner 的闭环。Planner 把 Goal 转成 structured plan，Executor 执行每一步并产生 observation，Verifier 比较 expected observation 和 actual result，冲突时由 Replanner 生成新版本计划。
+
+这张图的边界是：plan 不是事实源，observation 和 verifier 才是事实边界。计划可以降低盲目行动，但如果工具结果、用户约束或风险状态变化，系统必须重规划或停止，而不是沿着旧计划继续推进。
+
 核心是 plan 和 observation 的闭环。Planner 产出结构化计划，Executor 执行，Verifier 判断是否需要重规划。
 
 ## 架构与运行机制
@@ -81,6 +85,8 @@ sequenceDiagram
 
 如果规划和执行冲突，先看计划是否假设了错误前提，再看工具 observation 是否可信，最后看 Verifier 是否应该触发 replan。不要让模型在旧计划上硬走。
 
+事故复盘可以按计划版本排查。影响面先看是 planner 产出低质计划、executor 误执行、verifier 漏判，还是 replanner 覆盖旧约束；止血可以降低自动执行权限、缩小计划步数、要求每步 verifier 通过后再继续；根因常见于 expected_observation 过弱、done_condition 不可验证、budget 未限制、replan_reason 没记录；回归要固定“计划过期”“工具失败”“证据冲突”“预算耗尽”四类 case。
+
 ## 常见误区与排障
 
 常见误区是计划生成后不更新，或者 ToT 分支无限扩张。排障要看 plan version、replan reason、被放弃路径和预算使用。
@@ -123,5 +129,5 @@ Coding Agent 可以讲先定位、再改动、再测试的计划；Travel Agent 
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [AgentGuide Agent 核心面试题库](https://github.com/adongwanai/AgentGuide/blob/main/docs/04-interview/03-agent-questions.md)
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow、agent、tool use、eval 与人工反馈应按任务复杂度组合，而不是无条件追求复杂规划。
+- [AgentGuide Agent 核心面试题库](https://github.com/adongwanai/AgentGuide/blob/main/docs/04-interview/03-agent-questions.md)：用于支持 CoT、ToT、Planner-Executor、Replanner 等概念在面试中应落到工程取舍、验证和失败恢复。
