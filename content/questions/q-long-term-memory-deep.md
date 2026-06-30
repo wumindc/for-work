@@ -36,6 +36,10 @@ flowchart LR
   H --> I[Top memories with confidence]
 ```
 
+图 1：长期记忆查询的分层召回漏斗。图中 `Scope filter` 先切掉跨租户、跨用户、跨 workspace 和权限不足的记录；`Memory type router` 再把 profile、episodic、semantic 记忆送往不同索引；`Reranker` 最后把相似度、时效性、重要性、置信度和纠错状态合成排序。
+
+这张图的核心边界是：向量检索只适合语义经验和知识片段，不适合权限、当前项目状态、用户确认和精确配置。那些内容应该走结构化读取或业务系统复核。否则系统可能“语义上很像”但 scope 错误，把另一个项目或旧事实放进当前上下文。
+
 这里的核心不是单一索引，而是“先缩小集合，再语义召回，最后可信排序”。这样能减少延迟，也能降低错误记忆进入上下文的概率。
 
 ## 可画图
@@ -54,6 +58,8 @@ flowchart LR
 
 指标包括 memory_query_p95、candidate_count、memory_precision、stale_hit_rate、index_freshness 和 cost_per_retrieval。性能指标和质量指标要一起看，否则会把错误内容更快地召回。
 
+事故处理先分影响面：是慢查询、错召回、跨 scope 泄漏，还是旧记忆污染回答；止血可以降低 top-k、关闭低置信 semantic memory、强制 tenant/workspace filter，或让高风险任务只读结构化状态；根因要查 query intent、filter 条件、候选集合、memory_id、rank、version、last_verified_at 和缓存 key；回归则建立跨项目旧路径、用户纠错、过期偏好和权限不足四类样本，验证不会再被召回。
+
 ## 面试官追问
 
 - 什么时候用结构化查询，什么时候用向量检索？
@@ -61,6 +67,17 @@ flowchart LR
 - 热索引和冷归档怎么划分？
 - 用户纠错后如何更新索引？
 - 如何评估 top-k 设置是否合理？
+
+## 多轮追问模拟
+
+**追问 1：为什么不能直接在全量历史上向量搜索？**  
+答题要点：会带来跨用户、跨项目、旧事实和低置信记录污染；必须先按 scope 和 type 缩小集合，再做语义召回。考察点是安全边界和检索质量。陷阱是只谈性能，不谈污染率。
+
+**追问 2：profile memory 和 semantic memory 的查询有什么区别？**  
+答题要点：profile 偏好、权限、配置等精确字段适合结构化查询；semantic memory 适合经验、知识卡片和长文本摘要；episodic memory 则按任务和时间分片。考察点是索引建模。陷阱是所有记忆都进向量库。
+
+**追问 3：如何判断 top-k 设置合理？**  
+答题要点：看 memory_precision、stale_hit_rate、answer lift、token cost、latency 和用户纠错率；不同任务可以动态 top-k。考察点是效果评估。陷阱是只调大 top-k 追求召回。
 
 ## 项目化回答
 
@@ -97,6 +114,6 @@ flowchart LR
 
 ## 来源与延伸阅读
 
-- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [LangChain Memory overview](https://docs.langchain.com/oss/python/concepts/memory)：官方文档用于说明长期记忆、短期记忆和不同 memory 类型的语义边界。
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于支持 thread state、checkpoint 和跨步骤状态恢复的工程实践。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：官方文档用于说明用数据集和评估器衡量 memory precision、stale hit 与回答质量。

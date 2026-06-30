@@ -31,6 +31,10 @@ flowchart TD
   Action --> Verify[after observation verifier]
 ```
 
+图 1：Browser Agent 的 hybrid observation 决策链路。图中 `DOM + accessibility tree` 负责提供便宜、稳定、可定位的候选元素；`confidence` 是触发视觉分支的闸门；`screenshot+vision` 只补足遮挡、布局、canvas 和无语义控件等结构化观察看不到的部分；最终的 `after observation verifier` 才决定动作是否真的成功。
+
+这张图的边界也很重要：vision 不是 Executor，它只提供额外证据。真正执行动作时仍要绑定 locator、role/name、bbox 或坐标策略，并在执行后重新观察页面。否则系统会把“看起来像下一步”误当成可点击事实，换一个 viewport 或弹层状态就可能失败。
+
 ## 系统设计案例
 
 购物网站的“下一步”按钮可能是图标按钮。DOM 里只有无意义 class，此时 DOM-only 很弱。系统可以截取按钮区域，用 vision 识别视觉标签，再生成 locator candidates。点击后仍要验证 URL 或步骤标题是否变化。
@@ -39,11 +43,24 @@ flowchart TD
 
 如果视觉判断和 DOM 冲突，优先看用户可见状态，但执行仍要绑定 locator。若 vision latency 升高，应只对低置信区域截图。若误点图标，检查视觉摘要是否缺 bbox 和 verifier。指标看 `vision_trigger_rate`、`vision_latency`、`wrong_click_rate`、`verifier_pass_rate`。
 
+事故处理可以按四步走：影响面先看错误动作是否集中在某类页面，例如 canvas、浮层、响应式移动端或图标按钮；止血先降低自动执行权限，把高风险动作切到 ask_user 或 dry-run，同时只对低置信区域启用截图；根因再回放 trace，检查 before/after observation、locator candidates、bbox、viewport、screenshot_ref 和 verifier verdict 是否一致；回归则沉淀最小页面样本，覆盖遮挡、无 aria label、canvas 和移动端缩放四类场景，避免只修当前按钮。
+
 ## 面试官追问
 
 - DOM-only 什么时候足够？语义化表单、按钮、链接和文本任务。
 - screenshot 什么时候必须用？遮挡、canvas、布局判断和图像控件。
 - 视觉结果如何防误读？用 expected_state verifier 和 trace replay 校准。
+
+## 多轮追问模拟
+
+**追问 1：为什么不直接全页截图交给视觉模型？**  
+答题要点：全页截图 token 和延迟更高，定位动作也更不稳定；DOM/accessibility tree 能提供 role、name、状态和 locator，适合作为默认观察；视觉只应在低置信或视觉语义任务中补证据。考察点是成本控制和可执行性。陷阱是把“用户看到的画面”当成“系统可稳定操作的对象”。
+
+**追问 2：如果 DOM 显示按钮可点，但截图看到被弹窗挡住，信谁？**  
+答题要点：用户可见状态优先，但不能直接相信 vision 完成动作；应把遮挡写入 observation，阻止点击或先关闭弹窗，再用 after verifier 验证状态变化。考察点是冲突证据处理。陷阱是继续按 DOM-only 点击，导致 no-op 或误点。
+
+**追问 3：如何设计一条可回放的错误点击 trace？**  
+答题要点：记录 URL、viewport、DOM summary、accessibility snapshot、locator candidates、bbox、screenshot_ref、action args、before/after observation 和 verifier verdict。考察点是可观测性。陷阱是只保存最终错误信息，无法判断是观察、规划还是执行失败。
 
 ## 项目化回答
 
@@ -79,6 +96,7 @@ Browser Agent 的 observation builder 应输出结构化页面状态，而不是
 
 ## 来源与延伸阅读
 
-- [Playwright Locators](https://playwright.dev/docs/locators)
-- [Playwright Actionability](https://playwright.dev/docs/actionability)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [Playwright Locators](https://playwright.dev/docs/locators)：官方文档用于说明 locator 应优先表达用户可感知的 role、text、label 等语义，而不是只依赖脆弱 CSS。
+- [Playwright Actionability](https://playwright.dev/docs/actionability)：官方文档用于解释 visible、stable、receives events、enabled 等动作前检查，支撑“DOM 候选仍需执行前校验”的结论。
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：官方文档用于说明截图、DOM snapshot 和 action trace 如何支持错误点击回放。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持把 observation、action 和 verifier 串成可追踪 span 的工程实践。
