@@ -298,6 +298,12 @@ Post-publish thin-depth deepening:
 - [x] `db-replication-read-write-splitting`
 - [x] `db-sharding-partitioning`
 - [x] `db-sql-join-optimization`
+- [x] `es-query-aggregation-optimization`
+- [x] `es-rag-hybrid-search`
+- [x] `es-shards-write-path`
+- [x] `es-use-cases-boundary`
+- [x] `q-es-query-optimization`
+- [x] `q-es-rag-hybrid-search`
 
 For each question:
 
@@ -311,10 +317,12 @@ For each question:
 
 Work after the first AI Agent / RAG batch:
 
-- [ ] Elasticsearch low-score questions.
+- [x] Elasticsearch low-score questions and topics.
   - [x] `q-es-boundary-inverted-index`
+  - [x] `q-es-query-optimization`
   - [x] `q-es-rag-hybrid-search`
   - [x] `es-rag-hybrid-search`
+  - [x] `es-shards-write-path`
   - [x] `es-query-aggregation-optimization`
   - [x] `es-use-cases-boundary`
   - [x] `es-inverted-index-mapping`
