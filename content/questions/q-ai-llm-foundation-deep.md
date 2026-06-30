@@ -29,7 +29,7 @@ flowchart TD
   E --> H[Response and trace]
 ```
 
-数据流要保证所有工具调用都有 user、scope、riskLevel 和 audit。模型生成的理由不能当作授权依据。
+图 1：LLM 接入后端业务系统的受控边界。Backend API 和 Auth 层决定用户身份与租户边界，Context Builder 只组装已授权证据，Model Gateway 只负责模型调用治理，Tool Permission Gate 才能把模型提出的动作转换为真实业务副作用。数据流要保证所有工具调用都有 `user`、`scope`、`risk_level` 和 `audit`；模型生成的理由不能当作授权依据。
 
 ## 可画图
 
@@ -43,6 +43,8 @@ flowchart TD
 
 如果出现越权数据，先查 Context Builder 的权限过滤和缓存 key。如果出现错误写操作，检查 Tool Permission Gate 和 audit。指标包括 tool_denial_rate、schema_pass_rate、fallback_rate、safety_block_rate 和 user_negative_feedback_rate。
 
+完整事故链路要讲清影响面、止血、根因和回归。影响面先按 tenant、tool_name、risk_level 和 model_version 分组；止血可以临时关闭写工具、切只读模式或要求人工确认；根因通常来自上下文越权、缓存 key 缺少租户维度、工具 schema 太宽或 verifier 漏掉业务不变量；回归要把失败输入、工具参数、权限状态和 verifier verdict 固化成 golden case。
+
 ## 面试官追问
 
 - 如何防 prompt injection？
@@ -50,6 +52,20 @@ flowchart TD
 - 如何控制成本？
 - 模型输出不符合 schema 怎么办？
 - 如何做灰度和回滚？
+
+## 多轮追问模拟
+
+### 追问 1：如何防 prompt injection？
+
+回答要点：外部文档、网页和用户输入都标成 untrusted data，只能作为证据，不能覆盖系统策略；工具执行只听后端权限网关、schema 和 policy。考察点是数据与指令隔离。容易踩坑的是只说“在 prompt 里提醒模型不要被注入”，没有工程边界。
+
+### 追问 2：工具调用失败如何恢复？
+
+回答要点：先把工具失败分为参数校验失败、权限失败、下游超时、业务状态冲突和不可重试错误；可重试动作要有 idempotency key，不可重试动作要返回草稿、补偿或转人工。考察点是副作用治理。容易踩坑的是让模型根据自然语言猜工具执行结果。
+
+### 追问 3：如何做灰度和回滚？
+
+回答要点：模型版本、prompt_version、tool_schema_version、verifier_version 和 policy_version 都要进入 trace；灰度按租户、场景、风险等级或流量比例展开；回滚要能回到上一组版本。考察点是把 LLM 变成可发布的软件组件。容易踩坑的是只回滚模型，不回滚提示词、工具 schema 和 verifier。
 
 ## 项目化回答
 
@@ -82,7 +98,7 @@ flowchart TD
 - 追问成本控制：按 task_type 路由模型，限制 context_tokens，缓存只缓存权限安全的中间结果。
 - 追问灰度回滚：模型版本、prompt_version、verifier_version 和工具版本都进入 trace，失败时按版本回退。
 
-## 参考资料
+## 来源与延伸阅读
 
-- [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)
-- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)
+- [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)：用于确认模型调用、输入输出和应用侧生成链路的基本语义。
+- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)：用于说明提示词只是输入组织方式，不能替代权限、工具和验证器边界。

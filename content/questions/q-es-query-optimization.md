@@ -27,7 +27,7 @@ flowchart TD
   D -->|resource| H[Shard and heap tuning]
 ```
 
-数据流从用户 Search API 参数到 DSL，再到 shard 执行和结果合并。每层都可能慢。
+图 1：ES 慢查询排障路径。Slow log 先定位慢查询样本，Profile API 再拆 query tree 和 fetch/aggregation 阶段，最后按瓶颈选择改 DSL、改分页、改聚合或处理资源问题。数据流从用户 Search API 参数到 DSL，再到 shard 执行和结果合并；每一层都可能慢，所以不能一上来只说“加节点”。
 
 ## 可画图
 
@@ -43,6 +43,8 @@ flowchart TD
 
 指标包括 search_latency_p95、query_time、fetch_time、aggregation_time、heap_usage、rejected_requests 和 circuit_breaker_tripped。
 
+一条完整事故回答可以按影响面、止血、根因和回归展开：先确认是全部搜索慢、单个索引慢还是某个 query hash 慢；止血时可以降低最大 `size`、禁用高风险聚合字段、对超慢 query 返回降级结果；根因如果是高基数字段聚合，就要回到 mapping、fielddata、bucket 数和 heap；回归时固定 slow query 样本，用 Profile API、p95 和 breaker 指标对比优化前后。
+
 优化取舍要看读写比例和业务 SLA。给所有字段加索引会提升查询自由度，但会增加写入和存储成本；预聚合能降低查询延迟，但会牺牲实时性和灵活性；限制用户 DSL 能保护集群，却会降低高级搜索能力。面试里要把“快”和“可维护”一起讲。
 
 ## 面试官追问
@@ -52,6 +54,20 @@ flowchart TD
 - PIT 解决什么问题？
 - 聚合为什么容易吃内存？
 - profile API 线上怎么用？
+
+## 多轮追问模拟
+
+### 追问 1：filter context 为什么更适合过滤？
+
+回答要点：filter context 不参与相关性评分，更适合布尔过滤、权限过滤和时间范围过滤，也更容易被缓存。考察点是 query/filter 的执行语义。容易踩坑的是把所有条件都塞进 must，既影响评分又增加不必要的计算。
+
+### 追问 2：search_after 和 from/size 区别是什么？
+
+回答要点：from/size 深分页会让每个 shard 保留大量候选并在协调节点合并；search_after 用上一页排序值继续查询，通常配 PIT 获得一致视图。考察点是分布式搜索分页代价。容易踩坑的是只说“search_after 更快”，不说明它要求稳定排序且不适合任意跳页。
+
+### 追问 3：Profile API 线上怎么用？
+
+回答要点：用抽样和问题样本定位 query tree 耗时，不应对所有线上流量常开；Profile 结果要和 slow log、节点资源、mapping 变化一起看。考察点是排障方法。容易踩坑的是只看单次 profile，不看业务流量和资源水位。
 
 ## 项目化回答
 
@@ -82,7 +98,7 @@ flowchart TD
 - 追问 circuit breaker：防止单次查询占用过多内存拖垮节点。
 - 追问 profile API：用于定位 query tree 耗时，线上采样使用，不能全量常开。
 
-## 参考资料
+## 来源与延伸阅读
 
-- [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
-- [Elasticsearch Search profile API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-profile.html)
+- [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)：用于确认 query/filter、分页、聚合等 DSL 的语义边界。
+- [Elasticsearch Search profile API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-profile.html)：用于说明如何拆解查询执行树和阶段耗时。

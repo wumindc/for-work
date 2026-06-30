@@ -16,6 +16,8 @@
     "validate:content-quality": "tsx scripts/validate-content-quality.mjs",
     "audit:technical-depth": "tsx scripts/audit-technical-depth.mjs",
     "audit:content-rigor": "tsx scripts/audit-content-rigor.mjs",
+    "audit:publication-readiness": "tsx scripts/audit-publication-readiness.mjs --write-report",
+    "audit:publication-readiness:strict": "tsx scripts/audit-publication-readiness.mjs --write-report --strict",
     "audit:coverage-map": "tsx scripts/audit-coverage-map.mjs",
     "validate:interview-ui": "tsx scripts/validate-interview-ui-contract.mjs",
     "validate:all": "npm run validate:data && npm run validate:graph && npm run validate:content-depth && npm run validate:markdown-content && npm run validate:content-quality && npm run validate:interview-ui"

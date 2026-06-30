@@ -1,0 +1,127 @@
+# Publication Readiness Longhaul Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. This is a long-running editorial plan; do not claim completion until every current Markdown article has been reviewed, upgraded, verified, and recorded.
+
+**Goal:** Review and upgrade all published knowledge articles so they are rigorous enough for public readers, not only locally useful as a generated interview notebook.
+
+**Architecture:** Keep `content/topics` and `content/questions` as the source of truth, but add an advisory publication-readiness audit that scores every article. Work in repeatable batches: generate the audit report, pick the highest-priority documents, manually improve the text, rerun the report, and record the next backlog.
+
+**Tech Stack:** Markdown content, Node/tsx audit scripts, React/Vite static site, Mermaid diagrams, existing data files under `src/data`.
+
+---
+
+## Quality Bar
+
+Every public article should eventually satisfy these editorial requirements:
+
+- The article has a clear thesis and does not only list template paragraphs.
+- Mechanism is explained through state, data flow, protocol fields, failure paths, or runtime behavior.
+- Mermaid diagrams have numbered captions and nearby explanation of nodes, boundaries, and state changes.
+- Claims are bounded: the article explains where the method works, where it does not, and what failure looks like.
+- Sources are not decorative links; each source states which conclusion it supports.
+- Interview answers are speakable: 30-second answer, longer answer, follow-up probes, project answer, counterexamples, and common mistakes.
+- Operational detail is present: metrics, trace/log evidence, rollback or mitigation, root cause, and regression checks.
+- Tone is professional: no hype words, unsupported ranking claims, or absolute promises without context.
+
+## Files
+
+- Create/modify: `scripts/audit-publication-readiness.mjs`
+  Advisory full-site audit with score, issue codes, domain summary, and top revision targets.
+- Modify: `package.json`
+  Adds `audit:publication-readiness` and `audit:publication-readiness:strict`.
+- Generate: `docs/content-audits/publication-readiness-report.md`
+  Current scorecard and backlog.
+- Modify in batches: `content/topics/*.md`
+  Upgrade knowledge articles.
+- Modify in batches: `content/questions/*.md`
+  Upgrade interview-answer articles.
+
+## Batch Workflow
+
+### Task 1: Refresh Audit Baseline
+
+- [x] Run `npm run audit:publication-readiness`.
+- [x] Confirm the report covers all current Markdown documents.
+- [x] Use the first 50 revision targets as the default queue.
+
+Expected current baseline:
+
+- 310 documents total.
+- 118 topic articles.
+- 192 question articles.
+- Report path: `docs/content-audits/publication-readiness-report.md`.
+
+### Task 2: Burn Down Blockers First
+
+Priority order:
+
+1. `content/questions/q-ai-chatgpt-runtime-core.md`
+2. `content/questions/q-es-query-optimization.md`
+3. `content/questions/q-ai-llm-foundation-deep.md`
+4. Remaining blocker documents from the latest report.
+
+For each article:
+
+- [x] Remove unsupported performance/ranking claims or add explicit evidence and benchmark scope.
+- [x] Add or fix numbered Mermaid caption.
+- [x] Add nearby diagram explanation.
+- [x] Add missing source intent lines.
+- [x] Add missing incident or operational section when relevant.
+- [x] Run `npm run audit:publication-readiness` and confirm the article is no longer `blocked`.
+
+### Task 3: Upgrade AI Agent / RAG Question Backlog
+
+The first report shows most low-score items are AI Agent / RAG generated interview answers. Work in five-document batches:
+
+- [x] `q-planning-methods-core`
+- [ ] `q-ai-llm-training-core`
+- [ ] `q-react-loop-core`
+- [ ] `q-playwright-actions-deep`
+- [ ] `q-agent-definition-deep`
+
+For each question:
+
+- [ ] Make the 30-second answer precise and bounded.
+- [ ] Add `## 多轮追问模拟` if missing.
+- [ ] Make each follow-up include answer points, what it tests, and a trap.
+- [ ] Add source intent and at least two credible references when the topic needs factual support.
+- [ ] Remove risky absolute wording or explain the condition under which it is true.
+
+### Task 4: Upgrade Traditional Engineering Backlog
+
+Work after the first AI Agent / RAG batch:
+
+- [ ] Elasticsearch low-score questions.
+- [ ] MQ transaction and ordering questions.
+- [ ] Redis questions with missing sources.
+- [ ] Java/JVM blocked documents.
+- [ ] System-design blocked documents.
+
+Each batch should preserve domain terminology and avoid importing AI-specific phrases where traditional engineering terms are more precise.
+
+### Task 5: Verification After Every Batch
+
+Run:
+
+```bash
+npm run validate:all
+npm run audit:technical-depth
+npm run audit:content-rigor
+npm run audit:publication-readiness
+npm run build
+```
+
+Expected:
+
+- Existing blocking validations pass.
+- Publication readiness backlog decreases or becomes more accurate.
+- Build succeeds; Vite chunk warning is acceptable unless unrelated changes make it worse.
+
+### Task 6: Promotion Criteria
+
+Only consider the long-running objective complete when:
+
+- `audit:publication-readiness:strict` passes.
+- Every article has been manually reviewed or intentionally exempted with a written reason.
+- `validate:all`, `audit:technical-depth`, `audit:content-rigor`, and `build` pass after the final batch.
+- A browser preview confirms at least one topic and one question from every domain render correctly.
