@@ -291,6 +291,13 @@ Post-publish thin-depth deepening:
 - [x] `rag-document-ingestion-stack`
 - [x] `self-growing-knowledge-base`
 - [x] `skill-packaging-workflow`
+- [x] `db-backup-recovery-migration`
+- [x] `db-index-execution-plan`
+- [x] `db-lock-deadlock-troubleshooting`
+- [x] `db-online-ddl-schema-change`
+- [x] `db-replication-read-write-splitting`
+- [x] `db-sharding-partitioning`
+- [x] `db-sql-join-optimization`
 
 For each question:
 
