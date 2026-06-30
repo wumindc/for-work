@@ -31,7 +31,7 @@ flowchart LR
   Audit --> Eval[Safety Eval]
 ```
 
-图中的关键是：安全策略不是只在模型前后各放一个检查，而是贯穿输入、上下文、工具和输出。
+图 1：Guardrails 分层防护链路。图中的关键是：安全策略不是只在模型前后各放一个检查，而是贯穿输入、上下文、工具和输出。
 
 ## 架构与运行机制
 
@@ -110,6 +110,14 @@ Guardrails 要区分语义风险判断和确定性策略执行。模型 guardrai
 被问“guardrail 能否替代权限系统”时，要明确不能。Guardrail 是风险识别和流程控制，权限系统是确定性授权。写操作最终必须由后端 ACL、租户隔离和资源归属校验决定。
 
 被问“如何评估 guardrails”，不能只看拦截率。要同时看 false positive、false negative、unsafe action block、PII leak、human handoff 和用户完成率。拦太多也会让系统不可用。
+
+## 生产验收清单
+
+Guardrails 上线前要做三类验收。第一类是策略覆盖：输入侧至少覆盖 jailbreak、prompt injection、PII、越权意图和高风险任务；上下文侧要把网页、邮件、PDF、RAG chunk 标记为 untrusted evidence；工具侧要按 read/write、risk_level、permission_scope、external_effect、reversible 和 sensitive_data 分级；输出侧要验证 JSON schema、citation、PII、unsupported claim 和业务规则。每条策略都要有 owner、policy_version、样本集和回滚路径。
+
+第二类是故障演练：把恶意网页指令、越权文档、错误工具参数、确认后参数替换、敏感信息泄露和 unsupported claim 做成 fixture。演练时要证明模型可以识别风险，但最终 allow/deny/confirm 由 deterministic policy 和业务 ACL 决定。尤其是确认链路，要验证 preview_snapshot、args_hash、approval_id 和执行参数一致；如果目标金额、收件人、文件路径或权限范围变化，旧 approval 必须失效。
+
+第三类是指标闭环：上线后同时看漏拦和误拦。`unsafe_tool_call_block_rate` 高不一定是好事，可能说明工具暴露过宽；`false_positive_rate` 高会伤害任务完成率；`pii_leak_count` 和 `policy_bypass_attempts` 是安全事故信号；`human_handoff_rate` 要按 risk_level 分桶。面试里能讲出这套验收，说明你把 Guardrails 当成安全工程，而不是把它当成提示词技巧。
 
 ## 来源与延伸阅读
 

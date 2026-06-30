@@ -28,7 +28,7 @@ flowchart LR
   Audit --> Rollback[rollback or compensation]
 ```
 
-图中权限决策不依赖模型自述理由，而依赖用户身份、资源归属、工具元数据、业务 ACL 和当前任务 scope。
+图 1：工具权限与 Human-in-the-loop 执行链路。图中权限决策不依赖模型自述理由，而依赖用户身份、资源归属、工具元数据、业务 ACL 和当前任务 scope。
 
 ## 架构与运行机制
 
@@ -108,6 +108,14 @@ Coding Agent 中，read_file 是只读工具，apply_patch 是写工具，run_te
 被问“哪些工具能自动执行”，回答：低敏只读、可审计、不会产生外部副作用的工具可以自动；读敏感数据、写操作、财务、删除、发布、外发消息必须 deny 或 confirm。
 
 被问“多 Agent 共用工具怎么控权”，回答：Registry 统一 tool metadata，Policy Engine 按 agent role、user role、tenant、resource 和 task scope 决策。Agent 的 prompt 不能作为权限来源。
+
+## 生产验收清单
+
+工具权限上线前要先做工具清单审计。每个工具必须声明 `tool_name`、`owner`、`read_or_write`、`risk_level`、`permission_scope`、`resource_type`、`requires_confirmation`、`reversible`、`external_effect`、`timeout_ms`、`idempotency_key_strategy` 和 `audit_policy`。缺少这些字段的工具不应暴露给 Agent。只读工具也要过滤资源归属，不能因为“不写数据”就跳过权限。
+
+Human-in-the-loop 的验收要覆盖完整状态机：模型提出 tool_call，系统生成 dry-run/preview，用户确认，执行前重新检查权限和 args_hash，执行后写 audit ledger。如果确认记录过期、参数变化、资源状态变化或用户权限变化，执行必须被拒绝并重新生成 preview。对于退款、发邮件、发布、删除、提交代码、转账这类外部副作用动作，还要验证重复点击、重试、超时和部分成功都不会产生重复副作用。
+
+排障验收则要能复盘一条高风险动作：谁发起、模型给了什么参数、Policy Engine 为什么允许/拒绝/确认、用户看到了什么 preview、实际执行参数是否一致、下游返回什么、是否触发补偿。关键指标包括 `approval_expired_count`、`args_hash_mismatch_count`、`duplicate_side_effect_count`、`audit_missing_count` 和 `rollback_success_rate`。这些指标比“弹了确认框”更能证明工具权限真的可控。
 
 ## 来源与延伸阅读
 

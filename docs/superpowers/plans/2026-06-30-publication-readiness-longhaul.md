@@ -162,6 +162,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-multi-agent-roles-deep`
 - [x] `q-prompt-injection-core`
 - [x] `q-prompt-injection-deep`
+- [x] `q-rag-pipeline-core`
 - [x] `q-rag-pipeline-deep`
 - [x] `q-skills-core`
 - [x] `q-skills-deep`
@@ -193,6 +194,7 @@ AI Agent / RAG topic backlog:
 - [x] `web-agent-eval`
 - [x] `web-agent-project`
 - [x] `framework-selection`
+- [x] `guardrails`
 - [x] `handoff-pattern`
 - [x] `multi-agent-roles`
 - [x] `browser-observation`
@@ -204,6 +206,7 @@ AI Agent / RAG topic backlog:
 - [x] `paper-agent-project`
 - [x] `swe-bench`
 - [x] `tool-error-recovery`
+- [x] `tool-permissions`
 - [x] `tool-registry`
 - [x] `travel-agent-project`
 - [x] `reflection-review`
@@ -240,6 +243,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `es-rag-hybrid-search`
   - [x] `es-query-aggregation-optimization`
   - [x] `es-use-cases-boundary`
+  - [x] `es-inverted-index-mapping`
   - [x] `q-es-index-shard-write`
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`
@@ -254,6 +258,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-db-index-execution-plan`
   - [x] `q-db-mvcc-transaction-isolation`
   - [x] `db-index-execution-plan`
+  - [x] `db-mvcc-transaction-isolation`
 - [ ] Redis questions with missing sources.
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
