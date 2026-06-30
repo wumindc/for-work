@@ -31,6 +31,10 @@ flowchart TD
   F --> G
 ```
 
+图 1：旅行规划 Agent 的约束评测闭环，从用户需求抽取结构化约束，再对行程逐项验证硬约束和软偏好，最后汇总到指标面板。
+
+这张图的关键不是“生成行程”，而是把每条自然语言需求变成可追踪、可复核的 verifier 输入。`Hard constraint result` 负责判断是否可执行，例如营业时间、预算、返回酒店时间；`Preference score` 负责表达用户满意度倾向，例如节奏、亲子友好、餐厅风格。两条结果线分开，能避免把“用户不太喜欢”误判成“行程不可执行”，也能避免把预算超限这类硬失败包装成体验问题。
+
 数据流里要保留每条约束的来源句子和检查结果。这样用户修改时可以回溯 Agent 为什么这样安排。
 
 ## 可画图
@@ -47,6 +51,8 @@ flowchart TD
 
 如果用户反馈行程太赶，先看 pace 偏好是否被正确抽取，再看 travel_time 是否被低估。若预算超出，检查价格来源时间和 currency 处理。
 
+事故处理可以按四步走：先定影响面，确认是单个行程、某类城市数据，还是所有实时价格/营业时间都异常；再止血，把缺 source/time 的价格和开放状态降级为 unknown，暂停自动确认预订或高风险推荐；然后找根因，看是 extractor 漏抽约束、地图 API 数据过期、交通时间模型低估，还是 verifier 权重错误；最后做回归，把用户原始需求、结构化 constraints、itinerary、工具返回和 verifier verdict 固化为 golden case。这样复盘才不会停在“模型没理解用户”。
+
 指标包括 hard_constraint_pass_rate、preference_score、time_conflict_rate、budget_violation_rate、availability_error_rate 和 fallback_success_rate。
 
 ## 面试官追问
@@ -56,6 +62,20 @@ flowchart TD
 - 用户修改行程如何反哺偏好？
 - 多人偏好冲突怎么办？
 - 如何避免模型编造价格？
+
+## 多轮追问模拟
+
+**追问 1：如果硬约束之间互相冲突怎么办？**
+
+不要让模型私自取舍。系统应把冲突显式化，例如“预算 3000”和“五星酒店 + 每晚市中心”同时满足概率很低，就返回 conflict set、可放宽字段和候选 tradeoff。能自动优化的是软偏好，硬约束冲突要追问或让用户确认。
+
+**追问 2：约束满足率为什么不能只靠 LLM judge？**
+
+因为很多约束有确定性证据。营业时间、价格、距离、返回酒店时间都可以用工具结果或规则 verifier 判断。LLM judge 可以辅助判断“亲子友好”“节奏舒适”这类偏好，但硬约束应该优先用 deterministic checker，并把 source/time 写入 trace。
+
+**追问 3：如何证明 Travel Agent 不是 demo？**
+
+看三类证据：一是每条用户需求有结构化 constraint 和来源句子；二是每个 itinerary item 有价格、地点、营业时间、交通来源和检索时间；三是失败样本能回放，修复后 golden set 通过。如果只有漂亮行程文本，没有 verifier、trace 和 error bucket，就还只是内容生成。
 
 ## 项目化回答
 
@@ -92,6 +112,6 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [Google Maps Platform Places API](https://developers.google.com/maps/documentation/places/web-service/overview)
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：官方文档用于支持用 dataset、evaluator 和回归集评估 Agent 输出质量，而不是只看一次性人工观感。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持把工具调用、约束抽取、验证结果和失败原因串成可排障 trace 的做法。
+- [Google Maps Platform Places API](https://developers.google.com/maps/documentation/places/web-service/overview)：官方文档用于支持旅行场景中地点、营业时间、地理范围等外部实时字段需要来源和更新时间。

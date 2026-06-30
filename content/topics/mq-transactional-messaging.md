@@ -12,7 +12,7 @@
 
 ## 为什么需要它
 
-业务经常需要“数据库更新”和“发消息”同时成立。例如支付成功后发券，订单创建后通知仓库。如果数据库提交成功但消息没发出去，下游永远不知道状态变化。如果先发消息再提交数据库，又可能下游看到不存在的数据。
+业务经常需要“数据库更新”和“发消息”同时成立。例如支付成功后发券，订单创建后通知仓库。如果数据库提交成功但消息没发出去，下游可能长期不知道状态变化。如果先发消息再提交数据库，又可能下游看到不存在的数据。
 
 事务消息和 Outbox 都是在解决这个缝隙。
 
@@ -29,6 +29,10 @@ flowchart TD
   G --> H[Idempotent handler]
   E --> I[Retry and compensation]
 ```
+
+图 1：Transactional Outbox 的最终一致性链路，把业务状态和事件记录放进同一个本地事务，再由 relay 发布到 MQ，消费者用幂等处理重复投递。
+
+这张图的重点是把“双写”拆成两个可靠边界：`Local transaction` 只负责同时写业务表和 outbox 表，保证事件不会在数据库提交后丢失；`Relay publisher` 负责异步发布、重试、补偿和状态标记，允许消息被重复发送；`Idempotent handler` 负责把重复消费收敛成一次业务效果。它追求的是可恢复的最终一致，不是跨 DB 和 MQ 的瞬时强一致。
 
 | 方案 | 核心机制 | 优点 | 代价 |
 | :--- | :--- | :--- | :--- |
@@ -80,6 +84,8 @@ RocketMQ 事务消息则先发送 half message，broker 暂不投递。Producer 
 
 如果业务状态已更新但下游没收到，先查 outbox 是否有 pending，relay 是否失败，broker 是否收到，consumer lag 是否积压。若重复发券，查 consumer 幂等表。
 
+事故复盘要按影响面、止血、根因、回归展开。影响面先看是单个 aggregate、某个 event_type，还是 relay 全局停滞；止血可以暂停下游副作用、提高 relay 告警级别、对高风险事件改人工补偿；根因再分 outbox 未写入、本地事务回滚、relay 发布失败、broker 拒收、consumer 幂等缺失和 DLQ 未处理；回归则要补充事务提交后 relay 崩溃、broker 超时、重复发布、consumer 重启和状态未知回查等 case。只说“加重试”是不够的，因为重试会同时放大重复消费风险。
+
 ## 常见误区与排障
 
 - 事务提交后直接发消息，没有兜底。
@@ -102,7 +108,7 @@ RocketMQ 事务消息则先发送 half message，broker 暂不投递。Producer 
 
 ## 深入技术细节
 
-本地事务和消息发送无法天然处在同一个数据库事务里，核心问题是“双写不一致”。业务库提交成功但消息发送失败，下游永远不知道状态变化；消息发送成功但本地事务回滚，下游会处理不存在的事实。Outbox 的思路是在本地事务里同时写业务表和 outbox 表，再由 relay 异步发布。事务消息的思路是 broker 先保存 half message，本地事务完成后提交或回滚消息，并在状态未知时回查。
+本地事务和消息发送无法天然处在同一个数据库事务里，核心问题是“双写不一致”。业务库提交成功但消息发送失败，下游可能长期不知道状态变化；消息发送成功但本地事务回滚，下游会处理不存在的事实。Outbox 的思路是在本地事务里同时写业务表和 outbox 表，再由 relay 异步发布。事务消息的思路是 broker 先保存 half message，本地事务完成后提交或回滚消息，并在状态未知时回查。
 
 两者取舍不同。Outbox 与数据库强绑定，通用、可审计、容易补偿，但有 relay 延迟和表清理成本。事务消息由中间件提供原生流程，适合 RocketMQ 这类支持半消息和事务回查的场景，但平台绑定更强。无论哪种方案，消费者仍要幂等，因为 broker 重试、relay 重发、回查误判都可能导致重复消费。
 
@@ -119,9 +125,27 @@ Outbox 表建议包含 `event_id`、`aggregate_id`、`event_type`、`payload`、
 - 追问状态未知：通过事务回查或 outbox 状态重试，但消费者仍保持幂等。
 - 追问 Outbox 缺点：延迟、表膨胀、relay 可用性、清理归档和重复发布处理。
 
+## 多轮追问模拟
+
+**追问 1：Outbox 能不能保证消息只发送一次？**
+
+不能，Outbox 更准确地说是保证事件不会因为“本地事务已提交但发送失败”而丢失。Relay 可能在发布成功但更新 outbox 状态前崩溃，所以消息可能重复发送。消费者仍然要按 `event_id` 或业务唯一键做幂等。
+
+**追问 2：事务消息是不是比 Outbox 更强？**
+
+不是简单强弱关系。事务消息把 half message、commit/rollback 和回查交给 broker，链路更贴近消息中间件；Outbox 借助数据库本地事务，更通用、更容易审计和补偿。选择要看中间件能力、团队运维经验、可观测性和业务对延迟的容忍度。
+
+**追问 3：Outbox 积压时先扩容 relay 吗？**
+
+先分桶定位。若 oldest_pending_age 增大但 broker 正常，可能是 relay 卡住或查询索引差；若 publish latency 高，可能是 broker 或网络；若某类 event 持续失败，要看 payload schema、权限或下游限流。盲目扩容 relay 可能把坏消息更快打到 broker 或消费者。
+
+## 上线检查清单
+
+上线前至少检查五件事。第一，业务表和 outbox 写入是否在同一个 local transaction 内完成，失败时是否整体回滚。第二，relay 是否有批量扫描上限、按 `next_retry_at` 调度、指数退避和 dead-letter 标记，避免坏消息阻塞全表。第三，消费者是否用 `event_id` 或业务唯一键做幂等，并把重复消费当作成功返回。第四，监控是否覆盖 oldest_pending_age、publish_lag、retry_count、DLQ_count 和 duplicate_consume_count。第五，补偿脚本是否可审计，能按 trace_id 解释某个业务对象从提交到消费的完整链路。
+
 ## 来源与延伸阅读
 
-- [RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)
-- [Apache Kafka Transactions](https://kafka.apache.org/documentation/#transactions)
-- [RabbitMQ Publisher Confirms](https://www.rabbitmq.com/docs/confirms)
-- [Microservices.io Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html)
+- [RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：官方文档用于支持 half message、事务提交/回滚和事务状态回查这条事务消息链路。
+- [Apache Kafka Transactions](https://kafka.apache.org/documentation/#transactions)：官方文档用于支持 Kafka 在生产者事务、幂等和 exactly-once 语义上的能力边界。
+- [RabbitMQ Publisher Confirms](https://www.rabbitmq.com/docs/confirms)：官方文档用于支持发布确认只能证明 broker 接收，不等同于业务消费成功。
+- [Microservices.io Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html)：模式文档用于支持业务表与 outbox 同事务写入、再异步发布事件的方案。

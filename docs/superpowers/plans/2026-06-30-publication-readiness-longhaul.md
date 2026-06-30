@@ -113,6 +113,10 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-swe-bench-deep`
 - [x] `q-trajectory-eval-core`
 - [x] `q-trajectory-eval-deep`
+- [x] `q-travel-agent-project-deep`
+- [x] `q-web-agent-eval-deep`
+- [x] `q-workflow-vs-agent-deep`
+- [x] `q-a2a-acp-deep`
 
 AI Agent / RAG topic backlog:
 
@@ -136,6 +140,7 @@ Work after the first AI Agent / RAG batch:
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`
   - [x] `q-mq-ordering`
+  - [x] `mq-transactional-messaging`
 - [ ] Redis questions with missing sources.
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.

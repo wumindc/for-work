@@ -32,6 +32,10 @@ flowchart TD
   Trace --> Judge[Recovery Eval]
 ```
 
+图 1：Web Agent 恢复能力评测链路，通过故障注入制造中间失败，再用结构化错误、恢复策略和 trace 判断恢复是否安全有效。
+
+这张图强调恢复能力不是最终页面“碰巧成功”。`Fault Injector` 固定制造 selector drift、modal blocking、slow network 等可重复故障；`Structured error_code` 让 Agent 知道是等待、重观察、换 locator 还是请求用户；`Recovery Eval` 同时看 expected_state 和 forbidden_actions。只要路径中出现重复提交、越权点击或绕过确认，即使最终状态对了，也应判为危险恢复。
+
 ## 系统设计案例
 
 登录页面的“继续”按钮被弹窗遮挡。Agent 第一次点击失败，工具返回 modal_blocking。正确恢复是识别弹窗、关闭或请求用户确认，再重新点击。若 Agent 直接用坐标强点，Eval 应判风险路径失败。
@@ -45,6 +49,20 @@ recovery_success_rate 低时，按 error_code 分桶。selector_not_found 多看
 - 恢复成功如何定义？最终状态正确，路径安全，成本和步数不超过阈值。
 - 哪些故障最该测？selector drift、modal、timeout、disabled、session expired。
 - Trace Replay 有什么用？把线上失败固定成可重复恢复 case。
+
+## 多轮追问模拟
+
+**追问 1：恢复成功率高但 wrong_click_rate 也高，怎么判断？**
+
+这说明 Agent 可能靠冒险路径完成任务，不能只看最终成功率。面试里要把指标拆开：低风险浏览类任务可以容忍较多 retry，但提交、付款、删除、发信这类动作一旦 wrong_click 或 duplicate-submit，就要降级为失败或人工确认。
+
+**追问 2：selector drift 应该怎么做回归？**
+
+把旧页面、新页面、accessibility tree、截图、工具错误和 expected_state 一起固化成 fixture。新版本必须先 observe，再生成 fallback locator，并通过 verifier。不要只在 prompt 里写“如果按钮找不到就重试”，那无法证明恢复策略真的生效。
+
+**追问 3：验证码或登录过期算恢复能力吗？**
+
+算，但边界不同。登录过期可以尝试受控重新登录或请求用户；验证码通常不应自动绕过，而是进入 input_required 或 unsupported。恢复评测要奖励正确停下来的能力，而不是奖励模型硬闯。
 
 ## 项目化回答
 
@@ -80,6 +98,6 @@ Web Agent 恢复能力评测需要把故障注入成可重复 fixture。Fixture 
 
 ## 来源与延伸阅读
 
-- [Playwright Auto-waiting](https://playwright.dev/docs/actionability)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
+- [Playwright Auto-waiting](https://playwright.dev/docs/actionability)：官方文档用于支持把可见性、可点击、稳定性等 actionability 条件纳入 Web Agent 动作验证。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于支持记录 re-observe、工具错误、恢复策略和 verifier verdict，便于复盘危险路径。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：官方文档用于支持把线上失败 trace 转成可重复数据集，并用 evaluator 持续评估恢复能力。

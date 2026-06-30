@@ -37,6 +37,10 @@ sequenceDiagram
   G-->>A: result with correlation_id
 ```
 
+图 1：跨 Agent 调用的协议控制面，Registry 负责能力发现，Gateway 负责鉴权、schema 校验和审计，目标 Agent 只接收受控任务和授权引用。
+
+这张图的边界是：协议层传的是最小任务契约，不是把调用方上下文整体塞给另一个 Agent。`capability discovery` 让调用方选择兼容能力；`message envelope` 让请求可验证、可追踪；`task state and artifact refs` 让长任务可以被恢复和排障。真正的业务质量仍由调用方 verifier、policy 和人工审查兜底，协议只保证互操作、安全边界和生命周期可观测。
+
 协议层要让每一步可验证。输入错了返回 schema error，权限不足返回 auth denial，目标繁忙返回 retryable 状态。
 
 ## 可画图
@@ -62,6 +66,20 @@ sequenceDiagram
 - 协议如何支持流式进度？
 - 失败重试怎样保证幂等？
 - 多版本 Agent 如何兼容？
+
+## 多轮追问模拟
+
+**追问 1：为什么不能直接把完整上下文发给下游 Agent？**
+
+因为跨 Agent 调用常常跨团队、跨系统甚至跨租户。完整上下文会泄漏私有工具、用户数据、检索库结果和内部推理。更好的做法是传 `context_refs`，每个引用带 resource id、scope、TTL、tenant 和审计记录，由 Gateway 授权后再让目标 Agent 读取最小必要材料。
+
+**追问 2：任务状态为什么不能只有 completed 和 failed？**
+
+真实远程 Agent 可能需要排队、等待用户补材料、调用外部系统、部分产出 artifact 或被取消。只有 completed/failed 会让调用方误判超时和重试。至少要区分 submitted、accepted、working、input_required、completed、failed、canceled，并让每次状态变化带 correlation_id。
+
+**追问 3：协议版本不兼容怎么办？**
+
+Capability manifest 要声明 protocol_version 和 capability_version。调用方按版本选择 schema，Gateway 可以做兼容校验或拒绝不支持版本。对于长任务，结果 artifact 也要带 schema version，避免目标 Agent 升级后旧 orchestrator 静默解析错误。
 
 ## 项目化回答
 
@@ -98,6 +116,6 @@ Capability manifest 也要最小暴露。它可以公开 capability name、input
 
 ## 来源与延伸阅读
 
-- [Agent2Agent Protocol](https://github.com/a2aproject/A2A)
-- [Model Context Protocol Specification](https://modelcontextprotocol.io/specification/2025-06-18)
-- [Agent Client Protocol Introduction](https://agentclientprotocol.com/get-started/introduction)
+- [Agent2Agent Protocol](https://github.com/a2aproject/A2A)：官方资料用于支持跨 Agent 任务、能力和状态交互需要协议化，而不是直接拼自然语言消息。
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/specification/2025-06-18)：官方文档用于支持把工具、资源和上下文访问边界显式建模，避免协议层泄漏私有能力。
+- [Agent Client Protocol Introduction](https://agentclientprotocol.com/get-started/introduction)：官方文档用于支持客户端与 Agent 之间通过标准化会话和消息接口协作的设计方向。
