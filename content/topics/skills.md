@@ -31,6 +31,10 @@ flowchart TD
   I --> J[Deliver artifact and trace]
 ```
 
+图 1：Skill 从触发、渐进加载、工具契约到验证交付的运行链路。
+
+图中 Skill Router 只负责判断是否命中；Load Skill instruction 读取入口流程；Load references or templates by scope 表示按任务范围渐进加载资料，而不是一次性塞入全部知识。Tool contract and permissions 是安全边界，Skill 不能绕过工具权限。最后的 eval 或 verification 决定产物是否可交付，trace 记录 skill version、引用材料和验证结果，便于回放。
+
 | 组件 | 作用 | 设计重点 |
 | :--- | :--- | :--- |
 | trigger | 判断何时启用 | 明确正例、反例和优先级 |
@@ -71,6 +75,8 @@ Skill 的运行一般分为发现、加载、执行和验证。发现阶段用 t
 - tool contract 要声明工具权限、输入输出 schema、side effect 和审批要求。
 - scope 要限制语言、框架、业务域或文件类型，防止误用。
 - version 和 eval 需要绑定，升级后用回归任务确认输出没有退化。
+
+上线 Skill 时还要区分“强制流程”和“辅助参考”。代码审查、财务操作、邮件发送这类高风险任务适合强制流程，必须执行检查点；写作润色、资料整理这类任务可以把 Skill 作为参考包，让 Agent 根据上下文裁剪。否则 Skill 会变成僵硬模板，反而降低复杂任务质量。
 
 ## 系统设计案例
 
@@ -131,7 +137,7 @@ Skill Router 要处理优先级和冲突。如果多个 Skill 命中，应按显
 
 ## 来源与延伸阅读
 
-- [Anthropic: Effective tools for agents](https://www.anthropic.com/engineering/effective-tools-for-agents)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
-- [Model Context Protocol 文档](https://modelcontextprotocol.io/docs)
+- [Anthropic: Writing effective tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents)：支撑“能力封装需要围绕 Agent 可理解的接口、样例和评测迭代”的观点。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：支撑把 workflow、tool use、human feedback 和 evaluation 组合成稳定 Agent 系统的框架。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：支撑 tool contract、工具调用和运行时工具接入的基础概念。
+- [Model Context Protocol 文档](https://modelcontextprotocol.io/docs)：支撑“外部能力发现和工具/资源连接需要协议边界”的讨论，帮助区分 Skill、Tool 与外部上下文协议。

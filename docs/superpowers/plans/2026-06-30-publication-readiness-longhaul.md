@@ -166,6 +166,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-tool-error-recovery-core`
 - [x] `q-tool-error-recovery-deep`
 - [x] `q-tool-registry-core`
+- [x] `q-tool-registry-deep`
 - [x] `q-tool-schema-core`
 - [x] `q-tool-schema-deep`
 - [x] `q-trace-replay-core`
@@ -197,6 +198,10 @@ AI Agent / RAG topic backlog:
 - [x] `llm-foundation`
 - [x] `memory-decay`
 - [x] `paper-agent-project`
+- [x] `reflection-review`
+- [x] `rerank`
+- [x] `sandbox`
+- [x] `skills`
 
 For each question:
 

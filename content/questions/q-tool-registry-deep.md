@@ -37,7 +37,9 @@ flowchart TD
   Trace --> Eval[Eval and Rollback Signals]
 ```
 
-图里可以强调：多 Agent 共用工具不是共用同一份上下文，而是共享治理面，再按角色生成不同视图。
+图 1：多 Agent 工具 Registry 从可见性、版本策略到执行审计的治理链路。
+
+图里可以强调：多 Agent 共用工具不是共用同一份上下文，而是共享治理面，再按角色生成不同视图。Registry 只负责输出“某个 Agent 在某个租户、任务和策略下可见的工具视图”，Dispatcher 才负责真实执行。Feature Flag 和 Version Policy 控制 schema 灰度，Permission Policy Engine 控制执行授权，Trace 则把 agent、tenant、tool version、schema hash 和 policy decision 连接起来，方便回放与回滚。
 
 ## 系统设计案例
 
@@ -56,6 +58,24 @@ flowchart TD
 - 多 Agent 共享工具会不会互相污染？不会让它们共享状态，工具 metadata 共享，运行状态按 agent、用户和任务隔离。
 - 如何下线工具？先标记 deprecated，给替代工具和迁移期，保留历史 trace replay 能力，再关闭可见性。
 - MCP 远程工具如何纳管？把远程工具同步进本地 registry view，执行时仍走本地 permission gate 和 audit。
+
+## 多轮追问模拟
+
+**追问 1：Registry 返回 tool view 时，是不是只看 Agent 类型就够了？**
+
+不够。Agent 类型只能决定大类能力，最终 tool view 还要看 tenant、user role、resource ownership、task type、risk policy、feature flag 和 tool health。比如同样是客服 Agent，企业 A 可能开了退款预览，企业 B 没开；同一用户能看订单，不一定能看支付凭证。这个追问考察多租户和资源级授权意识，陷阱是把 Agent role 当成唯一权限来源。
+
+**追问 2：schema version 和 runtime version 为什么要分开？**
+
+schema version 影响模型如何生成参数，runtime version 影响后端如何执行。如果只记录一个版本，灰度出问题时很难判断是模型不会填新字段，还是 handler 行为变了。正确做法是 trace 同时记录 schema hash、runtime version、model version 和 prompt template version。这个追问考察灰度归因能力，陷阱是把工具升级当成普通后端发布。
+
+**追问 3：远程 MCP 工具能不能直接暴露给所有 Agent？**
+
+不能。MCP 可以负责能力发现和协议连接，但企业系统仍要把远程工具纳入本地 registry metadata：owner、riskLevel、permissionScope、timeout、audit policy、health 和 data boundary。执行时走本地 Dispatcher 和权限门禁。这个追问考察标准协议与本地治理的边界，陷阱是把“发现工具”误当成“授权执行”。
+
+**追问 4：如何判断工具 Registry 设计真的有效？**
+
+看分层指标：`valid_call_rate` 说明模型是否能按 schema 调用；`permission_denial_rate` 和 `unsafe_call_block_rate` 说明策略是否发挥作用；`schema_compatibility_errors` 说明版本是否兼容；`rollback_time` 和 `version_rollback_count` 说明灰度是否可控。还要按 agent、tenant、tool version 和 model version 切片。这个追问考察可观测性，陷阱是只看整体任务成功率。
 
 ## 项目化回答
 
@@ -88,5 +108,7 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [Model Context Protocol](https://modelcontextprotocol.io/)：支撑“远程工具发现、资源连接和协议边界”这部分讨论，说明 Registry 可以吸收外部能力，但不应把协议发现等同于本地授权。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：支撑“工具是 Agent 执行动作的接口”这一前提，可用来解释为什么 schema、执行器和 trace 要分层治理。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：支撑 Agent 编排、工具调用、审批和运行时治理的整体框架。
+- [Anthropic: Writing effective tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents)：支撑工具描述、工具评测和迭代改进的重要性，适合补充“工具定义不是一次性配置”的观点。

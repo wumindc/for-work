@@ -36,6 +36,10 @@ flowchart TD
   K -->|no| M[Rollback and quarantine output]
 ```
 
+图 1：Sandbox 将 Agent 动作请求转换为受策略约束的执行环境。
+
+图中 Policy Engine 是控制面，负责根据路径、网络、凭据和风险选择只读、临时工作区、网络白名单或凭据代理。Process runner 是执行面，所有 stdout、stderr、exit code、文件 diff、网络请求和资源用量都进入 Audit log。Verified 之后才能 apply 或 persist；验证失败时要 rollback，并把不可信输出隔离成 artifact，而不是继续塞回模型上下文。
+
 | 隔离面 | 控制方式 | 典型指标 |
 | --- | --- | --- |
 | filesystem | 只读挂载、临时目录、diff preview | unauthorized_write_block |
@@ -76,6 +80,8 @@ Sandbox 的核心是把“模型想做什么”转成“宿主允许什么”。
 - process 必须有 timeout、资源限额、工作目录限制和输出大小限制。
 - credential 通过 broker 按需注入，不能把长期 secret 写入环境或日志。
 - policy 要版本化，并支持风险等级、审批、拒绝原因和 rollback。
+
+还要把 sandbox 失败当成一等状态返回给 Agent。比如 network denied、credential denied、timeout、resource limit hit 和 policy confirm required，应该以结构化 error envelope 返回，让上层决定改参数、请求授权、走缓存还是停止。不能把所有失败都压成“命令执行失败”，否则模型会倾向于盲目重试或请求更大权限。
 
 ## 系统设计案例
 
@@ -136,7 +142,7 @@ Sandbox 要围绕 action request 建模，而不是只选 Docker 还是 VM。Act
 
 ## 来源与延伸阅读
 
-- [Anthropic: Claude Code security](https://docs.anthropic.com/en/docs/claude-code/security)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
-- [Vercel Sandbox 文档](https://vercel.com/docs/vercel-sandbox)
-- [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
+- [Anthropic: Claude Code security](https://code.claude.com/docs/en/security)：支撑本地 coding agent 需要权限、目录和执行风险治理的讨论。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：支撑把输入输出检查、策略门禁和运行时保护放在模型之外。
+- [Vercel Sandbox 文档](https://vercel.com/docs/sandbox)：支撑隔离执行环境、临时运行时和受控代码执行的工程方案。
+- [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)：支撑“网页、文档和工具观察可能诱导危险动作”的安全威胁模型。

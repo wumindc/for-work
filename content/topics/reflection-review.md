@@ -28,7 +28,9 @@ flowchart LR
   Verdict -->|blocked| Human[human review]
 ```
 
-图里 reviewer 不是凭感觉打分，它必须读取 rubric 和外部证据。verdict 要能驱动修订、停止或人工接管。
+图 1：Reflection 从草稿、证据、rubric 到修订或人工接管的闭环。
+
+图里 reviewer 不是凭感觉打分，它必须读取 rubric 和外部证据。Draft 是待审查产物，Rubric 定义“什么算好”，Evidence 约束 reviewer 不能凭空判断。Verdict 不是自然语言建议，而是可执行的结构化结果：通过、修订、阻塞或转人工。Editor 只根据 issues 修改草稿，避免每一轮都重新发散。
 
 ## 架构与运行机制
 
@@ -37,6 +39,8 @@ flowchart LR
 ## 运行机制
 
 Reflection 的输出建议包含 `verdict`、`score`、`issues`、`evidence`、`required_changes` 和 `stop_reason`。retry 要有最大次数和差异记录。连续两次没有实质改进，应停止或转人工。
+
+上线时还要把 reflection 放在发布门禁之前，而不是之后补一句“已自检”。例如代码生成场景中，reviewer 的 pass 只能进入测试和 diff gate；RAG 场景中，reviewer 的 pass 只能说明 claim list 已被检查，不能替代 citation verifier；高风险动作中，reviewer 只能提出风险，最终动作仍要由 policy 或人工确认。
 
 ## 关键设计取舍
 
@@ -70,6 +74,8 @@ sequenceDiagram
   R-->>E: verdict + required changes
   E-->>G: revised patch
 ```
+
+图 2：代码任务中的 Reflection 时序。Generator 先产出 patch 并运行测试，Reviewer 读取 diff 与测试结果后输出 verdict，Editor 再按 required changes 修订。这个链路的重点是 reviewer 不直接修改真实工作区，也不绕过测试门禁。
 
 ## 真实问题与排障
 
@@ -120,5 +126,6 @@ Retry 需要停止条件。常见 stop policy 包括 max_revision_count、no_imp
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持把 Agent 系统拆成 workflow、tool use、evaluation 与 human-in-the-loop 的设计观点。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于说明运行时检查、输入输出约束和门禁不能只靠模型自评。
+- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)：用于解释 Reflection 在 Agent 架构和评测体系中的位置。
