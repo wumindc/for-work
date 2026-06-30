@@ -260,6 +260,14 @@ Post-publish thin-depth deepening:
 - [x] `q-ai-llm-training-core`
 - [x] `q-ai-llm-training-deep`
 - [x] `q-langgraph-deep`
+- [x] `q-planning-methods-core`
+- [x] `q-planning-methods-deep`
+- [x] `q-react-loop-core`
+- [x] `q-workflow-vs-agent-core`
+- [x] `rag-pipeline`
+- [x] `react-loop`
+- [x] `reflection-review`
+- [x] `rerank`
 
 For each question:
 

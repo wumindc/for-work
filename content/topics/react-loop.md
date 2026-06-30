@@ -131,6 +131,22 @@ ReAct 的风险控制也应放进 loop contract。高风险工具调用前要经
 
 还有一个常见深问是“loop 失败算模型问题还是系统问题”。我的回答会先看 trace：如果 observation 不完整，是工具问题；如果 verifier 漏判，是评测问题；如果同一动作重复，是 stop policy 问题；最后才归因到模型选择。
 
+## 公开阅读校验
+
+这篇文章公开发布时，需要把 ReAct 的边界讲得比“想、做、看反馈”更硬。一个能上线的 loop 必须有受控 action 类型、结构化 observation、state reducer、verifier、预算和 stop policy。否则模型只是不断生成下一步，系统既不知道它为什么继续，也不知道什么时候必须停止。
+
+读者可以用一个简单检查法评审 ReAct：每一步是否有 `step_id`，工具结果是否有 `observation_ref`，状态变化是否有 `state_diff`，停止是否有 `stop_reason`。如果这些字段缺失，排障时只能翻聊天记录猜测；如果字段齐全，重复动作、工具失败、页面未变化、测试失败和预算耗尽都能被定位到具体轮次。
+
+ReAct 的另一个公开阅读重点是不要把完整思维链当成产品能力。真实系统应该展示证据、工具结果、决策摘要和最终依据，而不是展示模型的完整隐式推理。这样既保护用户体验和安全边界，也让审计聚焦在可验证的外部事实上。
+
+最后要强调适用场景。ReAct 适合需要外部反馈的开放任务，比如代码修复、网页操作、论文证据检索；不适合路径固定、强事务或高风险副作用动作。高风险动作可以由 ReAct 准备 proposal，但执行必须回到 workflow、权限网关和人工确认。
+
+如果团队要把 ReAct 放进真实产品，还要先定义“无进展”的判据。例如同一 action 在同一 state 上重复、observation 与上一轮完全一致、工具连续返回同类错误、verifier 多次拒绝同一问题，都应该触发停止、降级或转人工。没有无进展判据，max steps 只是粗暴刹车，无法解释 loop 为什么失败。
+
+对外部读者来说，好的 ReAct 文章还应该说明上下文投影。下一轮不应吃进完整历史，而应吃进目标、最新 state、关键 observation、未解决风险和预算余额。这个设计既降低 token 成本，也减少旧错误污染新决策。能讲清这一点，才说明理解 ReAct 不只是理解 prompt 模板，而是理解一个有状态运行时。
+
+线上复盘时，也要把 ReAct 事故拆成可归因的几类：目标解释错、动作选择错、工具参数错、观察丢失、状态归并错、验证器放行错。只有这样，团队才能判断是要改 prompt、改 tool schema、补 observation、收紧权限，还是调整 stop policy。如果把所有失败都归因成“模型不稳定”，系统会很难进入可治理状态。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow 与 agent 的差异、何时使用 agent loop、以及生产中需要可控工具和反馈边界。

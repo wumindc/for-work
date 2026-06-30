@@ -141,6 +141,14 @@ RAG 的工程核心是 evidence lifecycle。离线侧每个 chunk 要带 `doc_id
 
 被问“chunk 怎么切”，回答结构优先：标题、章节、段落、表格和代码块保留语义边界；小 chunk 召回，父 chunk 补上下文，并用 eval 调参。
 
+## 公开阅读校验
+
+公开读者读完这篇后，应该能判断一个 RAG 项目是不是只接了向量库。可发布的方案至少要说明四条证据链：文档如何解析并保留位置，候选如何被召回和过滤，证据如何进入上下文，答案中的 claim 如何回到 citation。缺任何一条，系统都无法证明答案为什么可信。
+
+评审 RAG 时不要只问“命中率多少”。更好的问题是：正确证据是否进入候选集，是否被 rerank 选入上下文，生成是否只使用被选证据，unsupported claim 是否被 verifier 拦住。这个四段式排障能把责任落到 ingest、retrieval、rerank、context builder、generator 或 verifier，而不是笼统地说模型幻觉。
+
+如果要上线给公开读者或企业用户，RAG 还必须处理权限和版本。相同问题在不同租户、角色、文档版本下可能有不同答案；缓存、citation 和 trace 都要带这些维度。只在最终答案做文本脱敏是不够的，因为无权限 evidence 一旦进入模型上下文，就已经越过了系统边界。
+
 ## 来源与延伸阅读
 
 - [AgentGuide Agent 核心面试题库](https://github.com/adongwanai/AgentGuide/blob/main/docs/04-interview/03-agent-questions.md)：用于 RAG 面试题组织。

@@ -124,6 +124,16 @@ Retry 需要停止条件。常见 stop policy 包括 max_revision_count、no_imp
 - retry 什么时候停止？超过预算、严重问题不下降、新问题增加或触发高风险策略时。
 - Reflection 和 Eval 的区别？Reflection 是运行时修订机制，Eval 是离线或门禁评测；二者可以共用 rubric。
 
+## 公开阅读校验
+
+公开读者最容易误解 Reflection，以为“让模型再检查一遍”就能提高可靠性。这篇文章要让读者看到真正的边界：reviewer 必须读 rubric、证据和产物引用，输出结构化 verdict；它不能凭自然语言感觉替代测试、citation verifier、policy engine 或人工审批。
+
+评审一个 Reflection 设计时，可以问四个问题：rubric 是否明确到可判定，issue 是否指向 evidence_ref，修订是否只改 required_changes，连续无改进时是否停止或转人工。四个问题有任何一个回答不上来，reflection loop 就很可能变成“模型互相说服”，把错误改得更流畅、更难发现。
+
+生产里还要区分运行时 reflection 和发布 eval。Reflection 是为了在一次任务内修订草稿、patch 或答案；Eval 是为了判断一个版本能否发布。二者可以共享 rubric，但不能互相替代。尤其是代码、RAG 和高风险业务动作，reviewer pass 只能进入下一道门禁，不能直接当成最终正确。
+
+还有一个必须写清的边界是 reviewer 的责任范围。Reviewer 可以指出问题、要求补证据、标记风险或建议人工接管，但不应该静默扩大任务范围，也不应该绕过 verifier 直接发布结果。这样做能防止“自我审查”变成另一个不受控的生成器。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持把 Agent 系统拆成 workflow、tool use、evaluation 与 human-in-the-loop 的设计观点。
