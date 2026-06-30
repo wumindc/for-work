@@ -244,6 +244,14 @@ Post-publish thin-depth deepening:
 - [x] `langgraph`
 - [x] `llm-foundation`
 - [x] `llm-training-alignment`
+- [x] `mcp-fundamentals`
+- [x] `memory-decay`
+- [x] `multi-agent-roles`
+- [x] `paper-agent-project`
+- [x] `planning-methods`
+- [x] `playwright-actions`
+- [x] `project-storytelling`
+- [x] `prompt-injection`
 
 For each question:
 

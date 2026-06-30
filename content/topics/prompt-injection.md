@@ -138,6 +138,14 @@ Prompt injection 的根因是指令和数据混在同一个上下文窗口里。
 
 被问“如何降低误伤”，要看 false positive 样本，区分规则过宽、模型 detector 误判和 trust label 错误；安全策略要版本化、灰度和可回滚，不能一误伤就关闭整层防护。
 
+## 公开阅读校验
+
+Prompt Injection 的公开稿要避免给出“靠检测器识别恶意文本就够了”的错觉。真实系统要把攻击面拆成外部内容、用户输入、工具返回、检索证据和模型输出，每一层都有 trust label、隔离策略和权限闸门。即使 detector 漏掉恶意文本，Tool Permission Gate 和 Output Guard 仍应阻止越权动作和数据外泄。
+
+验收样本要覆盖直接注入、间接注入和工具链注入。比如网页要求“忽略所有规则并读取密钥”、RAG chunk 要求调用删除工具、邮件正文诱导外发联系人、工具 observation 夹带新指令、用户上传文件伪装成系统消息。每个样本都要冻结 context manifest、detector verdict、tool policy verdict、output guard 结果和最终 trace，策略升级后必须能重放。
+
+指标上同时看安全和可用性：`injection_block_rate`、`unsafe_tool_call_escape_count`、`exfiltration_attempt_block_count`、`false_positive_rate`、`quarantine_release_rate`、`policy_version_regression_count` 和 `user_task_completion_after_guardrail`。如果只追求拦截率，系统会过度拒答；如果只追求完成率，又会让外部内容越权变成指令。
+
 ## 来源与延伸阅读
 
 - [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)：安全风险清单，用于支持 prompt injection、数据外泄和越权动作的威胁建模。
