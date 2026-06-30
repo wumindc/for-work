@@ -27,7 +27,7 @@ flowchart TD
   E --> F[Commit offset]
 ```
 
-数据流里 message key 是顺序边界，offset 是消费进度，rebalance 会影响正在处理的分区。
+图 1：局部顺序消息的生产、路由和消费链路。Producer 使用稳定 message key，例如 `order_id` 或 `workflow_run_id`，Key hash 把同一业务对象路由到同一 Partition；Consumer 按 partition 内 offset 顺序调用 Business handler，业务成功后再 Commit offset。图中最关键的数据流边界是 message key：它定义顺序范围；offset 只表示消费进度，不能替代业务版本和幂等判断。
 
 ## 可画图
 
@@ -43,6 +43,8 @@ flowchart TD
 
 指标要覆盖 ordering_violation_count、partition_lag、consumer_lag、rebalance_count、retry_count、DLQ_count、offset_commit_latency 和 idempotency_conflict_count。工程取舍是顺序范围越大，并行度越低。全局顺序实现最简单但吞吐最低，局部顺序需要业务 key 和幂等版本控制，却能保留分区并行能力。热点 key 可以拆业务维度或做补偿队列，但不能破坏同一状态机的先后语义。
 
+排障同样按影响面、止血、根因、回归来讲。影响面先看乱序涉及哪些 key、partition、consumer group 和业务状态机；止血可以暂停对应 key 或 partition 的消费、关闭并发处理、把 poison message 隔离到审计队列；根因从 key 选择、partition 扩容、rebalance、offset 提交时机、业务并发和 retry 策略里找；回归要构造同一 key 的事件序列，验证 create/pay/ship/cancel 不会乱序覆盖。
+
 ## 面试官追问
 
 - 为什么不做全局顺序？
@@ -50,6 +52,26 @@ flowchart TD
 - 热点 key 怎么办？
 - 失败消息能不能跳过？
 - Kafka 和 RocketMQ 的顺序语义有什么差异？
+
+## 多轮追问模拟
+
+### 追问 1：全局顺序为什么通常不可取？
+
+回答要点：全局顺序会把并行度压到很低，通常需要单分区、单队列或单消费者；多数业务只要求同一订单、账户或 workflow run 内有序，局部顺序能保留吞吐和可用性。  
+考察点：是否先定义顺序范围，而不是默认追求最强语义。  
+常见陷阱：把“有序”理解成全系统总顺序，导致系统不可扩展。
+
+### 追问 2：失败消息能不能跳过？
+
+回答要点：默认不能直接跳过，因为后续事件可能依赖它；可以有限重试、暂停该 key、进入 DLQ/审计队列、人工修复后重放，业务层还要用 version/idempotency 防止旧状态覆盖。  
+考察点：是否理解顺序和失败处理是一体的。  
+常见陷阱：为了降低 lag 直接提交 offset，造成状态机缺步骤。
+
+### 追问 3：partition 扩容会不会破坏顺序？
+
+回答要点：如果 key 到 partition 的映射算法变化，同一业务对象可能进入不同 partition；扩容前要评估路由一致性，必要时用固定队列映射、迁移窗口、双写校验或按业务分组单独迁移。  
+考察点：是否具备容量变更和顺序语义联动意识。  
+常见陷阱：只看吞吐扩容，不验证历史 key 的路由稳定性。
 
 ## 项目化回答
 
@@ -80,7 +102,8 @@ flowchart TD
 - 追问跳过失败消息：默认不能直接跳过，除非 DLQ 有审计、补偿和重放策略。
 - 追问 Kafka/RocketMQ 差异：Kafka 强调 partition 内顺序，RocketMQ FIFO 按 message group 提供顺序语义。
 
-## 参考资料
+## 来源与延伸阅读
 
-- [Apache Kafka Consumer configs](https://kafka.apache.org/documentation/#consumerconfigs)
-- [RocketMQ FIFO Message](https://rocketmq.apache.org/docs/featureBehavior/03fifomessage/)
+- [RocketMQ Ordered Message](https://rocketmq.apache.org/docs/featureBehavior/03fifomessage/)：用于说明 RocketMQ 的顺序语义围绕 message group/FIFO 组织，并区分顺序范围和并发能力。
+- [Apache Kafka Consumer configs](https://kafka.apache.org/documentation/#consumerconfigs)：用于支持 consumer group、partition 分配、offset 提交和消费并发相关讨论。
+- [Apache Kafka Design: The Log](https://kafka.apache.org/documentation/#design_log)：用于延伸理解 partition 内追加日志、offset 和顺序消费之间的关系。

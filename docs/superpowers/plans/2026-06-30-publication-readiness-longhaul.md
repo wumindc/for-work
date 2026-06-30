@@ -84,6 +84,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-langgraph-deep`
 - [x] `q-planning-methods-deep`
 - [x] `q-react-loop-deep`
+- [x] `q-browser-observation-core`
 
 For each question:
 
@@ -98,9 +99,10 @@ For each question:
 Work after the first AI Agent / RAG batch:
 
 - [ ] Elasticsearch low-score questions.
+  - [x] `q-es-rag-hybrid-search`
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`
-  - [ ] `q-mq-ordering`
+  - [x] `q-mq-ordering`
 - [ ] Redis questions with missing sources.
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.
