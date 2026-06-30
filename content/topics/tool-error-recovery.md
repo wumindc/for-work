@@ -31,7 +31,9 @@ flowchart LR
   Error --> Trace[Trace + Metrics]
 ```
 
-图里的关键是 Recovery Policy。错误返回只描述事实，是否重试、降级或补偿由策略决定。
+图 1：工具失败恢复把 tool call 的成功和失败都收敛到可观测、可决策的运行时链路。
+
+图里的关键是 Recovery Policy。Tool Runtime 只描述事实，例如超时、限流、权限拒绝、参数无效、部分成功或下游 schema 漂移；Recovery Policy 再结合工具元数据、幂等性、错误预算、用户风险和当前状态决定 retry、fallback、ask user、stop 或 handoff。Trace + Metrics 不是事后装饰，而是恢复动作能被审计、回放和评估的前提。
 
 ## 架构与运行机制
 
@@ -40,6 +42,8 @@ flowchart LR
 ## 运行机制
 
 timeout、rate limit、5xx 可以有退避重试。permission denied、invalid arguments、business rule violation 通常不该盲目重试。写操作失败要区分是否已生效，必要时查状态或执行 compensation。
+
+恢复策略应有明确停止条件。常见限制包括最大重试次数、总耗时预算、单工具错误预算、连续相同错误次数、用户确认缺失和 side effect 状态未知。超过限制后要返回可解释失败，而不是继续让模型“再试一次”。对用户可见的失败说明应包含当前已完成步骤、未完成步骤、是否产生副作用、下一步选择和是否需要人工介入。
 
 ## 关键设计取舍
 
@@ -56,6 +60,8 @@ timeout、rate limit、5xx 可以有退避重试。permission denied、invalid a
 每个工具要声明 retry policy、timeout、idempotent、side effect 和 compensation plan。写工具必须有 idempotency key。错误要进入 eval，常见失败要有 fixture。
 
 指标包括 `tool_error_rate`、`retry_success_rate`、`fallback_success_rate`、`compensation_rate`、`human_handoff_rate` 和 `error_budget_burn`。
+
+工程上最好把错误分类固化成协议，而不是每个工具随意返回字符串。例如 `TOOL_TIMEOUT`、`RATE_LIMITED`、`INVALID_ARGUMENTS`、`PERMISSION_DENIED`、`SCHEMA_MISMATCH`、`PARTIAL_SUCCESS`、`SIDE_EFFECT_UNKNOWN`、`DOWNSTREAM_UNAVAILABLE`。每类错误都应有默认恢复动作、是否暴露给模型、是否可重试、是否需要用户确认、是否计入告警。这样新增工具时不会重复发明恢复逻辑，也能在离线 eval 中复现历史故障。
 
 ## 系统设计案例
 
@@ -76,9 +82,13 @@ sequenceDiagram
   R-->>A: observation or handoff
 ```
 
+图 2：写操作超时后的恢复时序。关键不是立即重复提交，而是先用 idempotency key 查询外部系统状态，再根据 committed、not found 或 unknown 选择返回成功、安全重试或人工接管。
+
 ## 真实问题与排障
 
 如果工具错误率上升，先按 error_code 聚合。看是下游慢、参数错误、权限变更、schema 漂移还是调用量突增。再看 retry 是否放大压力，fallback 是否生效。
+
+排障时要把模型错误和工具错误拆开。模型生成 invalid args 是参数生成问题；工具返回 403 是权限或租户问题；工具超时是依赖或容量问题；下游字段缺失是 schema 兼容问题。不要把这些都归成“Agent 不稳定”。更好的事件表应包含 `run_id`、`tool_id`、`tool_version`、`error_code`、`retry_count`、`latency_ms`、`side_effect_status`、`fallback_tool_id`、`final_verdict` 和 `user_visible_message`。
 
 ## 常见误区与排障
 
@@ -124,5 +134,7 @@ Coding Agent 的测试失败不能当工具崩溃，要作为 observation。Web 
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow、tool use 和 agent loop 的边界，以及为什么恢复策略应放在宿主流程中治理。
+- [OpenAI: A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支持工具调用、guardrails、human-in-the-loop 和生产化 agent 系统的设计边界。
+- [OpenAI API Error Codes](https://platform.openai.com/docs/guides/error-codes)：用于说明错误码、限流、认证和服务端错误需要被结构化分类处理。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：用于支持工具声明、工具调用和运行时封装的工程语义。

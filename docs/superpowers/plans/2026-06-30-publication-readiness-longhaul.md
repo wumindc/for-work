@@ -198,6 +198,10 @@ AI Agent / RAG topic backlog:
 - [x] `llm-foundation`
 - [x] `memory-decay`
 - [x] `paper-agent-project`
+- [x] `swe-bench`
+- [x] `tool-error-recovery`
+- [x] `tool-registry`
+- [x] `travel-agent-project`
 - [x] `reflection-review`
 - [x] `rerank`
 - [x] `sandbox`
@@ -233,6 +237,8 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-redis-cache-consistency`
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.
+- [ ] AI engineering trend documents.
+  - [x] `local-ai-inference-stack`
 
 Each batch should preserve domain terminology and avoid importing AI-specific phrases where traditional engineering terms are more precise.
 
