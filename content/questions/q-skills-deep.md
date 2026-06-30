@@ -34,7 +34,9 @@ flowchart TD
   J --> K[Trace skill version]
 ```
 
-运行时要按需加载。入口文件只放触发和流程，长资料放 references，固定格式放 templates，重复动作放 scripts。这样可以控制 context 成本，也便于维护。
+图 1：可复用 Skill 的定义、触发、渐进加载、执行、验证和版本追踪流程。
+
+图中 Skill definition 被拆成 Trigger rules、Instruction steps、References and templates、Tool contract 和 Eval cases，说明 Skill 不是单个长提示词，而是一组可维护资产。Task 进入后先匹配触发规则，再 Load minimal context，避免把所有参考资料一次性塞进上下文。Execute workflow 阶段按 tool contract 调用工具，Verify output 用 golden cases、rubric 或命令级检查验收产物，Trace skill version 则把 `skill_name`、`skill_version`、`trigger_reason` 和 `verification_result` 写入记录。这样 Skill 才能复用、回滚和量化质量波动。
 
 ## 可画图
 
@@ -59,6 +61,20 @@ flowchart TD
 - examples 和 templates 应该如何组织？
 - Skill 版本升级失败怎么回滚？
 - 如何避免 Skill 输出千篇一律？
+
+## 多轮追问模拟
+
+第一轮追问：一个 Skill 的最小可用定义是什么？
+回答要点：metadata、trigger、scope、workflow steps、tool contract、verification、fallback 和 version。考察点是可维护边界。陷阱是只写一段提示词，没有触发负例、工具权限和验证方式。
+
+第二轮追问：渐进加载如何落地？
+回答要点：入口文件只放路由、scope 和核心步骤；按任务类型再加载 references、templates、examples 或 scripts；长资料不要默认进上下文。考察点是 context 成本和信息污染控制。陷阱是把所有说明、案例和资料塞进一个文件。
+
+第三轮追问：Skill 版本升级后质量下降怎么办？
+回答要点：trace 记录 skill_version 和 case_id，用 regression 找失败类型；先回滚到上一版，再拆分是 trigger、reference、tool contract 还是 eval 变化导致。考察点是版本化与回归。陷阱是只改 prompt，不保留可复现样本。
+
+第四轮追问：如何避免 Skill 输出千篇一律？
+回答要点：模板只约束必要结构，不固定表达；references 提供领域素材，workflow 要求读当前上下文和用户目标；eval 检查准确性、完整性和场景适配，而不是只检查标题。考察点是可复用和个性化之间的平衡。陷阱是把模板当成最终内容。
 
 ## 项目化回答
 
@@ -95,6 +111,6 @@ Eval 要覆盖 trigger 和产物质量。Trigger precision 防误触发，trigge
 
 ## 来源与延伸阅读
 
-- [Anthropic Skills repository](https://github.com/anthropics/skills)
-- [Anthropic Agent Skills engineering note](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
+- [Anthropic Skills repository](https://github.com/anthropics/skills)：用于参考 Skill 包结构、示例资产和可复用能力的组织方式。
+- [Anthropic Agent Skills engineering note](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)：用于说明 Skill 为什么要做成可加载、可组合、可复用的任务能力包。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：用于对照 Tool 的 schema、调用和 hosted/local tool 边界，避免把 Tool 与 Skill 混为一谈。

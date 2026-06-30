@@ -156,6 +156,11 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-long-term-memory-core`
 - [x] `q-mcp-fundamentals-deep`
 - [x] `q-multi-agent-roles-deep`
+- [x] `q-prompt-injection-core`
+- [x] `q-prompt-injection-deep`
+- [x] `q-rag-pipeline-deep`
+- [x] `q-skills-core`
+- [x] `q-skills-deep`
 
 AI Agent / RAG topic backlog:
 

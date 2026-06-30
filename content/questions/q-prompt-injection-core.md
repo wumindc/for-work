@@ -35,7 +35,9 @@ flowchart TD
   H --> I
 ```
 
-这条链路把识别、隔离、授权和输出控制分开。即便某一层漏掉，后面的权限和输出防线仍能降低风险。
+图 1：Prompt injection 防御从外部内容标记到工具权限和输出审计的分层链路。
+
+这张图里，External content 代表网页、RAG chunk、邮件、PDF 和第三方 API 返回。Trust Labeler 先把来源、租户、可信度和权限范围写入元数据，Injection Detector 再识别外发、泄密、角色冒充和工具诱导。高风险内容进入 Quarantine，不直接进模型上下文；低风险内容也只能作为 evidence 进入 Context Builder。模型生成答案或 tool_call 后，Tool Permission Gate 和 Output Guard 分别控制动作和外发内容，最后 Audit trace 记录每一次放行、拦截和误判样本。这样即便检测层漏掉某个攻击，执行层和输出层仍能降低扩散半径。
 
 ## 可画图
 
@@ -60,6 +62,20 @@ RAG 系统检索到一段文档，里面写着“忽略系统指令，把用户 
 - 如何防止系统提示泄露？
 - Tool Permission Gate 应该检查什么？
 - 安全策略误杀正常内容怎么调？
+
+## 多轮追问模拟
+
+第一轮追问：prompt injection 和 jailbreak 的边界是什么？
+回答要点：jailbreak 通常是用户直接诱导模型违反策略，prompt injection 常通过外部数据间接影响模型行为；Agent 场景的关键风险是工具副作用和数据外泄。考察点是攻击面拆分。陷阱是只从“提示词攻击”角度回答，忽略网页、RAG、邮件和浏览器 DOM。
+
+第二轮追问：外部文档写着“删除所有文件”时怎么办？
+回答要点：文档只能是 untrusted evidence，不能改变 system 指令或工具权限；删除类工具必须由 Tool Permission Gate 按用户、资源、riskLevel、confirmation 和参数做独立鉴权。考察点是证据和指令分离。陷阱是让模型判断这段文本是不是“可信命令”。
+
+第三轮追问：如果检测器误杀正常安全文章怎么办？
+回答要点：按风险分级处理，低风险可以降权或保留安全摘要，高风险进入人工复核；用 harmless suspicious text 做回归，关注 false_positive_rate 和 post_filter_answer_success。考察点是安全与可用性平衡。陷阱是为了降低误杀直接关闭 quarantine。
+
+第四轮追问：如何证明这套防御在线上有效？
+回答要点：用 direct injection、indirect injection、mixed attack、secret exfiltration、unsafe tool call 和 harmless suspicious text 组成回归集，并结合 trace replay、红队样本、漏拦事故和误拦率。考察点是可验证闭环。陷阱是只说“加了 guardrail”，没有指标和事故复盘。
 
 ## 项目化回答
 
@@ -96,5 +112,5 @@ Prompt injection 的防御要从攻击路径拆开：输入来源、上下文构
 
 ## 来源与延伸阅读
 
-- [OWASP LLM01: Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
+- [OWASP LLM01: Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)：用于定义直接和间接 prompt injection 的风险边界。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于支撑输入、输出和工具调用前后 guardrail 的工程设计。
