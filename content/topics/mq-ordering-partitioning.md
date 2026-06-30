@@ -30,6 +30,10 @@ flowchart TD
   F --> I[Commit offset]
 ```
 
+图 1：顺序消息通常以业务 key 进入固定 partition，再由同一 consumer group 内的消费者按 offset 顺序处理，处理成功后提交消费进度。
+
+图中 `message key` 是顺序域选择边界，决定哪些事件必须落到同一 partition；`Partition` 是 MQ 提供顺序和并发的基本单位；`Consumer` 是业务状态机执行边界；`Commit offset` 是进度确认边界，必须晚于业务处理和幂等记录。只要这几个边界被破坏，就可能出现状态回退、重复执行或跳过失败消息。
+
 | 概念 | 作用 | 风险 |
 | --- | --- | --- |
 | message key | 决定分区或消息组 | key 倾斜 |
@@ -80,6 +84,8 @@ Producer 根据业务 key 发送消息，同一 key 进入同一 partition。Bro
 
 如果出现状态回退，先看消息 key 是否一致，再看消费者是否并发处理了同一 key，最后看 offset 是否过早提交。若 lag 集中在一个 partition，可能是热点 key 或 poison message。
 
+排障时可以把链路拆成四段。影响面：确认哪些 aggregate、partition、offset 范围出现 ordering violation，是否集中在某个 key。止血：暂停该 partition 或该 key 的消费，冻结自动补偿，避免旧事件继续覆盖新状态。根因：检查 producer 是否改过 key 规则、partition 数是否调整、rebalance 是否打断正在处理的消息、消费者是否在同一 key 内开了并发。回归：用同一批事件按原 offset 回放，验证状态机版本约束、幂等表和 offset 提交时机。
+
 ## 常见误区与排障
 
 - 以为 MQ 默认全局有序。
@@ -125,7 +131,7 @@ Producer 根据业务 key 发送消息，同一 key 进入同一 partition。Bro
 
 ## 来源与延伸阅读
 
-- [Apache Kafka Concepts](https://kafka.apache.org/documentation/#intro_concepts_and_terms)
-- [Apache Kafka Consumer configs](https://kafka.apache.org/documentation/#consumerconfigs)
-- [RocketMQ FIFO Message](https://rocketmq.apache.org/docs/featureBehavior/03fifomessage/)
-- [RabbitMQ Consumer acknowledgements](https://www.rabbitmq.com/docs/confirms)
+- [Apache Kafka Concepts 官方文档](https://kafka.apache.org/documentation/#intro_concepts_and_terms)：用于支持 partition、record 顺序和 consumer group 的基础语义说明。
+- [Apache Kafka Consumer configs 官方文档](https://kafka.apache.org/documentation/#consumerconfigs)：用于确认 consumer group、offset 提交和消费配置对顺序处理的影响。
+- [RocketMQ FIFO Message 官方文档](https://rocketmq.apache.org/docs/featureBehavior/03fifomessage/)：用于对照 message group/FIFO 语义，说明局部顺序比全局顺序更常见。
+- [RabbitMQ Consumer acknowledgements 官方文档](https://www.rabbitmq.com/docs/confirms)：用于说明 ack 时机和重投递行为如何影响顺序与重复处理。

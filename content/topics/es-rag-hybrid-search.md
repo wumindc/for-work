@@ -29,6 +29,10 @@ flowchart TD
   I --> J[Grounded answer]
 ```
 
+图 1：ES Hybrid Search 把文档解析、文本字段、向量字段、用户查询、双路召回、RRF 融合、rerank 和 grounded answer 串成一条 RAG 检索链路。
+
+图中 `ES index` 是召回层边界，负责 text、keyword、metadata 和 dense_vector 的统一检索；`RRF fusion` 是排序融合边界，避免直接相加不同检索器的分数；`Evidence pack` 是生成前的证据边界，只有通过 rerank 和 citation grounding 的片段才应进入答案上下文。这个边界能把“搜到候选”和“可被引用”分开。
+
 | 层次 | ES 能力 | RAG 作用 |
 | --- | --- | --- |
 | text field | BM25 和 analyzer | lexical recall |
@@ -80,6 +84,8 @@ flowchart TD
 
 如果召回缺少精确错误码，检查 analyzer、text/keyword 字段和 BM25 路径。若向量召回噪声多，检查 chunk、embedding 模型、kNN top_k 和 rerank。若权限泄漏，首先查 metadata filter。
 
+事故处理要按影响面、止血、根因、回归拆开。影响面先看 query 类别、租户、权限范围、unsupported claim、citation_precision 和 query_latency_p95；止血可以临时降低 vector top_k、关闭高风险文档集合、回退 embedding_model_version、只放行 BM25+metadata 的保守路径，或在生成层拒答低置信 evidence；根因要回放同一 query 的 BM25-only、kNN-only、hybrid 和 rerank trace，确认问题来自 analyzer、chunk、向量版本、RRF 参数还是权限过滤；回归要把事故 query 加入 eval set，并保存 retrieved chunk、rank、rrf_score、rerank_score 和最终 citation。
+
 ## 常见误区与排障
 
 - 把向量检索当成 RAG 全部。
@@ -121,7 +127,7 @@ RAG 评测要覆盖 recall@k、precision@k、MRR、citation_precision、unsuppor
 
 ## 来源与延伸阅读
 
-- [Elasticsearch kNN search](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)
-- [Elasticsearch Dense vector field](https://www.elastic.co/guide/en/elasticsearch/reference/current/dense-vector.html)
-- [Elasticsearch RRF](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)
-- [OpenAI Cookbook: Elasticsearch RAG](https://cookbook.openai.com/examples/vector_databases/elasticsearch/elasticsearch-retrieval-augmented-generation)
+- [Elasticsearch kNN search 官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html)：用于支持 ES 可在同一检索链路中执行近似向量召回和过滤的机制说明。
+- [Elasticsearch Dense vector field 官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/current/dense-vector.html)：用于确认 dense_vector 字段、embedding 版本和索引建模的语义边界。
+- [Elasticsearch RRF 官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)：用于说明为什么 BM25 与 kNN 分数不宜直接相加，以及 RRF 如何按排名融合多路候选。
+- [OpenAI Cookbook: Elasticsearch RAG](https://developers.openai.com/cookbook/examples/vector_databases/elasticsearch/elasticsearch-retrieval-augmented-generation)：用于补充 ES 作为 RAG 检索后端的工程实践，包括索引、召回和生成链路衔接。

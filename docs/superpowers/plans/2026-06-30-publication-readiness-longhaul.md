@@ -176,10 +176,15 @@ Work after the first AI Agent / RAG batch:
 - [ ] Elasticsearch low-score questions.
   - [x] `q-es-boundary-inverted-index`
   - [x] `q-es-rag-hybrid-search`
+  - [x] `es-rag-hybrid-search`
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`
   - [x] `q-mq-ordering`
   - [x] `mq-transactional-messaging`
+  - [x] `mq-consumer-governance`
+  - [x] `mq-ordering-partitioning`
+- [ ] Database low-score questions.
+  - [x] `q-db-index-execution-plan`
 - [ ] Redis questions with missing sources.
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.
