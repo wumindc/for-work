@@ -73,6 +73,8 @@ flowchart TD
 
 我会说排查 ES 慢查询要先定位阶段，再改 DSL 或索引。项目里 Search API 会限制字段、分页和聚合，慢查询进入样本库，后续变更要回归。
 
+更项目化一点可以这样讲：“我们把每类查询模板都打 `query_hash`，日志里记录 index alias、time range、from/size、sort 字段、aggregation 名称、took、timeout、hit count 和 response size。慢查询不是靠人肉回忆，而是进入回放集。每次改 mapping、DSL 模板或分页策略，都用这批样本比较 p95、aggregation_time、heap 和 circuit breaker。”
+
 ## 常见错误
 
 - 直接加节点。
@@ -91,6 +93,12 @@ flowchart TD
 
 不是所有慢查询都该加索引。给所有字段建索引会拖慢写入并增加存储。不是所有聚合都该实时算，高频大范围报表可能应该走离线预聚合。不是所有深分页都该支持，用户翻到第几万页往往是产品需求要改，而不是技术要硬扛。
 
+另一个反例是“线上开 Profile API 就能解决问题”。Profile 能帮助拆 query tree，但它本身会改变请求成本，也不能替代 slow log、资源指标和业务影响面分析。更稳的做法是抽样问题请求，在隔离环境或低流量窗口复现，再把优化前后的 DSL、profile 结果和指标对比固化到回归里。
+
+## 公开阅读校验
+
+这道题如果只背优化点，会像清单题；公开阅读时要能看出排障顺序。读者应该先学会问：慢的是哪类 query，在哪个 index alias，是否集中在某个租户或时间窗口，query phase、fetch phase、aggregation 哪个阶段占比高，集群资源是否先于 DSL 退化。只有顺序清楚，后面的 filter context、PIT、composite aggregation 和预聚合才不是零散技巧。
+
 ## 深问准备
 
 - 追问 filter context：不评分，适合缓存和过滤，能先缩小候选。
@@ -102,3 +110,6 @@ flowchart TD
 
 - [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)：用于确认 query/filter、分页、聚合等 DSL 的语义边界。
 - [Elasticsearch Search profile API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-profile.html)：用于说明如何拆解查询执行树和阶段耗时。
+- [Elasticsearch Paginate search results](https://www.elastic.co/guide/en/elasticsearch/reference/current/paginate-search-results.html)：用于支持 from/size、search_after 与 PIT 的分页成本取舍。
+- [Elasticsearch Composite aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html)：用于说明大规模 bucket 遍历为什么要分页而不是一次性拉全量。
+- [Elasticsearch Circuit breaker settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/circuit-breaker.html)：用于补充高成本查询与聚合的资源保护边界。

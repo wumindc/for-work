@@ -74,6 +74,10 @@ flowchart TD
 - RRF 参数和各路 top_k 要通过消融实验调。
 - 指标包括 recall@k、precision@k、citation_precision、rerank_lift、query_latency 和 index_refresh_lag。
 
+落地时建议把检索 trace 作为一等产物保存下来，而不是只保存最终回答。一次 trace 至少包含 query rewrite、metadata filter、BM25 命中、kNN 命中、RRF 排名、rerank 前后名次、进入上下文的 evidence span 和最终 citation。这样当用户反馈“答案看起来对但引用不对”时，可以判断是召回漏证据、融合排序错、rerank 误判，还是生成层把证据外推了。
+
+索引演进也要提前设计。embedding 模型升级时不要直接覆盖旧 `dense_vector` 字段，而是新增向量字段或新索引，保留 `embedding_model_version`，用同一批 gold queries 回放 BM25-only、kNN-only、hybrid 和 hybrid+rerank。只有 recall、citation_precision、permission_leak_count、latency 都在可接受范围内，才把线上流量切到新字段或新 alias。
+
 ## 系统设计案例
 
 企业知识库问答使用 ES 存储制度文档。text 字段用于 BM25，keyword 字段用于部门和权限，dense_vector 字段用于语义召回。用户问题同时跑 BM25 和 kNN，RRF 融合后交给 reranker。
@@ -105,6 +109,10 @@ flowchart TD
 ## 项目化表达
 
 项目里可以说：“我用 ES 同时承载 text、keyword、metadata 和 dense_vector。BM25 兜住精确词，kNN 做语义召回，RRF 融合候选，rerank 和 citation verifier 控制最终证据质量。”
+
+## 公开阅读校验
+
+面向公开读者时，要把 Hybrid Search 写成可验证链路，而不是“BM25 加向量”的口号。读者应该能看到：metadata filter 为什么必须前置，RRF 为什么处理的是排名而不是原始分数，rerank 为什么只作用在小候选集，citation verifier 为什么检查 claim 与 evidence 的支撑关系。如果缺少这几层边界，文章会让人误以为 ES 只是在向量库旁边多跑一次关键词搜索。
 
 ## 深入技术细节
 
