@@ -318,6 +318,13 @@ Post-publish thin-depth deepening:
 - [x] `mq-use-cases-boundary`
 - [x] `q-mq-ordering`
 - [x] `q-mq-transaction-message`
+- [x] `observability-alerting-slo-burn-rate`
+- [x] `observability-cardinality-capacity-cost`
+- [x] `observability-dashboard-runbook-incident`
+- [x] `observability-incident-tracing`
+- [x] `observability-structured-logging-correlation`
+- [x] `prometheus-metrics-promql`
+- [x] `q-observability-incident-tracing`
 
 For each question:
 
@@ -369,7 +376,11 @@ Work after the first AI Agent / RAG batch:
   - [x] `redis-cache-consistency`
   - [x] `redis-distributed-lock-rate-limit`
   - [x] `redis-persistence-aof-rdb`
-- [ ] Prometheus and observability low-score questions.
+- [x] Prometheus and observability low-score questions and topics.
+  - [x] `observability-alerting-slo-burn-rate`
+  - [x] `observability-cardinality-capacity-cost`
+  - [x] `observability-dashboard-runbook-incident`
+  - [x] `observability-structured-logging-correlation`
   - [x] `prometheus-metrics-promql`
   - [x] `observability-incident-tracing`
   - [x] `q-observability-incident-tracing`
