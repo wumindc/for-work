@@ -60,7 +60,7 @@ flowchart LR
 
 反例一：写 DB 后直接 set Redis 新值。这个做法看起来减少 miss，但在多字段聚合、并发读写和旧快照回填时容易产生旧值覆盖。更稳的是删缓存，必要时加版本拒绝旧写。
 
-反例二：延迟双删被说成绝对一致。延迟双删只能降低并发旧值回填概率，不能覆盖慢查询、长事务、MQ 延迟和删除失败。它是补丁，不是证明。
+反例二：延迟双删被说成强一致方案。延迟双删只能降低并发旧值回填概率，不能覆盖慢查询、长事务、MQ 延迟和删除失败。它是补丁，不是证明。
 
 反例三：DB 超时后把结果缓存为空。空值缓存只适合确认 not_found 的合法 key；timeout、rate_limited、internal_error 不能缓存为空，否则会把事故固化进 Redis。
 
@@ -89,13 +89,40 @@ flowchart LR
 ## 深问准备
 
 1. 为什么删缓存不是更新缓存？答并发旧值覆盖、多字段聚合和事实源重建。
-2. 延迟双删怎么设置时间？答根据慢查询、事务提交、读路径耗时和业务 SLA 估算，但不能保证绝对一致。
+2. 延迟双删怎么设置时间？答根据慢查询、事务提交、读路径耗时和业务 SLA 估算，但不能证明严格一致。
 3. MQ 删除事件重复怎么办？答删除操作幂等，event_id 去重，失败重试。
 4. 删除缓存失败怎么办？答 retry、DLQ、巡检、告警和人工修复。
 5. 如何证明一致性改善？答 stale_read_rate 下降、delete_fail_count 清零、event lag 收敛、事故回归通过。
 
+## 多轮追问模拟
+
+第一轮追问：为什么你说“先更新 DB 再删缓存”，不是“先删缓存再更新 DB”？
+
+回答要点：先删缓存再更新 DB 会打开一个窗口：并发读 miss 后可能读取旧 DB 值并回填缓存，随后写事务才提交，旧缓存就被延长。先提交 DB 再删缓存，把事实源更新放在前面；如果删除失败，可以通过 outbox、retry、DLQ 和巡检继续补偿。
+
+考察点：是否能从并发窗口解释方案，而不是背诵顺序。
+
+陷阱：说“顺序固定就不会有不一致”。cache-aside 的目标是控制窗口和可恢复，不是提供分布式事务。
+
+第二轮追问：删除缓存失败时，如何保证不会静默留下旧值？
+
+回答要点：删除动作要事件化，事件有 `event_id`、`source_version`、`cache_keys` 和 `retry_count`。失败进入重试队列，超过阈值进入 DLQ；同时用 consistency checker 抽样比较 DB version 和 cache version，发现旧值就删除并告警。
+
+考察点：是否把失败恢复设计成系统链路，而不是“打日志”。
+
+陷阱：只说“重试一下”，没有幂等、告警、死信和巡检。
+
+第三轮追问：哪些场景不能只依赖缓存一致性方案？
+
+回答要点：权限、支付、库存扣减、风控和工具执行许可这类高风险决策不能只读缓存，必须回查 DB、校验版本或使用强一致服务。缓存可以做读模型和加速层，但不应该成为最终授权依据。
+
+考察点：是否能按业务风险分层。
+
+陷阱：把所有业务统一成同一种缓存策略。
+
 ## 来源与延伸阅读
 
-- Redis 官方文档：用于确认 key、TTL 和缓存数据结构的语义边界。
-- Kafka / MQ 官方文档：用于支持失效事件的可靠投递、重试和消费积压治理。
-- MySQL InnoDB 官方文档：用于说明数据库事实源和事务提交边界。
+- [Redis key eviction](https://redis.io/docs/latest/develop/reference/eviction/)：用于支持“Redis 缓存是持久数据副本、可被淘汰并重建”的边界判断。
+- [Redis client-side caching](https://redis.io/docs/latest/develop/clients/client-side-caching/)：用于说明缓存失效和 invalidation message 的官方语义，帮助区分缓存通知与数据库事务一致性。
+- [Apache Kafka documentation](https://kafka.apache.org/documentation/)：用于支撑失效事件的 topic、consumer、offset 和消费积压治理思路。
+- [MySQL InnoDB transaction isolation levels](https://dev.mysql.com/doc/refman/en/innodb-transaction-isolation-levels.html)：用于说明数据库事实源、事务提交和隔离级别是缓存一致性讨论的底层边界。

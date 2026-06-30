@@ -29,6 +29,8 @@ flowchart LR
   Regression --> Fix[Prompt / Tool / State Fix]
 ```
 
+图 1：Agent 失败模式从信号到回归的治理链路。
+
 这张图的关键是把失败变成分类数据，而不是事故后靠人回忆。每个失败样本都要能归因、复现和回归。
 
 ## 架构与运行机制
@@ -36,6 +38,8 @@ flowchart LR
 数据流上，失败通常在某一步 observation 后进入 State，再影响下一轮 Context，最后导致错误行动。比如一个错误检索结果进入上下文，模型据此调用写工具，权限层又没有拦截，就会形成复合故障。
 
 因此排障要沿 run trace 看：输入、context、tool args、observation、state diff、guardrail verdict、stop reason。
+
+失败模式通常不是单点错误，而是跨模块放大。比如一次检索噪声先变成错误 evidence，随后被 Context Builder 放进高优先级上下文，模型再据此生成错误 tool args，工具返回又被 State 当成可信事实，最后 Eval 没有识别偏差。这种链式故障只看最终答案很难定位，所以 taxonomy 必须记录“第一处偏离”和“放大路径”。
 
 ## 运行机制
 
@@ -76,9 +80,15 @@ sequenceDiagram
   S-->>A: continue / recover / handoff
 ```
 
+图 2：Web Agent 动作后的验证与恢复时序。
+
+图 2 强调观察不是终点。Browser 返回 observation 后，Verifier 要检查是否达到预期状态，State 只接收经过判定的结果。若 verdict 为 fail，系统应该进入 recover 或 handoff，而不是让模型基于错误页面继续自由探索。
+
 ## 真实问题与排障
 
 Agent 误判导致策略冲突时，先冻结当前 run，读取 trace，找到第一次错误 observation 或错误 state diff。再判断是模型选择问题、工具返回问题、上下文污染还是权限策略缺失。
+
+排障报告最好包含四类证据：一是用户目标与 success criteria，证明系统当时应该做什么；二是关键 step 的 context refs 和 tool args，证明模型基于什么行动；三是 observation 与 state diff，证明错误如何进入系统状态；四是 guardrail 和 verifier verdict，证明为什么没有被拦截。没有这些证据，复盘容易停留在“模型不稳定”的空话。
 
 ## 常见误区与排障
 
@@ -122,5 +132,6 @@ Coding Agent 可以讲测试失败和 patch rollback。Paper Agent 可以讲 uns
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [AgentGuide 高质量资源筛选清单](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/03-resource-quality-checklist.md)
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支撑“简单、可组合 workflow 往往比过早自治更可靠”的失败治理原则。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于说明 agent、tool 和 workflow trace 是定位失败步骤、构建回归样本的基础。
+- [AgentGuide 高质量资源筛选清单](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/03-resource-quality-checklist.md)：用于补充中文资料筛选与故障复盘时的证据质量意识。

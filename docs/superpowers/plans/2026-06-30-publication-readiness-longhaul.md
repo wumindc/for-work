@@ -166,9 +166,13 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-tool-schema-core`
 - [x] `q-tool-schema-deep`
 - [x] `q-trace-replay-core`
+- [x] `q-trace-replay-deep`
 
 AI Agent / RAG topic backlog:
 
+- [x] `agent-core-modules`
+- [x] `agent-failure-modes`
+- [x] `agentic-rag`
 - [x] `context-compaction`
 - [x] `hybrid-search`
 - [x] `langgraph`
@@ -211,6 +215,7 @@ Work after the first AI Agent / RAG batch:
 - [ ] Database low-score questions.
   - [x] `q-db-index-execution-plan`
 - [ ] Redis questions with missing sources.
+  - [x] `q-redis-cache-consistency`
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.
 

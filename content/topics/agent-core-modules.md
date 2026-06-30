@@ -29,6 +29,8 @@ flowchart LR
   Eval --> Loop
 ```
 
+图 1：Agent 七模块的最小生产闭环。
+
 图里 Context 不是数据库，State 也不是聊天历史。State 是系统可信状态，Context 是给模型的一次性工作视图。Eval 不是上线后才补的报表，而是决定能否继续迭代的验证层。
 
 ## 架构与运行机制
@@ -42,6 +44,10 @@ flowchart LR
 实现时可以先做最小闭环：Goal、State、Tools、Trace 和 Verifier。再逐步增强 Context 压缩、权限策略、评测集和多 Agent。不要一开始堆复杂框架。
 
 State 至少要记录 `goal`、`constraints`、`plan`、`current_step`、`tool_results`、`open_risks`、`state_version`。Trace 至少要记录 step、tool、arguments、observation、latency、cost 和 verdict。
+
+七模块之间最容易混淆的是 Context、State 和 Memory。Context 是本轮传给模型的输入包，可以被裁剪、排序和压缩；State 是系统认为可信的当前事实，必须可恢复、可审计；Memory 是跨 run 的经验或用户偏好，进入 Context 前要经过选择和权限过滤。把三者都塞进 messages，会让 Agent 难以恢复，也难以解释为什么某一步做出了错误动作。
+
+另一个关键边界是 Tools 与 Guardrails。工具 schema 只描述“怎么调用”，不等于“允许调用”。权限、风险等级、确认策略、速率限制和 side effect policy 应该由宿主或运行时掌握。模型可以提出 action proposal，宿主负责校验和执行，这样失败时才能区分“模型建议错了”还是“系统放行错了”。
 
 ## 关键设计取舍
 
@@ -80,9 +86,15 @@ sequenceDiagram
   E-->>L: continue or stop
 ```
 
+图 2：Coding Agent 中七模块的时序协作。
+
+图 2 说明七模块不是静态清单，而是在每一步任务里反复闭合。Goal 初始化 State，Context Builder 从 State 取证据，Loop 选择下一步，Tools 产生 observation，Eval 决定继续、停止或回滚。面试里把这个时序讲清楚，比单纯背“七模块”更能体现工程理解。
+
 ## 真实问题与排障
 
 如果一个 Agent 不稳定，先定位缺的是哪一层。目标漂移看 Goal 和 Verifier，重复调用看 Loop，越权看 Guardrails，答非所问看 Context，无法复盘看 Trace，修复后回归失败看 Eval。
+
+排障时可以按“第一处不可解释状态变化”倒推。比如模型调用了错误工具，不要马上改 prompt，而要先看 Context 中工具说明是否污染、State 中计划是否过期、Tool schema 是否缺枚举约束、Guardrails 是否缺风险判断、Eval 是否把错误 observation 当成功。这样能把问题落到模块责任，而不是把所有故障都归因给模型。
 
 ## 常见误区与排障
 
@@ -126,6 +138,6 @@ sequenceDiagram
 
 ## 来源与延伸阅读
 
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支撑“目标、工具、上下文、评估和运行控制需要工程化拆分”的总体框架。
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持从简单 workflow 到 agentic loop 的渐进式设计原则，避免一开始堆复杂自治系统。
+- [AgentGuide Agent 学习地图](https://github.com/adongwanai/AgentGuide/blob/main/docs/00-getting-started/01-agent-map.md)：用于补充中文学习路径和面试语境下的模块化表达方式。
