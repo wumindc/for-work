@@ -111,6 +111,14 @@ CORS 只控制浏览器是否允许前端读取跨域响应，不是服务端权
 
 CSRF/CORS 验收要区分“浏览器读取限制”和“服务端授权”。CORS allowlist 要按环境和来源精确配置，不用通配符放开带凭证请求；CSRF 要测试 SameSite、CSRF token、Origin/Referer 校验和敏感方法。面试里可以强调：CORS 配错会造成浏览器侧数据暴露风险，但 CORS 正确也不能替代服务端资源归属校验。最终指标看 `csrf_block_count`、`cors_error_count`、`auth_error_rate`、`session_revoked_count` 和 `sensitive_cache_bypass_count`。
 
+## 公开阅读校验
+
+这篇文章的公开价值在于把缓存、登录态和权限边界放到同一张图里。读者应该能区分：HTTP 缓存由浏览器、代理和 CDN 根据响应头执行；Session/JWT 证明身份状态；授权由服务端按资源和租户判断；CORS 只是浏览器读取策略；CSRF 关注 Cookie 自动携带带来的跨站副作用。任何一层被混用，都会造成安全或一致性事故。
+
+一个可复用案例是后台用户资料接口泄漏：CDN 误缓存了带 Cookie 的响应，cache key 没包含认证状态。止血动作是旁路 CDN、清理缓存、统一设置 `no-store`、撤销相关 session，并检查 `Vary`、`Authorization`、`Cookie` 和权限日志。修复后要用多用户、多租户、登录退出、权限降级、浏览器后退和协商缓存测试证明不会串数据。
+
+指标要同时覆盖性能和安全：`cache_hit_rate` 不能单独代表好坏，还要看 `cdn_origin_fetch_rate`、`sensitive_cache_bypass_count`、`auth_error_rate`、`session_refresh_fail_rate`、`csrf_block_count`、`cors_error_count` 和 `session_revoked_count`。如果文章只建议“加 Cookie/JWT”而不讲撤销、权限变更和共享缓存风险，就不够严谨。
+
 ## 来源与延伸阅读
 
 - [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/info/rfc9110)：官方 RFC，用于确认 HTTP 方法、状态码和认证相关语义边界。

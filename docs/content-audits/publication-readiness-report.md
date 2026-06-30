@@ -12,7 +12,7 @@ It is advisory by default: it identifies the next content-review backlog without
 - Needs revision: 0
 - Blocked: 0
 - Average score: 100
-- Issues: blocker 0, major 0, minor 10
+- Issues: blocker 0, major 0, minor 0
 
 ## Domain Readiness
 
@@ -26,7 +26,7 @@ It is advisory by default: it identifies the next content-review backlog without
 | Prometheus 与监控体系 | 14 | 14 | 0 | 0 | 100 |
 | Java 并发与 JVM | 20 | 20 | 0 | 0 | 100 |
 | 分布式与系统设计 | 16 | 16 | 0 | 0 | 100 |
-| Web 工程 | 18 | 18 | 0 | 0 | 98 |
+| Web 工程 | 18 | 18 | 0 | 0 | 100 |
 | AI 工程趋势与实战方案 | 36 | 36 | 0 | 0 | 100 |
 | 工程质量与故障治理 | 0 | 0 | 0 | 0 | 0 |
 
@@ -34,62 +34,61 @@ It is advisory by default: it identifies the next content-review backlog without
 
 | Code | Count |
 | --- | ---: |
-| thin_depth | 10 |
 
 ## First 50 Revision Targets
 
 | Rank | Kind | Domain | ID | Score | Readiness | Main issues |
 | ---: | --- | --- | --- | ---: | --- | --- |
-| 1 | question | web-engineering | `q-web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
-| 2 | question | web-engineering | `q-web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
-| 3 | topic | web-engineering | `web-api-contract-idempotency-security` | 96 | publishable | minor:thin_depth |
-| 4 | topic | web-engineering | `web-auth-session-token-oauth` | 96 | publishable | minor:thin_depth |
-| 5 | topic | web-engineering | `web-browser-security-cors-csrf-xss` | 96 | publishable | minor:thin_depth |
-| 6 | topic | web-engineering | `web-cdn-cache-upload-download` | 96 | publishable | minor:thin_depth |
-| 7 | topic | web-engineering | `web-frontend-backend-contract-observability` | 96 | publishable | minor:thin_depth |
-| 8 | topic | web-engineering | `web-gateway-bff-api-versioning` | 96 | publishable | minor:thin_depth |
-| 9 | topic | web-engineering | `web-http-cache-session-auth` | 96 | publishable | minor:thin_depth |
-| 10 | topic | web-engineering | `web-websocket-sse-realtime` | 96 | publishable | minor:thin_depth |
-| 11 | topic | ai-agent-rag | `a2a-acp` | 100 | publishable |  |
-| 12 | topic | ai-agent-rag | `agent-core-modules` | 100 | publishable |  |
-| 13 | topic | ai-agent-rag | `agent-definition` | 100 | publishable |  |
-| 14 | topic | ai-agent-rag | `agent-failure-modes` | 100 | publishable |  |
-| 15 | topic | ai-agent-rag | `agentic-rag` | 100 | publishable |  |
-| 16 | topic | ai-agent-rag | `browser-observation` | 100 | publishable |  |
-| 17 | topic | ai-agent-rag | `chatgpt-runtime` | 100 | publishable |  |
-| 18 | topic | ai-agent-rag | `citation-grounding` | 100 | publishable |  |
-| 19 | topic | ai-agent-rag | `coding-harness` | 100 | publishable |  |
-| 20 | topic | ai-agent-rag | `component-eval` | 100 | publishable |  |
-| 21 | topic | ai-agent-rag | `context-compaction` | 100 | publishable |  |
-| 22 | topic | ai-agent-rag | `context-compression` | 100 | publishable |  |
-| 23 | topic | ai-agent-rag | `context-layers` | 100 | publishable |  |
-| 24 | topic | ai-agent-rag | `framework-selection` | 100 | publishable |  |
-| 25 | topic | ai-agent-rag | `function-calling` | 100 | publishable |  |
-| 26 | topic | ai-agent-rag | `guardrails` | 100 | publishable |  |
-| 27 | topic | ai-agent-rag | `handoff-pattern` | 100 | publishable |  |
-| 28 | topic | ai-agent-rag | `hybrid-search` | 100 | publishable |  |
-| 29 | topic | ai-agent-rag | `langgraph` | 100 | publishable |  |
-| 30 | topic | ai-agent-rag | `llm-foundation` | 100 | publishable |  |
-| 31 | topic | ai-agent-rag | `llm-training-alignment` | 100 | publishable |  |
-| 32 | topic | ai-agent-rag | `long-term-memory` | 100 | publishable |  |
-| 33 | topic | ai-agent-rag | `mcp-fundamentals` | 100 | publishable |  |
-| 34 | topic | ai-agent-rag | `memory-decay` | 100 | publishable |  |
-| 35 | topic | ai-agent-rag | `multi-agent-roles` | 100 | publishable |  |
-| 36 | topic | ai-agent-rag | `openai-agents-sdk` | 100 | publishable |  |
-| 37 | topic | ai-agent-rag | `paper-agent-project` | 100 | publishable |  |
-| 38 | topic | ai-agent-rag | `planning-methods` | 100 | publishable |  |
-| 39 | topic | ai-agent-rag | `playwright-actions` | 100 | publishable |  |
-| 40 | topic | ai-agent-rag | `project-storytelling` | 100 | publishable |  |
-| 41 | topic | ai-agent-rag | `prompt-injection` | 100 | publishable |  |
-| 42 | question | ai-agent-rag | `q-a2a-acp-core` | 100 | publishable |  |
-| 43 | question | ai-agent-rag | `q-a2a-acp-deep` | 100 | publishable |  |
-| 44 | question | ai-agent-rag | `q-agent-core-modules-core` | 100 | publishable |  |
-| 45 | question | ai-agent-rag | `q-agent-core-modules-deep` | 100 | publishable |  |
-| 46 | question | ai-agent-rag | `q-agent-definition-core` | 100 | publishable |  |
-| 47 | question | ai-agent-rag | `q-agent-definition-deep` | 100 | publishable |  |
-| 48 | question | ai-agent-rag | `q-agent-failure-modes-core` | 100 | publishable |  |
-| 49 | question | ai-agent-rag | `q-agent-failure-modes-deep` | 100 | publishable |  |
-| 50 | question | ai-agent-rag | `q-agentic-rag-core` | 100 | publishable |  |
+| 1 | topic | ai-agent-rag | `a2a-acp` | 100 | publishable |  |
+| 2 | topic | ai-agent-rag | `agent-core-modules` | 100 | publishable |  |
+| 3 | topic | ai-agent-rag | `agent-definition` | 100 | publishable |  |
+| 4 | topic | ai-agent-rag | `agent-failure-modes` | 100 | publishable |  |
+| 5 | topic | ai-agent-rag | `agentic-rag` | 100 | publishable |  |
+| 6 | topic | ai-agent-rag | `browser-observation` | 100 | publishable |  |
+| 7 | topic | ai-agent-rag | `chatgpt-runtime` | 100 | publishable |  |
+| 8 | topic | ai-agent-rag | `citation-grounding` | 100 | publishable |  |
+| 9 | topic | ai-agent-rag | `coding-harness` | 100 | publishable |  |
+| 10 | topic | ai-agent-rag | `component-eval` | 100 | publishable |  |
+| 11 | topic | ai-agent-rag | `context-compaction` | 100 | publishable |  |
+| 12 | topic | ai-agent-rag | `context-compression` | 100 | publishable |  |
+| 13 | topic | ai-agent-rag | `context-layers` | 100 | publishable |  |
+| 14 | topic | ai-agent-rag | `framework-selection` | 100 | publishable |  |
+| 15 | topic | ai-agent-rag | `function-calling` | 100 | publishable |  |
+| 16 | topic | ai-agent-rag | `guardrails` | 100 | publishable |  |
+| 17 | topic | ai-agent-rag | `handoff-pattern` | 100 | publishable |  |
+| 18 | topic | ai-agent-rag | `hybrid-search` | 100 | publishable |  |
+| 19 | topic | ai-agent-rag | `langgraph` | 100 | publishable |  |
+| 20 | topic | ai-agent-rag | `llm-foundation` | 100 | publishable |  |
+| 21 | topic | ai-agent-rag | `llm-training-alignment` | 100 | publishable |  |
+| 22 | topic | ai-agent-rag | `long-term-memory` | 100 | publishable |  |
+| 23 | topic | ai-agent-rag | `mcp-fundamentals` | 100 | publishable |  |
+| 24 | topic | ai-agent-rag | `memory-decay` | 100 | publishable |  |
+| 25 | topic | ai-agent-rag | `multi-agent-roles` | 100 | publishable |  |
+| 26 | topic | ai-agent-rag | `openai-agents-sdk` | 100 | publishable |  |
+| 27 | topic | ai-agent-rag | `paper-agent-project` | 100 | publishable |  |
+| 28 | topic | ai-agent-rag | `planning-methods` | 100 | publishable |  |
+| 29 | topic | ai-agent-rag | `playwright-actions` | 100 | publishable |  |
+| 30 | topic | ai-agent-rag | `project-storytelling` | 100 | publishable |  |
+| 31 | topic | ai-agent-rag | `prompt-injection` | 100 | publishable |  |
+| 32 | question | ai-agent-rag | `q-a2a-acp-core` | 100 | publishable |  |
+| 33 | question | ai-agent-rag | `q-a2a-acp-deep` | 100 | publishable |  |
+| 34 | question | ai-agent-rag | `q-agent-core-modules-core` | 100 | publishable |  |
+| 35 | question | ai-agent-rag | `q-agent-core-modules-deep` | 100 | publishable |  |
+| 36 | question | ai-agent-rag | `q-agent-definition-core` | 100 | publishable |  |
+| 37 | question | ai-agent-rag | `q-agent-definition-deep` | 100 | publishable |  |
+| 38 | question | ai-agent-rag | `q-agent-failure-modes-core` | 100 | publishable |  |
+| 39 | question | ai-agent-rag | `q-agent-failure-modes-deep` | 100 | publishable |  |
+| 40 | question | ai-agent-rag | `q-agentic-rag-core` | 100 | publishable |  |
+| 41 | question | ai-agent-rag | `q-agentic-rag-deep` | 100 | publishable |  |
+| 42 | question | ai-agent-rag | `q-ai-agent-boundary-structured` | 100 | publishable |  |
+| 43 | question | ai-agent-rag | `q-ai-chatgpt-runtime-core` | 100 | publishable |  |
+| 44 | question | ai-agent-rag | `q-ai-chatgpt-runtime-deep` | 100 | publishable |  |
+| 45 | question | ai-agent-rag | `q-ai-eval-observability-structured` | 100 | publishable |  |
+| 46 | question | ai-agent-rag | `q-ai-llm-foundation-core` | 100 | publishable |  |
+| 47 | question | ai-agent-rag | `q-ai-llm-foundation-deep` | 100 | publishable |  |
+| 48 | question | ai-agent-rag | `q-ai-llm-training-core` | 100 | publishable |  |
+| 49 | question | ai-agent-rag | `q-ai-llm-training-deep` | 100 | publishable |  |
+| 50 | question | ai-agent-rag | `q-ai-rag-memory-structured` | 100 | publishable |  |
 
 ## How To Use
 

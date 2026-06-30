@@ -97,6 +97,14 @@ flowchart LR
    - 考察点：是否理解真实安全边界在服务端。
    - 常见坑：把 UI 状态、CORS 或菜单权限当成后端授权。
 
+## 公开阅读校验
+
+这道题的高分回答不是“RESTful + OpenAPI”几个名词，而是能把接口生命周期说完整：设计时有 schema、版本和错误码；执行时有服务端权限、幂等和限流；发布时有契约测试和兼容窗口；事故时能用 request_id、error_code、幂等表和审计日志定位。回答必须让面试官相信你能治理 API，而不只是写 controller。
+
+项目举例建议落在一个有副作用的写接口，例如支付、订单创建、文件删除或 Agent 工具执行。关键点是同一业务意图用同一 `Idempotency-Key`，不同请求体要冲突，处理中状态要可查询，成功结果可复用，失败要区分确定失败和可重试失败。权限要按资源归属和租户校验，审计要记录操作者、资源、动作、结果和 trace。
+
+自测时可以问自己：错误码是否可行动，幂等键是否有 request_hash，旧客户端能否忽略新增字段，服务端是否防批量赋值，敏感字段是否白名单返回，API 是否有契约测试。指标至少覆盖 `schema_validation_error`、`idempotency_conflict_count`、`permission_denied_count`、`rate_limited_count` 和 `audit_missing_count`。
+
 ## 深问准备
 
 1. 错误码如何设计？

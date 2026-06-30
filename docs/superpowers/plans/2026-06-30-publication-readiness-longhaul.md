@@ -415,17 +415,17 @@ Work after the first AI Agent / RAG batch:
   - [x] `system-load-balancing-routing`
   - [x] `system-rate-limit-circuit-breaker-bulkhead`
   - [x] `system-service-discovery-config`
-- [ ] Web engineering remaining thin-depth documents.
-  - [ ] `q-web-api-contract-idempotency-security`
-  - [ ] `q-web-http-cache-session-auth`
-  - [ ] `web-api-contract-idempotency-security`
-  - [ ] `web-auth-session-token-oauth`
-  - [ ] `web-browser-security-cors-csrf-xss`
-  - [ ] `web-cdn-cache-upload-download`
-  - [ ] `web-frontend-backend-contract-observability`
-  - [ ] `web-gateway-bff-api-versioning`
-  - [ ] `web-http-cache-session-auth`
-  - [ ] `web-websocket-sse-realtime`
+- [x] Web engineering remaining thin-depth documents.
+  - [x] `q-web-api-contract-idempotency-security`
+  - [x] `q-web-http-cache-session-auth`
+  - [x] `web-api-contract-idempotency-security`
+  - [x] `web-auth-session-token-oauth`
+  - [x] `web-browser-security-cors-csrf-xss`
+  - [x] `web-cdn-cache-upload-download`
+  - [x] `web-frontend-backend-contract-observability`
+  - [x] `web-gateway-bff-api-versioning`
+  - [x] `web-http-cache-session-auth`
+  - [x] `web-websocket-sse-realtime`
 - [x] AI engineering trend documents.
   - [x] `agent-memory-layering-compression`
   - [x] `agent-state-file-verifier`
