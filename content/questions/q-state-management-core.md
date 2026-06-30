@@ -31,6 +31,10 @@ flowchart LR
   Projector --> Model[Model Input]
 ```
 
+图 1：Agent State 从事件到模型上下文的投影链路。图中工具结果和用户确认先进入 `Event Log`，`State Reducer` 根据上一版 state 和 verifier verdict 生成可信 diff，`State Store` 保存可恢复状态，`Context Projector` 再把当前步骤需要的信息裁剪给模型。
+
+这张图的关键边界是：模型输入不是 State 本身，聊天历史也不是 State。可信状态必须由宿主系统通过事件、工具结果和策略裁决维护。这样在上下文压缩、服务重启、工具失败或用户中断后，系统可以按 state_version 和 checkpoint 恢复，而不是让模型回忆自己做过什么。
+
 ## 系统设计案例
 
 Coding Agent 的 State 可以保存目标、已读文件、候选 patch、测试命令、失败日志引用和当前风险。测试失败后，不把完整日志塞进 prompt，而是保存 artifact id 和失败摘要。恢复任务时读取 checkpoint，再生成“已做什么、下一步做什么”的上下文。
@@ -39,11 +43,24 @@ Coding Agent 的 State 可以保存目标、已读文件、候选 patch、测试
 
 如果 Agent 重复执行同一动作，先查 state version 是否更新，再查 observation 是否进入 event log，最后看 Context Projector 是否投出了旧状态。指标看 `resume_success_rate`、`lost_constraint_rate`、`duplicate_action_rate` 和 `checkpoint_latency`。
 
+事故处理可以从状态链路定位：影响面先判断是重复动作、目标漂移、约束丢失还是 artifact 缺失；止血可以暂停自动写操作，强制从最新 checkpoint 读取并重新投影上下文；根因查 event log 是否漏写、reducer 是否拒绝 diff、state_version 是否冲突、projector 是否缓存旧状态；回归要覆盖工具失败、用户中断、压缩恢复、重复提交和 artifact 引用失效样本。
+
 ## 面试官追问
 
 - State 和 Memory 区别是什么？State 是当前任务事实，Memory 是跨任务长期信息。
 - 为什么不能只用 messages？messages 无 schema、无版本、难恢复。
 - 写操作失败后怎么恢复？先查外部事实源，再根据 idempotencyKey retry 或补偿。
+
+## 多轮追问模拟
+
+**追问 1：State、Memory、Context 怎么区分？**  
+答题要点：State 是当前 run 的可信运行事实；Memory 是跨任务复用的偏好、经验或长期事实；Context 是本轮投给模型的裁剪视图。考察点是边界清晰。陷阱是把 messages、memory 和 state 混成一团。
+
+**追问 2：为什么模型不能直接写可信 State？**  
+答题要点：模型可以提出意图或解释，但可信状态要由 reducer 根据工具 observation、用户确认、policy verdict 和 verifier 写入；否则会把幻觉当事实。考察点是宿主控制。陷阱是模型说“已完成”就更新状态。
+
+**追问 3：State 里为什么只存 artifact refs，不存完整日志？**  
+答题要点：大文件和长日志放 Artifact Store，State 存引用、hash、摘要和使用位置；这样上下文轻、可追溯，也能避免重复复制敏感内容。考察点是状态瘦身和回放能力。陷阱是把所有原始数据塞进 State。
 
 ## 项目化回答
 
@@ -79,6 +96,6 @@ Agent State 的核心是“宿主系统维护的可信事实”。可以分成 T
 
 ## 来源与延伸阅读
 
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于说明 checkpoint、thread state 和持久化状态如何支持恢复执行。
+- [LangChain Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)：官方文档用于支持 agent state 与短期上下文管理的工程边界。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明 event、tool call 和 state 更新应进入可追踪链路。

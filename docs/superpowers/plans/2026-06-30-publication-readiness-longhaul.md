@@ -90,6 +90,11 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-handoff-pattern-deep`
 - [x] `q-long-term-memory-deep`
 - [x] `q-memory-decay-core`
+- [x] `q-memory-decay-deep`
+- [x] `q-openai-agents-sdk-deep`
+- [x] `q-playwright-actions-core`
+- [x] `q-state-management-core`
+- [x] `q-state-management-deep`
 
 For each question:
 

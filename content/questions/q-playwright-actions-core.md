@@ -33,6 +33,10 @@ flowchart LR
   Verify -->|fail| Recover[Recovery Policy]
 ```
 
+图 1：Browser Agent 动作工具从意图到验证的执行链路。图中模型只输出 `Action Intent`，`action schema` 负责约束参数，`Locator Resolver` 将用户语义转成稳定 locator，`Playwright Executor` 负责浏览器动作，`expected_state verifier` 用动作后的观察判断业务结果，失败才进入 Recovery Policy。
+
+这张图说明 `page.click()` 只是链路中的一小段。Playwright 的 actionability/auto-wait 可以减少“元素不可操作”的错误，但不能证明业务目标已完成。真正对外发布的 Browser Agent 必须把 before/after observation、locator candidates、expected_state 和 verifier verdict 都写进 trace。
+
 ## 系统设计案例
 
 填写登录表单时，模型不应生成 CSS selector。它只说明“填写邮箱字段”。Resolver 用 label 或 role 定位输入框。fill 后 verifier 检查 value。点击登录后，verifier 检查 URL、用户头像或错误提示，而不是只看 click 没抛异常。
@@ -41,11 +45,24 @@ flowchart LR
 
 如果 click 成功但页面没变，查 verifier 是否缺失。selector_not_found 多，查 locator candidates。navigation_timeout 多，查等待条件。wrong_click 多，查 observation 是否过期。关键指标是 `action_success_rate`、`verifier_pass_rate`、`selector_drift_recovery_rate` 和 `wrong_click_rate`。
 
+事故处理按链路拆：影响面先看错误集中在 selector drift、遮挡、导航等待、重复提交还是 verifier 过松；止血先降低自动重试预算，对提交/删除/支付动作启用确认和幂等保护；根因查看 action_id、locator_candidates、strict mode 错误、bbox、before/after screenshot、network/navigation event 和 verifier_failed 原因；回归用登录、分页、弹窗、下载、表单提交和重复点击样本覆盖常见动作类型。
+
 ## 面试官追问
 
 - auto-wait 和 verifier 区别？前者保证元素可操作，后者保证业务结果。
 - locator fallback 怎么排？role、label、test id、text、局部 CSS。
 - 敏感动作怎么做？risk gate、preview、approval 和 audit。
+
+## 多轮追问模拟
+
+**追问 1：为什么不能让模型直接生成 CSS selector？**  
+答题要点：selector 脆弱、不可解释，也容易被页面结构变化破坏；模型应描述目标，执行层用 role/name、label、test id、文本等稳定 locator 解析。考察点是模型意图和执行分离。陷阱是把 LLM 当浏览器自动化脚本生成器。
+
+**追问 2：auto-wait 已经会等元素，为什么还要 verifier？**  
+答题要点：auto-wait 只证明元素可操作；verifier 证明业务状态变化，例如 URL、toast、DOM、文件或后端数据。考察点是浏览器动作和业务结果的边界。陷阱是 click 没异常就判成功。
+
+**追问 3：重复提交怎么防？**  
+答题要点：高风险动作要 preview、confirmation、idempotency key、args hash、after verifier 和重复提交拦截；失败重试前先查外部状态。考察点是副作用治理。陷阱是 verifier 失败后盲目 retry。
 
 ## 项目化回答
 
@@ -81,6 +98,6 @@ Playwright auto-wait 只能保证元素可操作，例如 visible、enabled、st
 
 ## 来源与延伸阅读
 
-- [Playwright Locators](https://playwright.dev/docs/locators)
-- [Playwright Actionability](https://playwright.dev/docs/actionability)
-- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)
+- [Playwright Locators](https://playwright.dev/docs/locators)：官方文档用于说明 role、text、label、test id 等稳定定位方式，支撑 locator resolver 的优先级。
+- [Playwright Actionability](https://playwright.dev/docs/actionability)：官方文档用于解释 auto-wait 和 visible、stable、receives events、enabled 等动作前检查。
+- [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer)：官方文档用于说明 action trace、截图和 DOM snapshot 如何支持错误动作回放。
