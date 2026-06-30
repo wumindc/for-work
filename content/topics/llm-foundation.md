@@ -133,6 +133,14 @@ Trace 里建议按 span 记录：context build、retrieval、model inference、t
 - 如果追问“context window 越大是不是越好”，要讲 token cost、噪声、attention 稀释、证据排序和压缩保真。
 - 如果追问“LLM 和规则引擎如何组合”，可以说规则负责确定边界，LLM 负责语义理解和表达，最终由 verifier 或业务规则裁决。
 
+## 公开阅读校验
+
+LLM 基础文章最容易写成模型科普，但公开读者真正需要的是接入系统的边界。建议把 LLM 定位成“概率推理与语言生成服务”，事实可靠性来自上下文、工具、检索、校验和业务规则。文章里要明确参数规模、上下文窗口、temperature、embedding、fine-tuning 都不是单独的可靠性保证，它们只改变能力或行为的某一层。
+
+生产接入前可以做任务分桶评测：事实问答、格式生成、代码生成、工具调用、摘要压缩、分类抽取、安全拒答。每个桶固定 prompt_version、model_version、解码参数和证据集合，记录 pass/fail、错误类型和成本。模型升级时不能只看总体胜率，要看 `task_type`、语言、上下文长度、风险等级和租户样本下是否有回归。
+
+线上排障要把“幻觉”拆细：没有召回到证据、证据过期、上下文被污染、指令冲突、采样不稳定、输出校验漏过、用户问题本身无答案。推荐在 trace 中记录 `model_version`、`prompt_version`、`context_hash`、`retrieval_snapshot`、`verifier_result`、`usage` 和 `latency_ms`。这样读者能看到 LLM 工程不是靠神秘经验，而是靠可观测的系统边界。
+
 ## 来源与延伸阅读
 
 - [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)：官方文档用于支持 token 生成、模型输出和应用层请求构造的基础概念。

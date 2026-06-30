@@ -115,6 +115,14 @@ Adapter Layer 的 contract 可以包含 `run(input, options)`、`dispatchTool(to
 - LangGraph 和 Agents SDK 怎么选？前者偏状态图和恢复，后者偏 OpenAI tools、handoff、guardrails、tracing。
 - 框架引入后变慢怎么办？拆分模型耗时、工具耗时、框架 overhead 和 trace 写入成本。
 
+## 公开阅读校验
+
+框架选型的公开稿不能停在“某框架很强”，而要给出可复现的取舍路径。建议把选型写成三步：先做 Native API baseline，证明不用框架能跑通最小任务；再用 Framework Matrix 标注状态复杂度、工具数量、恢复需求、人机协同、guardrails、部署约束和团队熟悉度；最后用同一批 golden cases 对比成功率、恢复率、延迟、成本、trace 可读性和调试时间。
+
+真正需要框架的信号通常不是“想做 Agent”，而是运行中已经出现复杂状态恢复、并发节点合并、人工暂停恢复、多角色 handoff、长期任务 checkpoint 或统一 tracing 的需求。反过来，如果任务只是单轮检索、固定工具调用或短流程生成，框架会把问题变成 adapter、版本升级和隐藏状态调试。文章里把这条边界说清，读者才不会把框架当成简历关键词。
+
+落地验收可以维护一个 `runtime_contract_tests` 集合：同一份输入在 Native Loop、LangGraph、Agents SDK adapter 下都要产生兼容的 trace、tool call、state update 和 error taxonomy。每次升级框架版本都跑迁移演练，重点看 `adapter_breaking_change_count`、`framework_overhead_ms`、`checkpoint_restore_success_rate`、`trace_gap_count` 和 `vendor_specific_leak_count`。这些指标能说明选型是工程决策，不是追热点。
+
 ## 来源与延伸阅读
 
 - [LangGraph Graph API 官方文档](https://docs.langchain.com/oss/python/langgraph/graph-api)：用于说明 StateGraph、节点、边和 checkpoint 等机制，支撑“复杂状态恢复适合显式图”的判断。

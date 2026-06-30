@@ -236,6 +236,14 @@ Post-publish thin-depth deepening:
 - [x] `coding-harness`
 - [x] `context-compaction`
 - [x] `context-compression`
+- [x] `context-layers`
+- [x] `framework-selection`
+- [x] `guardrails`
+- [x] `handoff-pattern`
+- [x] `hybrid-search`
+- [x] `langgraph`
+- [x] `llm-foundation`
+- [x] `llm-training-alignment`
 
 For each question:
 

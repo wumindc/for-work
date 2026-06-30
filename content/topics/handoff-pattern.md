@@ -133,6 +133,14 @@ state_summary 要是最小可执行状态，而不是完整聊天历史。完整
 
 被问“如何避免 handoff 循环”，可以用 Agent Registry 精确 capability、最大 handoff depth、completed_steps、arbiter fallback 和 failure taxonomy。循环样本要进入 trajectory eval。
 
+## 公开阅读校验
+
+公开稿里讲 handoff，最容易显得像“多个 Agent 互相发消息”。更专业的写法是把它当成控制权转移协议：谁拥有任务、谁能写状态、失败后回到哪里、哪些证据可以被接收方读取、哪些权限不能继承。一个 handoff 事件至少要能在 trace 中串起 sender、receiver、handoff reason、accepted/rejected verdict、state snapshot 和 return policy。
+
+验收时建议设计四组 fixture。第一组是 capability mismatch，搜索 Agent 被派去改代码时应拒绝；第二组是 missing context，接收方缺少 artifact refs 时应 clarify；第三组是 permission denied，接收方不能继承发送方没有的写权限；第四组是 handoff loop，两个 Agent 来回转交时应触发 depth limit 或 arbiter fallback。只有这些失败路径可控，多智能体协作才不是黑盒聊天。
+
+指标上要看 `handoff_accept_rate`、`handoff_reject_reason_distribution`、`handoff_loop_count`、`ownership_conflict_count`、`state_loss_incident_count` 和 `handoff_recovery_time_p95`。如果接受率很高但任务完成率不升，通常说明路由过宽或接收方能力定义虚；如果 loop count 上升，说明 capability registry、return policy 或 failure taxonomy 需要重写。
+
 ## 来源与延伸阅读
 
 - [OpenAI Agents SDK Handoffs 官方文档](https://openai.github.io/openai-agents-python/handoffs/)：用于说明 handoff 是受控的任务交接机制，不是简单 prompt 转发。
