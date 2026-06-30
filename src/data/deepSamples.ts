@@ -7506,10 +7506,10 @@ export const redisTopics = [
       "持久化策略要结合业务可丢失窗口、恢复时间、磁盘 IO、fork 开销和主从复制设计。",
       "AOF rewrite、RDB save 和备份任务要避开流量高峰，并监控 fork 耗时和磁盘水位。",
     ],
-    commonPitfalls: ["认为开启 AOF 就绝对不丢数据", "忽略 fork 和 rewrite 对延迟的影响", "把 Redis 当唯一事实源"],
+    commonPitfalls: ["认为开启 AOF 就完全不丢数据", "忽略 fork 和 rewrite 对延迟的影响", "把 Redis 当唯一事实源"],
     questionIds: ["q-redis-persistence-aof-rdb", "q-redis-replication-sentinel-cluster"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["redis-docs", "redis-replication"],
+    sourceIds: ["redis-docs", "redis-persistence", "redis-replication"],
     deepDive: redisDeepDive({
       hooks: [
         "用会话缓存、限流状态、排行榜和配置缓存讲不同业务对丢失窗口的容忍度。",
@@ -11316,7 +11316,7 @@ const handwrittenQuestionSeeds = [
     ],
     followUps: ["为什么 AOF 也可能丢数据？", "AOF rewrite 有什么风险？", "Redis 重启后如何避免 DB 被打爆？"],
     projectAnswerHints: ["可以讲限流状态、排行榜、配置缓存和任务状态的可丢失窗口。"],
-    commonMistakes: ["开启 AOF 就说绝对不丢", "把 Redis 当唯一事实源", "不做恢复演练"],
+    commonMistakes: ["开启 AOF 就说完全不丢", "把 Redis 当唯一事实源", "不做恢复演练"],
     examFocus: ["RDB", "AOF", "fsync", "rewrite", "RPO/RTO"],
     keyDetails: ["appendfsync", "fork", "copy-on-write", "aof_rewrite", "rdb_last_bgsave_status"],
     scenarioExtension: ["节点重启恢复、AOF 膨胀、磁盘水位告警。"],

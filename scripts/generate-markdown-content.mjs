@@ -197,7 +197,8 @@ const caseLines = (topic) => {
 };
 
 const sourceSection = (sourceIds) => {
-  const sourceLines = sourceIds
+  const uniqueSourceIds = [...new Set(sourceIds)];
+  const sourceLines = uniqueSourceIds
     .map((sourceId) => sourceById.get(sourceId))
     .filter(Boolean)
     .map((source) => `- [${source.title}](${source.url})：用于确认官方语义边界、命令行为和工程约束。`);

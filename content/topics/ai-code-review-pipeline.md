@@ -142,6 +142,14 @@ AI Code Review 的趋势重点是“把 review 做成流水线”，而不是“
 
 动手实验可以从一个小仓库开始，收集 20 个 PR 或补丁样例，把人工确认的问题作为 golden findings。评估时分开看 false_positive_rate、false_negative_rate、comment_action_rate 和 review_latency_p95。这样能解释为什么 Open Code Review / code-review-graph 的价值在 pipeline 和证据，而不只是“模型能看代码”。
 
+## 生产验收清单
+
+- 输入必须固定为 PR diff、changed range、依赖影响、相关测试和项目规则，避免整仓暴力塞上下文。
+- Finding schema 至少包含 `file`、`line`、`severity`、`evidence`、`confidence`、`rule_id/model_version` 和 `fix_hint`。
+- 发布前要用历史 PR 样本回放，分别统计误报、漏报、重复评论、无行号评论和被开发者采纳的比例。
+- 线上要支持按规则、模型版本、仓库、语言和目录关闭高噪声评论，并保留人工 override。
+- 不能让 LLM review 替代编译、测试、安全扫描和 code owner 审批，它更适合补语义风险与上下文解释。
+
 ## 来源与延伸阅读
 
 - [Alibaba Open Code Review](https://github.com/alibaba/open-code-review)：用于确认官方语义边界、命令行为和工程约束。

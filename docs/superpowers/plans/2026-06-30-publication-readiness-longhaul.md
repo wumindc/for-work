@@ -261,12 +261,16 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-db-mvcc-transaction-isolation`
   - [x] `db-index-execution-plan`
   - [x] `db-mvcc-transaction-isolation`
-- [ ] Redis questions with missing sources.
+- [x] Redis questions with missing sources.
   - [x] `redis-data-types-encoding`
   - [x] `redis-hotkey-breakdown-avalanche`
   - [x] `redis-replication-sentinel-cluster`
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
+  - [x] `q-redis-data-types-encoding`
+  - [x] `q-redis-distributed-lock-rate-limit`
+  - [x] `q-redis-lua-transaction-pipeline`
+  - [x] `q-redis-persistence-aof-rdb`
   - [x] `redis-cache-consistency`
   - [x] `redis-distributed-lock-rate-limit`
   - [x] `redis-persistence-aof-rdb`
@@ -290,11 +294,21 @@ Work after the first AI Agent / RAG batch:
   - [x] `web-http-cache-session-auth`
   - [x] `q-web-api-contract-idempotency-security`
   - [x] `q-web-http-cache-session-auth`
-- [ ] AI engineering trend documents.
+- [x] AI engineering trend documents.
   - [x] `agent-memory-layering-compression`
+  - [x] `agent-state-file-verifier`
+  - [x] `ai-code-review-pipeline`
+  - [x] `codex-claude-context-workflow`
+  - [x] `computer-use-agent-benchmark`
+  - [x] `design-assets-for-ai-coding`
+  - [x] `enterprise-agent-solution-map`
+  - [x] `loop-engineering-agent-runtime`
   - [x] `local-ai-inference-stack`
   - [x] `q-local-ai-inference-stack-core`
   - [x] `q-local-ai-inference-stack-deep`
+  - [x] `rag-document-ingestion-stack`
+  - [x] `self-growing-knowledge-base`
+  - [x] `skill-packaging-workflow`
 
 Each batch should preserve domain terminology and avoid importing AI-specific phrases where traditional engineering terms are more precise.
 

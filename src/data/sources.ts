@@ -237,6 +237,12 @@ export const sources = [
     kind: "official",
   },
   {
+    id: "redis-persistence",
+    title: "Redis Documentation: Persistence",
+    url: "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+    kind: "official",
+  },
+  {
     id: "redis-replication",
     title: "Redis Documentation: Replication",
     url: "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/",

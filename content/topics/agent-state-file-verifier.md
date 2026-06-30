@@ -136,6 +136,19 @@ State file 保存目标、约束、进度、证据和下一步动作，verifier 
 - 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
 - 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
 
+## 趋势落地补充
+
+State file 的难点不是把聊天记录落盘，而是把“可恢复任务”拆成事实字段。生产设计里应区分三类信息：目标和硬约束是不可被摘要覆盖的事实，plan 和 next_actions 是可重排的执行意图，tool observation、diff、截图、测试日志和引用是 verifier 需要读取的证据。这样恢复任务时才能判断“下一步还能不能做”，而不是只相信上一轮模型说自己做到哪里。
+
+Verifier 也要分层：格式 verifier 检查结构化输出是否满足 schema，artifact verifier 检查文件、测试、截图或 citation 是否真实存在，policy verifier 判断是否越权、超预算或需要人工确认。最容易出事故的是 false accept，也就是模型把部分完成、截图过期或测试未跑说成完成。面试回答可以把 `verifier_false_accept_rate`、`duplicate_work_rate`、`resume_success_rate` 和 `artifact_ref_missing_rate` 作为核心指标。
+
+## 生产验收清单
+
+- 状态字段要有 `state_version`、`run_id`、`goal`、`hard_constraints`、`artifact_refs`、`verifier_verdict` 和 `next_actions`，并记录 before/after 版本。
+- Schedule 要设置最大轮次、最大成本、超时、暂停恢复、人工门禁和终止条件，避免无限循环。
+- 恢复演练要覆盖状态文件丢字段、artifact 不可访问、旧摘要覆盖新证据、工具结果过期和用户约束变更。
+- 每次 verifier 放行都要能追到外部证据，不能只保存一句自然语言 verdict。
+
 ## 来源与延伸阅读
 
 - [Addy Osmani: Loop Engineering](https://addyosmani.com/blog/loop-engineering/)：用于确认官方语义边界、命令行为和工程约束。
