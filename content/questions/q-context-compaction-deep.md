@@ -33,6 +33,10 @@ flowchart TD
   Validator --> Gate[Tool + Patch Gate]
 ```
 
+图 1：压缩后恢复任务的约束保真链路。图中 Conversation Trace 同时进入 Constraint Extractor 和 Compactor，前者抽出 hard_constraints，后者生成压缩摘要，两者共同组成 Resume Packet；恢复后先由 Resume Validator 检查约束、状态和证据引用，再让 Tool + Patch Gate 控制后续动作。
+
+这张图的关键边界是：Resume Packet 不是“更短的聊天记录”，而是可验证的恢复协议。它要保留用户明确禁止、必须遵守、文件范围、权限、预算、验收标准和 source turn。真正危险的不是少了一些背景闲聊，而是把 hard constraint 降级成软偏好，或者保留了约束却没有接入工具门禁。
+
 ## 系统设计案例
 
 用户要求“只改移动端样式，不动业务逻辑”。压缩包必须保存这个约束。恢复后 Patch Gate 检查 changed_files 是否只在 CSS 或组件样式范围内。若 Agent 准备改数据请求逻辑，Gate 应阻断并要求重新确认。
@@ -41,11 +45,24 @@ flowchart TD
 
 如果恢复后出现越界改动，先看 hard_constraints 是否缺失。若约束存在但没生效，查 Tool Gate 和 Patch Gate。若约束语义模糊，要看是否应该在压缩前追问。指标包括 `constraint_retention_rate`、`lost_constraint_rate`、`policy_gate_block_count` 和 `post_resume_regression_rate`。
 
+事故处理按四步拆：影响面先判断是约束抽取漏掉、摘要丢 source、恢复计划冲突，还是 gate 没读取约束；止血可以暂停自动 patch、恢复到上一份 state_version、强制人工确认高风险动作；根因要查 constraint_id、source_turn、scope、artifact_refs、tool_policy_version、changed_files 和 gate verdict；回归要把原始 trace、resume packet、恢复计划和首个 tool call 做成固定样例，验证约束不会再丢失。
+
 ## 面试官追问
 
 - 什么是 hard constraint？用户明确禁止或必须遵守的边界。
 - 模型自查够吗？不够，高风险要规则和 gate。
 - 约束冲突怎么办？暂停，列出冲突并请用户裁决。
+
+## 多轮追问模拟
+
+**追问 1：hard constraint 和 soft preference 怎么区分？**  
+答题要点：hard constraint 是禁止、必须、范围、权限、验收或不可逆动作边界；soft preference 是风格、排序和非关键偏好。考察点是约束分级。陷阱是把“不许改 schema”当摘要备注。
+
+**追问 2：恢复后第一步应该做什么？**  
+答题要点：先跑 resume validation 和 lost constraint eval，确认 source、scope、state_version、artifact_refs 和后续计划都一致，再允许工具执行。考察点是恢复门禁。陷阱是直接继续 patch。
+
+**追问 3：如果压缩率和安全性冲突怎么办？**  
+答题要点：高风险任务宁可牺牲压缩率，保留 hard constraints、证据引用和关键状态；低风险对话才可以轻量摘要。考察点是风险权衡。陷阱是追求最短摘要。
 
 ## 项目化回答
 
@@ -81,6 +98,7 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
-- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于支持 checkpoint、state 和恢复机制需要显式持久化。
+- [LangChain Context engineering](https://docs.langchain.com/oss/python/langchain/context-engineering)：官方文档用于说明上下文工程要选择、裁剪和保留对模型有用的运行信息。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明恢复前后的模型调用、工具调用和 guardrail verdict 应进入 trace。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档用于支撑输入、输出和后续动作需要有可检查的安全边界。

@@ -34,6 +34,10 @@ flowchart TD
   Policy --> Audit[trace + rollback]
 ```
 
+图 1：Coding Agent harness 的受控执行闭环。图中模型只生成 plan 和候选 tool call；Harness Tools 负责搜索、读取、patch 与测试；Policy 层限制 sandbox、命令和 approval；Evidence 把测试输出、diff 和错误栈回传给模型；Audit 保存 trace、变更与 rollback 证据。
+
+这张图的核心边界是：能力来自“模型 + 工具反馈 + 验证门禁”的组合，而不是模型一次性写出可靠补丁。没有 PatchEngine、TestRunner、PolicyGate 和 TraceStore，模型无法可靠定位文件、保护用户改动、判断测试失败或恢复现场；反过来，harness 太封闭也会让模型无法获得足够证据。
+
 ## 系统设计案例
 
 同一个模型在没有 harness 时只能输出补丁文本。在有 harness 时，它可以搜索调用链、读取测试、应用 diff、运行失败测试、根据错误继续修复。最终输出还包含改动范围和验证命令。能力差异来自反馈闭环。
@@ -42,11 +46,24 @@ flowchart TD
 
 如果 Agent 看起来“变笨”，不一定是模型退化。先查搜索工具是否漏召回，文件读取是否被截断，测试环境是否坏，patch 是否应用失败，trace 是否缺 observation。指标看 `tool_error_rate`、`search_hit_rate`、`test_command_success_rate` 和 `avg_iterations`。
 
+事故处理要先分影响面：是单个仓库失败、某类语言失败、所有 patch 失败，还是测试命令整体不可用。止血可以禁用高风险 shell、切回只读诊断、提高 approval 等级、恢复最近 patch 或缩小文件写入范围。根因要查 query、search candidates、file snapshot hash、patch hunks、command allowlist、exit code、stderr 摘要、flaky 标记和 verifier verdict。回归要把失败任务固定成 harness eval，分别跑 search/read/patch/test/trace 的消融组合。
+
 ## 面试官追问
 
 - 模型升级能否替代 harness？不能，执行、权限、验证和回滚仍要宿主管。
 - Harness 太强会不会限制模型？会，所以工具要覆盖常见路径，但保留安全边界。
 - 如何衡量 harness 贡献？同一模型下做工具消融实验。
+
+## 多轮追问模拟
+
+**追问 1：为什么 patch 协议比直接写文件好？**  
+答题要点：patch 能保留 hunk、old hash、new hash 和冲突信息，方便审计、回滚和保护用户未提交改动。考察点是变更控制。陷阱是让模型直接覆盖整文件。
+
+**追问 2：工具输出应该如何设计？**  
+答题要点：返回结构化摘要、关键错误、截断原因、原始日志引用和证据 id；大段日志要可追溯但不直接污染上下文。考察点是 observation 质量。陷阱是把 2 万行日志塞给模型。
+
+**追问 3：如何量化 harness 的贡献？**  
+答题要点：同一模型做 search/read/test/patch/trace 消融，对比 issue_resolution_rate、test_pass_rate、irrelevant_diff_rate、rollback_rate 和 command latency。考察点是实验设计。陷阱是把成功率提升全归因给模型升级。
 
 ## 项目化回答
 
@@ -82,6 +99,7 @@ Harness 贡献可以用消融实验衡量：同一模型分别给它 search/read
 
 ## 来源与延伸阅读
 
-- [SWE-bench](https://www.swebench.com/)
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
-- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)
+- [SWE-bench](https://www.swebench.com/)：基准项目用于说明代码修复能力需要在真实仓库、测试和补丁上下文中评估。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：官方文档用于支持工具执行、函数工具、运行时工具和工具审批是 Agent runtime 的核心组成。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明模型调用、工具调用、handoff 和 guardrail 事件应进入 trace。
+- [OpenTelemetry Traces](https://opentelemetry.io/docs/concepts/signals/traces/)：可观测性文档用于补充 span、trace 与故障链路复盘的通用概念。

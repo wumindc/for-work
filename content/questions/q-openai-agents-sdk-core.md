@@ -36,6 +36,10 @@ flowchart LR
   Specialist --> Trace
 ```
 
+图 1：OpenAI Agents SDK 的一次 run lifecycle。图中 Request 进入 Runner，Runner 调度 Agent；Agent 可以选择 tools 或 handoff；tools 的副作用要经过 guardrails 与业务权限；handoff 把任务交给 Specialist Agent；tracing 记录模型、工具、handoff、guardrail 和成本信息。
+
+这张图的边界是：SDK 提供编排与可观测基础设施，但不替代业务控制面。Agent、Runner、tools、handoff、guardrails、tracing 是运行时概念；租户权限、幂等、事务、人工确认、数据脱敏和上线 eval 仍要在业务系统里设计。
+
 ## 系统设计案例
 
 客服系统可以用 Triage Agent 分诊订单、退款和物流。订单 Agent 只允许查订单和解释状态，退款 Agent 可以生成退款预览，但真正退款要走 Tool Runtime 的 permission gate 和用户确认。
@@ -43,6 +47,8 @@ flowchart LR
 ## 真实问题与排障
 
 如果线上失败，我会看 trace：哪个 Agent 接管，handoff reason 是什么，调用了哪些 tools，guardrail verdict 是什么，最终失败在哪层。指标包括 `handoff_accuracy`、`tool_chain_success_rate`、`guardrail_trigger_rate`、`trace_coverage` 和 `cost_per_task`。
+
+事故处理要先看影响面：是 triage 选错 Agent、handoff 丢状态、tool schema 错、guardrail 误杀/漏放，还是 tracing 不完整。止血可以禁用某个 handoff、把高风险 tool 切到人工确认、回退 prompt/model 或临时关闭自动写操作。根因要查 run_id、agent_name、handoff reason、state_summary、tool args、guardrail verdict、output_type validation 和 trace spans。回归要把失败 run 固化成 eval case，并覆盖正常 tool path、handoff path、guardrail block path 和人工确认 path。
 
 ## 面试官追问
 
@@ -57,6 +63,17 @@ flowchart LR
 ### 追问 3：什么时候不用 SDK？
 
 需要强自定义运行时、跨供应商抽象或极低层控制时，可以自研 loop。
+
+## 多轮追问模拟
+
+**追问 1：Agent 和 Runner 的边界是什么？**  
+答题要点：Agent 定义 instructions、model、tools、handoffs、output contract；Runner 负责推进 run、处理 tool call/handoff 和返回结果。考察点是运行时边界。陷阱是把 Agent 当线程或服务进程。
+
+**追问 2：handoff payload 应该包含什么？**  
+答题要点：reason、state_summary、completed_steps、constraints、open_questions、risk_flags、return_policy，必要时带 source refs。考察点是跨 Agent 状态交接。陷阱是只转发原始对话。
+
+**追问 3：guardrails 为什么不能替代权限系统？**  
+答题要点：guardrails 判断输入/输出/模型行为风险，业务权限要由 deterministic policy 校验用户、资源、状态和副作用。考察点是安全分层。陷阱是用 LLM 判断能不能退款、删数据或发邮件。
 
 ## 项目化回答
 
@@ -89,5 +106,9 @@ Agents SDK 的概念要按 run lifecycle 串起来。Agent 定义 `instructions`
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK](https://platform.openai.com/docs/guides/agents-sdk)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)：官方文档用于支持 Agent、Runner、tools、handoffs、guardrails 和 tracing 是 SDK 的核心概念。
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：官方文档用于说明模型工具调用如何连接受控外部能力。
+- [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)：官方文档用于支撑多 Agent 交接、分工和任务转移设计。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档用于说明输入/输出 guardrail 的位置与边界。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明 run、generation、tool call、handoff 和 guardrail 需要进入 trace。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：官方指南用于补充 Agent 边界、人类确认、工具治理和上线评估。

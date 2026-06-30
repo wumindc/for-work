@@ -33,6 +33,10 @@ flowchart LR
   Verify --> Model
 ```
 
+图 1：原生 API 最小 AgentRuntime 闭环。图中 Goal 进入 Context Builder，ModelClient 生成 tool call，ToolDispatcher 执行工具，Observation 写入 TraceStore，Verifier 决定继续或停止。这个闭环就是评估任何框架之前的 baseline。
+
+这张图的边界是：原生 API 负责暴露真实控制面，框架负责在复杂度上升后减少自研运行时成本。选型不是“用不用框架”的信仰题，而是看 checkpoint、状态图、handoff、人类中断、trace、guardrail、eval 接入这些能力是否已经成为刚需。
+
 ## 系统设计案例
 
 一个内部文档问答助手只需要 RAG、工具调用和 citation verifier。原生 API 足够透明。若后续加入多角色 handoff、长任务 checkpoint 和人工审批，再把 StateStore 和 ToolDispatcher 接到框架。
@@ -41,11 +45,24 @@ flowchart LR
 
 如果原生实现后来变复杂，观察信号是大量手写状态机、重复恢复逻辑、trace 不统一和人机协同困难。此时可以迁移到框架。若框架实现反而难排障，应回到 baseline 对比。
 
+事故处理要先定影响面：是原生 loop 状态混乱、框架抽象吞错、checkpoint 恢复失败，还是 trace schema 不一致。止血可以回退到原生 baseline、固定框架版本、关闭复杂 handoff 或把高风险分支改成人工确认。根因要查 adapter 输入输出、state schema version、tool schema、checkpoint id、retry policy、trace span 和 eval case。回归要用同一批 golden cases 同时跑 native baseline 与 framework implementation。
+
 ## 面试官追问
 
 - 原生 API 会不会重复造轮子？会，所以要保留迁移条件。
 - 怎么避免后期迁移痛苦？一开始就设计 Adapter Layer。
 - 原生 baseline 看哪些指标？成功率、延迟、成本、trace coverage 和代码复杂度。
+
+## 多轮追问模拟
+
+**追问 1：什么时候原生 API 更成熟？**  
+答题要点：任务线性、状态少、延迟敏感、团队需要完全控制或框架 trace 不透明时，原生 baseline 更适合。考察点是反框架堆砌能力。陷阱是为了简历默认上框架。
+
+**追问 2：什么时候必须考虑框架？**  
+答题要点：出现 checkpoint resume、多分支状态图、human interrupt、多 Agent handoff、跨团队复用 node 和大量手写恢复逻辑时。考察点是复杂度阈值。陷阱是原生 while loop 无限膨胀。
+
+**追问 3：Adapter Layer 要隔离什么？**  
+答题要点：隔离 model client、tool dispatcher、state schema、trace schema、error semantics 和 eval runner；业务层不要散落框架调用。考察点是迁移设计。陷阱是把框架 API 写进业务核心。
 
 ## 项目化回答
 
@@ -81,6 +98,8 @@ Adapter Layer 是面试官很爱追的点。业务层不要直接散落 `graph.i
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
-- [LangGraph Overview](https://docs.langchain.com/oss/python/langgraph/overview)
-- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)：官方文档用于支持框架提供 Agent、Runner、tools、handoffs、guardrails 和 tracing 等运行时能力。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：官方文档用于说明框架接入后仍要保留可调试、可回放的 trace。
+- [LangGraph Overview](https://docs.langchain.com/oss/python/langgraph/overview)：官方文档用于支撑 graph、state 和 controllable agent workflow 是框架适用场景。
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)：官方文档用于说明 checkpoint 和恢复是框架相对原生 loop 的重要能力。
+- [OpenAI Evals](https://platform.openai.com/docs/guides/evals)：官方文档用于支撑选型应以同一批 eval case 比较成功率、成本和回归风险。
