@@ -114,6 +114,7 @@ AI Agent/RAG 系统里也常见类似问题：长 prompt、全量 trace、embedd
 
 ## 来源与延伸阅读
 
-- Oracle HotSpot VM Garbage Collection Tuning Guide：用于确认 GC 调优语义和收集器取舍。
-- Oracle Java Concurrency 官方教程：用于连接线程池、线程状态和运行时问题。
-- Prometheus 官方文档：用于支持 JVM 指标、告警和事故看板设计。
+- [Oracle: HotSpot VM Garbage Collection Tuning Guide](https://docs.oracle.com/en/java/javase/21/gctuning/)：用于确认 GC 日志、收集器、停顿目标、吞吐和堆参数调优语义。
+- [Oracle: Troubleshooting Guide for Java SE 21](https://docs.oracle.com/en/java/javase/21/troubleshoot/)：用于支撑 JFR、heap dump、thread dump、Native Memory Tracking 和线上诊断流程。
+- [Oracle Java Tutorials: Concurrency](https://docs.oracle.com/javase/tutorial/essential/concurrency/)：用于连接线程状态、线程池、锁等待和运行时问题。
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)：用于支持 JVM 指标、告警、SLO 看板和事故时间线设计。

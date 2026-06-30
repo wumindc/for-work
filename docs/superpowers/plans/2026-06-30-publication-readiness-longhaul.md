@@ -252,6 +252,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `mq-consumer-governance`
   - [x] `mq-ordering-partitioning`
   - [x] `mq-use-cases-boundary`
+  - [x] `mq-reliable-delivery-idempotency`
   - [x] `q-mq-consumer-lag`
   - [x] `q-mq-reliable-delivery`
 - [ ] Database low-score questions.
@@ -260,9 +261,11 @@ Work after the first AI Agent / RAG batch:
   - [x] `db-index-execution-plan`
   - [x] `db-mvcc-transaction-isolation`
 - [ ] Redis questions with missing sources.
+  - [x] `redis-data-types-encoding`
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
   - [x] `redis-cache-consistency`
+  - [x] `redis-distributed-lock-rate-limit`
   - [x] `redis-persistence-aof-rdb`
 - [ ] Prometheus and observability low-score questions.
   - [x] `prometheus-metrics-promql`
@@ -270,6 +273,8 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-observability-incident-tracing`
   - [x] `q-prometheus-metrics-promql`
 - [ ] Java/JVM blocked documents.
+  - [x] `java-thread-pool-governance`
+  - [x] `jvm-gc-troubleshooting`
   - [x] `q-java-thread-pool-governance`
   - [x] `q-jvm-gc-troubleshooting`
 - [ ] System-design blocked documents.
