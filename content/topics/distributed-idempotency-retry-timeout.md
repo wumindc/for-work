@@ -100,8 +100,17 @@ flowchart LR
 
 面试最后可以补一句：这些机制要在 SDK、网关、服务端和 MQ 消费者之间统一口径，否则每层各自为政会让一次故障被多层重试同时放大。
 
+## 生产验收清单
+
+真正落地时，要把重试分层写清楚。传输层短重试只处理连接重置、短暂 DNS 或连接池抖动；业务层重试要知道错误码、幂等键和副作用语义；MQ redelivery 要依赖 message_id、消费状态表和 DLQ；人工 replay 要有审批、限速和审计。任何一层都不能假设“上游已经处理好了”，否则网关、SDK、服务端、消费者同时重试时会把一个下游慢故障放大成全链路雪崩。
+
+超时预算也要有验收口径：入口 SLA、网关 idle timeout、服务端 deadline、DB/Redis/socket timeout、外部 API timeout 和后台任务 run budget 必须能串成一张表。每个下游调用记录 `deadline_ms`、`remaining_budget_ms`、`retry_source` 和 `attempt`，事故时才能判断是预算分配错误、下游慢、连接池饱和还是重试策略错误。对于 Agent 工具执行，还要把模型等待工具 observation 的时间计入同一个 run budget。
+
+幂等验收可以用四组用例压住：同 key 同请求重复提交返回同一结果；同 key 不同请求返回 conflict；超时后查询状态再重试能收敛；处理中状态重复请求不会并发执行两次。再配合故障注入：下游 429、5xx、半成功、响应丢失、服务重启、MQ 重投，验证 `retry_rate`、`timeout_rate`、`unknown_result_count`、`duplicate_skip_count` 和 `idempotency_conflict_count` 都能解释系统行为。
+
 ## 来源与延伸阅读
 
-- RabbitMQ confirms 官方文档：用于说明确认和重复处理边界。
-- Kafka 官方文档：用于理解消息和消费重试语义。
-- Prometheus 官方文档：用于支持 retry、timeout、degrade 指标。
+- [AWS Builders Library: Timeouts, retries, and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)：官方工程文章，用于支持超时、退避、jitter 和重试放大风险。
+- [Stripe API: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)：官方文档，用于说明幂等键、参数一致性和重复请求结果复用。
+- [gRPC Deadlines](https://grpc.io/docs/guides/deadlines/)：官方文档，用于确认 deadline/timeout 在跨服务调用中的语义边界。
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)：官方文档，用于支持 retry、timeout、degrade 等保护机制的指标化验证。

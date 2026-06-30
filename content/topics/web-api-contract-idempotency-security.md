@@ -105,8 +105,17 @@ Agent 工具接口也一样：tool schema 就是 API 契约，模型输出参数
 
 这些边界也要用指标持续验证。
 
+## 生产验收清单
+
+API 契约上线前可以按“schema、行为、权限、幂等、观测”五类验收。schema 验收检查必填字段、枚举、格式、分页、排序、deprecated 字段和向后兼容；行为验收检查状态码、错误码、retryable、幂等冲突、rate limit 和超时语义；权限验收覆盖对象级授权、租户隔离、字段级脱敏和批量操作；幂等验收覆盖同 key 同请求、同 key 不同请求、超时后重试、处理中重复请求；观测验收检查 request_id、trace_id、audit_id、error_code 和敏感字段脱敏。
+
+契约测试也要分 consumer 和 provider。consumer contract 防后端删除字段、改变枚举或修改错误语义；provider test 防实现偏离 OpenAPI/JSON Schema；安全测试覆盖越权、批量赋值、过度数据暴露和无界分页。对于面向 Agent 的 tool schema，还要加 permission gate、dry-run、human confirmation 和参数摘要审计，避免模型把高风险操作当普通 API 调用。
+
+发布后看五组指标：`schema_validation_error` 表示客户端和契约不一致，`permission_denied_count` 表示权限边界被触发，`idempotency_conflict_count` 表示幂等键误用，`rate_limited_count` 表示容量保护生效，`audit_missing_count` 表示高风险操作没有留下证据。面试里能把这些指标和 CI gate 说清楚，会显得你不是只会设计接口文档，而是会治理接口生命周期。
+
 ## 来源与延伸阅读
 
-- RFC 9110 HTTP Semantics：用于确认 HTTP 方法和响应语义。
-- OWASP API Security：用于确认 API 认证、授权和输入风险。
-- Model Context Protocol：用于连接工具 schema 与机器可调用接口契约。
+- [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)：官方规范，用于支持 API schema、operation、request/response 和契约文档治理。
+- [Stripe API: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)：官方文档，用于说明写接口幂等键、参数一致性和结果复用。
+- [OWASP API Security Project](https://owasp.org/www-project-api-security/)：用于确认认证、授权、过度数据暴露、资源限制等 API 风险边界。
+- [Model Context Protocol](https://modelcontextprotocol.io/)：官方文档，用于连接 Agent tool schema 与机器可调用 API 契约。

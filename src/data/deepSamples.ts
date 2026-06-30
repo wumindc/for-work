@@ -9199,7 +9199,7 @@ export const observabilityTopics = [
     commonPitfalls: ["只堆大屏不定义 SLO", "高基数标签打爆监控系统", "告警没有 runbook"],
     questionIds: ["q-prometheus-metrics-promql", "q-observability-incident-tracing"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["prometheus-docs", "opentelemetry-docs"],
+    sourceIds: ["prometheus-querying-basics", "prometheus-querying-functions", "prometheus-histograms", "prometheus-alerting-rules", "sre-alerting-on-slos"],
     deepDive: observabilityDeepDive({
       hooks: ["把 JVM、Redis、MQ、RAG 检索质量放进同一套指标治理。", "用 SLO 告警和事故复盘讲生产观测能力。"],
       metrics: ["http_request_duration_p95", "error_rate", "slo_burn_rate", "tool_error_rate", "retrieval_recall_at_k"],
@@ -9511,10 +9511,10 @@ export const distributedTopics = [
     mustRemember: ["重试必须幂等", "超时要有预算", "降级保护核心链路"],
     details: ["重试会放大故障，必须有退避、上限和错误分类。", "超时要按端到端预算拆分给各依赖。"],
     engineeringNotes: ["每个写请求要有 idempotency_key。", "错误码要区分 retryable、non_retryable、rate_limited 和 timeout。"],
-    commonPitfalls: ["无脑重试打爆下游", "没有幂等键", "超时层层相加超过用户 SLA"],
+    commonPitfalls: ["盲目重试打爆下游", "没有幂等键", "超时层层相加超过用户 SLA"],
     questionIds: ["q-distributed-idempotency-retry-timeout", "q-distributed-transaction-saga-outbox"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["kafka-docs", "rabbitmq-confirms", "prometheus-docs"],
+    sourceIds: ["aws-timeouts-retries-backoff", "stripe-idempotent-requests", "grpc-deadlines", "prometheus-docs"],
     deepDive: distributedDeepDive({
       hooks: ["把 API、MQ、Redis 回源、模型调用和 Agent 工具执行放进同一套失败模型。", "用幂等键和错误分类讲生产可靠性。"],
       metrics: ["retry_rate", "timeout_rate", "idempotency_conflict_count", "rate_limited_count", "degrade_count"],
@@ -9544,7 +9544,7 @@ export const distributedTopics = [
     commonPitfalls: ["把 MQ 当事务", "补偿不可逆", "没有一致性巡检"],
     questionIds: ["q-distributed-transaction-saga-outbox", "q-distributed-idempotency-retry-timeout"],
     projectEvidenceIds: ["pe-coding-agent"],
-    sourceIds: ["rocketmq-transaction-message", "kafka-docs", "postgres-mvcc"],
+    sourceIds: ["microservices-transactional-outbox", "microservices-saga", "debezium-outbox-event-router", "rocketmq-transaction-message"],
     deepDive: distributedDeepDive({
       hooks: ["用订单支付、发券、库存和 Agent run state 讲最终一致性。", "比较 Outbox、事务消息和 Saga 的工程取舍。"],
       metrics: ["saga_pending_count", "compensation_success_rate", "outbox_pending_count", "inconsistent_count", "event_publish_lag"],
@@ -9955,7 +9955,7 @@ export const webTopics = [
     commonPitfalls: ["把敏感接口缓存到 CDN", "混淆认证和授权", "把 CORS 当安全边界"],
     questionIds: ["q-web-http-cache-session-auth", "q-web-api-contract-idempotency-security"],
     projectEvidenceIds: ["pe-web-agent"],
-    sourceIds: ["ietf-http-semantics", "mdn-http-caching", "owasp-api-security"],
+    sourceIds: ["ietf-http-semantics", "ietf-http-caching", "owasp-session-management", "owasp-csrf-prevention"],
     deepDive: webDeepDive({
       hooks: ["用登录态、用户权限、Web Agent 页面访问和 RAG 文档权限讲 Web 边界。", "把 HTTP 缓存和 Redis 缓存区别讲清。"],
       metrics: ["cache_hit_rate", "auth_error_rate", "csrf_block_count", "cors_error_count", "session_refresh_fail_rate"],
@@ -9985,7 +9985,7 @@ export const webTopics = [
     commonPitfalls: ["错误码只返回系统异常", "幂等键粒度错误", "只在前端做权限控制"],
     questionIds: ["q-web-api-contract-idempotency-security", "q-web-http-cache-session-auth"],
     projectEvidenceIds: ["pe-web-agent", "pe-coding-agent"],
-    sourceIds: ["ietf-http-semantics", "owasp-api-security", "model-context-protocol"],
+    sourceIds: ["openapi-spec", "stripe-idempotent-requests", "owasp-api-security", "model-context-protocol"],
     deepDive: webDeepDive({
       hooks: ["把 REST API 契约和 Agent tool schema 对比，讲清机器可调用接口。", "用幂等、权限和审计讲生产 API 安全。"],
       metrics: ["api_error_rate", "idempotency_conflict_count", "permission_denied_count", "rate_limited_count", "schema_validation_error"],
