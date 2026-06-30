@@ -139,6 +139,14 @@ Relevance grader 要区分相关、可回答和足够回答。一个文档提到
 
 被问“如何复盘错答”，从 trace 看正确证据是否被检索、grader 是否误判 gap、query rewrite 是否漂移、最终 claim 是否通过 citation verifier。这样能把错误定位到 retrieval、grading、planning 或 generation，而不是笼统说 RAG 失败。
 
+## 公开阅读校验
+
+Agentic RAG 的文章要把“更聪明的检索”降到工程可验收层面。公开方案里至少要回答四个问题：每轮为什么检索，检索到了什么，为什么认为还缺证据，什么时候必须停止。缺少这四个问题，所谓 agentic loop 很容易变成昂贵的重复搜索。
+
+生产验收建议把每轮检索写成事件：`sub_question`、`query`、`filters`、`retriever`、`candidate_ids`、`selected_evidence_ids`、`gap_reason`、`rewrite_reason`、`drift_score`、`grader_verdict`、`cost` 和 `stop_verdict`。这些字段能支撑两类审计：一类是质量审计，判断 claim 是否被 evidence 支持；另一类是运行审计，判断 loop 是否因为缺口明确才继续。没有事件化记录，出了错只能看到最终答案，无法知道是没检到、没选中、误判充分还是生成时过度推断。
+
+边界也要讲清楚。Agentic RAG 不适合所有问题：简单事实问答、单一权威来源、极低延迟场景、没有可用 verifier 的场景，普通 RAG 或直接查询更可靠。真正适合它的是多跳调研、资料对比、证据冲突处理和需要逐步澄清的问题。把适用场景和降级路径写明，文章会比“Agentic RAG 更强”这类泛化表达更可信。
+
 ## 来源与延伸阅读
 
 - [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支撑“先用 workflow，必要时再引入 agentic loop”的设计取舍。

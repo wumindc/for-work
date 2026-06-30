@@ -136,6 +136,14 @@ sequenceDiagram
 
 被问“State 和 Context 区别”时，强调 State 是可信持久事实，Context 是一次性工作视图；State 可恢复、可审计，Context 可压缩、可裁剪。把两者混用是很多长任务 Agent 不稳定的根因。
 
+## 公开阅读校验
+
+把七模块讲成文章时，最容易变成“组件清单”。公开读者真正需要的是一套可审查的验收口径：每个模块都要能落到数据结构、运行时事件和失败处置。一个 Agent 设计文档至少应说明 Goal 如何变成 done condition，State 哪些字段可恢复，Context 如何选择证据，Tools 的权限由谁裁决，Loop 什么时候停止，Guardrails 拦截哪些动作，Eval 用什么样本证明回归不过线。
+
+生产验收可以用三张表串起来。第一张是模块责任表，列出 owner、输入、输出、持久化位置和失败码；第二张是 run trace 表，逐步记录 context_refs、action proposal、tool observation、state diff 和 verifier verdict；第三张是回归样本表，把历史失败映射到七模块中的责任层。这样团队讨论“Agent 不稳定”时，不会停留在模型或 prompt，而能定位到 State 污染、Context 缺证据、Tool schema 缺约束、Guardrail 放行错误或 Eval 漏测。
+
+如果文章要给别人阅读，还要避免把七模块包装成必须一次建全的“大架构”。更稳的表达是分阶段：第一阶段先做 Goal、State、Tool、Trace、Verifier，证明任务能闭环；第二阶段补 Context Builder、权限策略和失败样本；第三阶段再引入长期记忆、多 Agent 或自动规划。这个顺序能把工程风险降下来，也更符合真实项目的交付节奏。
+
 ## 来源与延伸阅读
 
 - [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于支撑“目标、工具、上下文、评估和运行控制需要工程化拆分”的总体框架。
