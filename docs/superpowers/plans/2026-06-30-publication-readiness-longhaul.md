@@ -223,6 +223,9 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-es-boundary-inverted-index`
   - [x] `q-es-rag-hybrid-search`
   - [x] `es-rag-hybrid-search`
+  - [x] `es-query-aggregation-optimization`
+  - [x] `es-use-cases-boundary`
+  - [x] `q-es-index-shard-write`
 - [ ] MQ transaction and ordering questions.
   - [x] `q-mq-transaction-message`
   - [x] `q-mq-ordering`
@@ -233,9 +236,11 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-mq-consumer-lag`
 - [ ] Database low-score questions.
   - [x] `q-db-index-execution-plan`
+  - [x] `q-db-mvcc-transaction-isolation`
 - [ ] Redis questions with missing sources.
   - [x] `q-redis-cache-consistency`
 - [ ] Java/JVM blocked documents.
+  - [x] `q-java-thread-pool-governance`
 - [ ] System-design blocked documents.
 - [ ] AI engineering trend documents.
   - [x] `local-ai-inference-stack`

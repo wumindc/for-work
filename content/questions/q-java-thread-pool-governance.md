@@ -86,8 +86,36 @@ flowchart LR
 4. 线程池打满先扩容吗？
 5. ThreadLocal 上下文怎么传播和清理？
 
+## 多轮追问模拟
+
+**追问 1：线程池打满第一反应是不是把 maxPoolSize 调大？**
+
+- 回答要点：不应该直接扩。先看 active、queue、oldest_task_age、reject、task p95、下游 p95、DB 连接池、Redis latency、MQ lag 和错误率。若下游已经慢，扩线程只会增加并发压力和超时。止血优先限流、降级、隔离慢任务、缩短 timeout、暂停低优任务或写入 DLQ。
+- 考察点：是否能把线程池容量和下游容量、SLA、反压联系起来。
+- 常见陷阱：把线程池当成本地资源问题，忽略下游已经成为瓶颈。
+
+**追问 2：为什么无界队列危险？**
+
+- 回答要点：无界队列会让任务提交看起来成功，但真实压力转化为排队延迟、内存增长、Full GC 和超时风暴。使用 `ThreadPoolExecutor` 时，如果队列无界，maxPoolSize 的扩容语义也容易失效，因为任务会不断进入队列而不是触发新线程或拒绝。
+- 考察点：是否理解 queue capacity 是反压的一部分。
+- 常见陷阱：用无界队列“避免拒绝”，结果把故障推迟到 OOM。
+
+**追问 3：拒绝策略怎么选才算有业务语义？**
+
+- 回答要点：同步请求可快速失败、返回降级或提示稍后重试；异步任务可写 retry queue 或 DLQ；低优统计任务可丢弃并计数；MQ 消费不能在任务未执行时 ack。拒绝策略要配合错误码、告警和审计，而不是只打印日志。
+- 考察点：是否能从技术拒绝扩展到业务结果。
+- 常见陷阱：使用默认拒绝或只打日志，调用方误以为任务已经处理。
+
+**追问 4：ThreadLocal 在线程池里为什么容易出问题？**
+
+- 回答要点：线程池复用线程，ThreadLocal 中的 traceId、tenantId、MDC、安全上下文如果不在 finally 清理，后续任务可能读到上一个任务的数据，造成日志串链路、串租户或权限污染。提交任务时应捕获必要上下文，执行前设置，执行后清理。
+- 考察点：是否理解线程复用带来的隐性状态污染。
+- 常见陷阱：只在主线程设置 MDC，异步任务日志没有 trace，或者复用旧 trace。
+
 ## 来源与延伸阅读
 
-- Oracle Java Concurrency 官方教程：用于确认线程和并发基础语义。
-- Prometheus 官方文档：用于支持线程池指标和告警。
-- RabbitMQ/Kafka 官方文档：用于说明线程池打满和 consumer lag 的关系。
+- [Java ThreadPoolExecutor API](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html)：用于确认 core/max pool size、work queue、rejected execution handler 和线程池状态语义。
+- [Java BlockingQueue API](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/BlockingQueue.html)：用于支持有界/无界队列对反压、容量和任务积压的影响。
+- [Java ThreadLocal API](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ThreadLocal.html)：用于说明线程本地变量在线程复用时必须谨慎清理。
+- [Prometheus Alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)：用于支持 `queue_size`、`reject_count`、`task_latency_p95` 等指标进入告警规则。
+- [Apache Kafka Consumer Configs](https://kafka.apache.org/documentation/#consumerconfigs)：用于说明消费并发、poll、lag 和处理线程池容量之间的关系。

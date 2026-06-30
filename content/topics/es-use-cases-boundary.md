@@ -30,6 +30,10 @@ flowchart TD
   I --> J[Response]
 ```
 
+图 1：ES 的典型边界是把业务文档同步成搜索视图，由 primary/replica shard 建索引，再通过 coordinating node 聚合查询结果。
+
+这张图要读成“写入视图”和“查询视图”两条链路。左侧 Documents 进入 Index API 后落到 primary shard，再构建倒排索引和 doc values，并复制到 replica；右侧 Search request 由 coordinating node 分发到相关 shard，最后合并 hits 和 aggregations。它适合构建可检索、可聚合的派生视图，但不替代数据库负责交易状态、强事务和最终事实源。
+
 | 场景 | ES 适合度 | 原因 | 边界 |
 | :--- | :--- | :--- | :--- |
 | 全文搜索 | 高 | inverted index 和 relevance | 需要正确 analyzer |
@@ -43,6 +47,8 @@ flowchart TD
 ES 将文档写入 index，再按 mapping 构建倒排索引和列式 doc values。搜索时，coordinating node 将 query DSL 分发到相关 shard，各 shard 返回局部结果，最后汇总排序和聚合。
 
 near real-time 意味着写入成功不等于立刻可搜索。refresh 之后新 segment 才进入搜索视图。这个边界在同步链路和面试回答中要讲清楚。
+
+因此判断“该不该用 ES”时，要先问读模型是什么。全文检索、日志检索、商品筛选、RAG lexical recall 和多维聚合需要倒排索引、相关性、过滤、排序或 bucket 统计，ES 很合适；主键精确查询、强一致余额、订单状态机、复杂事务更新和小数据量简单查询，数据库通常更稳。ES 的定位是 search/read model，不是系统唯一事实源。
 
 ## 运行机制
 
@@ -70,6 +76,8 @@ near real-time 意味着写入成功不等于立刻可搜索。refresh 之后新
 - 使用 alias、rollover、ILM 管理索引生命周期。
 - 指标包括 indexing_latency、refresh_time、search_latency、heap_usage、segment_count、rejected_requests 和 disk_watermark。
 
+同步链路要显式处理延迟、乱序和重放。事件里应带 `entity_id`、`entity_version`、`op_type`、`occurred_at` 和 `payload_hash`，写入 ES 时用版本或更新时间避免旧事件覆盖新状态。索引重建时用新 index 接收全量数据，校验文档数、抽样 hash 和查询结果后再切 alias。这样 ES 出问题时可以重建搜索视图，而不是把业务事实丢给 ES 自己恢复。
+
 ## 系统设计案例
 
 商品搜索系统可以用数据库保存交易一致性数据，用 ES 保存搜索视图。商品变更通过 MQ 或 CDC 同步到 ES。用户搜索时，ES 做关键词召回、过滤、排序和聚合，详情页再回源主库或缓存。
@@ -81,6 +89,8 @@ near real-time 意味着写入成功不等于立刻可搜索。refresh 之后新
 如果搜索结果缺最新数据，先看写入是否成功、refresh 是否发生、alias 是否指向正确索引。若查询慢，查看 query DSL、shard 数、segment、heap、slow log 和 profile API。
 
 排障时要分清写入延迟、refresh 延迟、mapping 问题和查询设计问题。
+
+一个典型事故是“运营后台改了商品名，但前台搜不到”。排查不要直接重启集群，而是按链路看：数据库变更事件是否发出，消费端是否积压，bulk item 是否有 mapping conflict，写入 alias 是否正确，refresh 是否完成，查询 alias 是否仍指向旧 index，用户查询是否命中了旧缓存。止血可以让详情页读主库、重放失败事件或临时切回旧索引；根因修复可能是 mapping 变更、alias 切换流程、事件版本控制或 bulk item 失败处理。
 
 ## 常见误区与排障
 
@@ -123,7 +133,8 @@ ES 的核心价值来自倒排索引、列式 doc values、分片并行和近实
 
 ## 来源与延伸阅读
 
-- [Elasticsearch Near real-time search](https://www.elastic.co/guide/en/elasticsearch/reference/current/near-real-time.html)
-- [Elasticsearch Mapping](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html)
-- [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
-- [Elasticsearch Shards and replicas](https://www.elastic.co/guide/en/elasticsearch/reference/current/scalability.html)
+- [Elasticsearch Near real-time search](https://www.elastic.co/guide/en/elasticsearch/reference/current/near-real-time.html)：用于确认 refresh 之后新 segment 才对搜索可见，写入成功不等于强实时可搜。
+- [Elasticsearch Mapping](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html)：用于支持 text、keyword、date、numeric、dense_vector 等字段建模边界。
+- [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)：用于说明 ES 适合复杂查询、过滤、排序和全文检索，但需要受控 DSL。
+- [Elasticsearch Scalability and resilience](https://www.elastic.co/guide/en/elasticsearch/reference/current/scalability.html)：用于支持 shard、replica 和分布式查询的扩展性与成本边界。
+- [Elasticsearch Index aliases](https://www.elastic.co/guide/en/elasticsearch/reference/current/aliases.html)：用于支持 reindex、蓝绿切换和搜索视图治理。

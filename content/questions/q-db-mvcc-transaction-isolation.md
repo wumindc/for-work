@@ -89,8 +89,36 @@ MVCC 的关键是可见性。一个事务读取时，不一定读取最新物理
 
 收束时可以强调：事务题不是追求一个“最强隔离级别”，而是把本地正确性、跨系统最终一致性、用户可见状态和补偿指标一起设计出来。
 
+## 多轮追问模拟
+
+**追问 1：MVCC 下普通读不阻塞写，是不是说明数据库不需要锁？**
+
+- 回答要点：不是。MVCC 主要让一致性快照读避免和写互相阻塞，但 `update`、`delete`、`select ... for update`、唯一约束检查、外键检查和部分范围扫描仍然需要锁。PostgreSQL 文档强调读写可以通过多版本减少冲突，MySQL InnoDB 也同时使用多版本读和传统两阶段锁。
+- 考察点：候选人是否能区分快照读、当前读、写锁和约束检查。
+- 常见陷阱：把“MVCC 提升并发”说成“没有锁”，线上就会误判锁等待和死锁。
+
+**追问 2：为什么库存扣减不建议简单依赖 Repeatable Read？**
+
+- 回答要点：隔离级别只定义可见性和并发异常边界，不替代业务条件。库存扣减要把条件写进原子 SQL，例如 `stock >= n`，并关注行锁、索引、热点 SKU、重试和幂等。高隔离级别可能减少异常，但也可能放大锁等待和死锁。
+- 考察点：是否能把数据库隔离和业务不变量连接起来。
+- 常见陷阱：只说“提高到 Serializable”，不讨论吞吐、重试和用户体验。
+
+**追问 3：事务里写订单后直接发 MQ 有什么问题？**
+
+- 回答要点：本地数据库事务和远程 MQ 发送不是同一个原子资源，可能出现事务回滚但消息已发、事务提交但消息发送失败、发送超时但状态未知。Outbox 把业务变更和事件写入同一个本地事务，之后由 Relay 发布，消费者用 `event_id` 幂等。
+- 考察点：是否理解本地事务边界和跨系统最终一致性。
+- 常见陷阱：把 MQ 发送放进数据库事务，导致锁持有时间拉长，还不能真正保证原子性。
+
+**追问 4：死锁只要捕获异常重试就够了吗？**
+
+- 回答要点：重试是止血，不是根因修复。要限制最大次数、退避、保证幂等，并分析死锁日志、锁对象、访问顺序、执行计划和事务时长。常见修复包括统一访问顺序、补索引、缩短事务、拆热点和降低批量任务并发。
+- 考察点：是否具备生产排障闭环。
+- 常见陷阱：无限重试，把死锁变成延迟、雪崩和重复副作用。
+
 ## 来源与延伸阅读
 
-- PostgreSQL MVCC 官方文档：用于确认多版本并发控制语义。
-- MySQL InnoDB Index Types 官方文档：用于说明索引和锁范围关系。
-- RocketMQ Transaction Message 官方文档：用于对比事务消息和 Outbox。
+- [PostgreSQL MVCC Introduction](https://www.postgresql.org/docs/current/mvcc-intro.html)：用于支持 MVCC 下读写通过多版本降低冲突，但这不等同于所有操作都不加锁。
+- [PostgreSQL Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)：用于确认不同隔离级别在 PostgreSQL 中的可见性语义和实现边界。
+- [MySQL InnoDB Transaction Model](https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-model.html)：用于说明 InnoDB 同时结合多版本读和传统锁模型，不能把隔离级别简化为“只读快照”。
+- [MySQL InnoDB Locking](https://dev.mysql.com/doc/en/innodb-locking.html)：用于支持 next-key lock、行锁和范围锁对索引与并发冲突的影响。
+- [Apache RocketMQ Transaction Message](https://rocketmq.apache.org/docs/featureBehavior/04transactionmessage/)：用于对比事务消息的两阶段语义，以及为什么跨系统一致性需要显式协议。

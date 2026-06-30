@@ -88,7 +88,36 @@ sequenceDiagram
 - 追问 replica 失败：讲 in-sync copies、重试、分片健康和副本重新分配。
 - 追问 bulk 重试：只重试失败 item，保留 idempotency key，避免重复写副作用。
 
-## 参考资料
+## 多轮追问模拟
 
-- [Elasticsearch Index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html)：用于说明写入请求、refresh policy 和版本控制语义。
+**追问 1：Bulk API 返回 HTTP 200，为什么还要看每个 item？**
+
+- 回答要点：Bulk 是批量 envelope，HTTP 成功只说明请求被 ES 接收并处理，不代表每条 index/update/delete 都成功。每个 item 可能因为 mapping conflict、version conflict、routing 错误、文档过大或 shard 不可用失败。生产重试只能针对失败 item，且要保留业务版本和幂等键。
+- 考察点：是否知道 ES 写入结果是 item 级语义。
+- 常见陷阱：只看 HTTP status，导致部分失败长期静默丢数据。
+
+**追问 2：为什么写入成功后立刻搜索可能查不到？**
+
+- 回答要点：ES 是 near real-time search。primary/replica 写入和 refresh 是不同阶段；写入成功表示操作进入写入链路和 translog，refresh 后新 segment 才进入 searcher 视图。若业务需要写后强一致读，优先读主库，或显式使用 refresh policy，但要承担吞吐和小 segment 成本。
+- 考察点：是否能区分 write acknowledgement、refresh、flush 和 search visibility。
+- 常见陷阱：把 refresh、flush、translog 混成同一个概念。
+
+**追问 3：旧 MQ 事件覆盖了新文档，怎么防？**
+
+- 回答要点：事件应带业务版本、更新时间或单调递增序号，写 ES 时用外部版本或在应用层比较 `source_updated_at`。重放、补偿和 DLQ 处理也要保留版本语义，不能盲目按到达顺序覆盖。
+- 考察点：是否理解 ES 作为搜索视图时必须处理乱序同步。
+- 常见陷阱：认为 MQ 顺序天然可靠，忽略重试、分区、补偿和回放。
+
+**追问 4：refresh_interval 配得越短是不是越好？**
+
+- 回答要点：不是。更短 refresh 能降低 search visibility lag，但会产生更多小 segment，增加 merge、IO 和 CPU 压力，影响写入吞吐。要按业务 SLA 选择，后台强实时查询可以局部等待 refresh，普通搜索页接受近实时延迟。
+- 考察点：是否能讲清实时可见性和写入吞吐的取舍。
+- 常见陷阱：为了解决个别后台查询，把全索引 refresh_interval 调得过短。
+
+## 来源与延伸阅读
+
+- [Elasticsearch Index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html)：用于说明写入请求、refresh policy、routing、version control 和 optimistic concurrency control。
+- [Elasticsearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html)：用于支持 bulk 请求必须逐 item 检查 status 和 error，而不能只看 HTTP 结果。
+- [Elasticsearch Near real-time search](https://www.elastic.co/guide/en/elasticsearch/reference/current/near-real-time.html)：用于确认 refresh 决定新文档何时进入可搜索视图。
 - [Elasticsearch Translog](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html)：用于说明 translog、flush 和崩溃恢复边界。
+- [Elasticsearch Optimistic concurrency control](https://www.elastic.co/guide/en/elasticsearch/reference/current/optimistic-concurrency-control.html)：用于支持 `seq_no`、`primary_term` 和并发写入语义。
