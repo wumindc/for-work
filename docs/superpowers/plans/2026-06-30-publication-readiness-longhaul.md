@@ -98,6 +98,11 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-web-agent-project-core`
 - [x] `q-agent-core-modules-core`
 - [x] `q-agent-core-modules-deep`
+- [x] `q-agent-definition-core`
+- [x] `q-ai-agent-boundary-structured`
+- [x] `q-ai-chatgpt-runtime-deep`
+- [x] `q-ai-llm-foundation-core`
+- [x] `q-ai-llm-training-deep`
 
 AI Agent / RAG topic backlog:
 

@@ -27,6 +27,10 @@ flowchart TD
   E --> F[Answer with trace]
 ```
 
+图 1：LLM 在生产系统中的受控生成链路。图中 Context Builder 把系统约束、用户问题、RAG 证据和工具结果拼成 ContextPack；LLM inference 负责基于上下文生成候选答案；Verifier 再检查事实、引用、格式和安全策略；最终答案应带 trace，而不是只返回一段看似可信的文字。
+
+这张图的核心边界是：LLM 的输入是上下文，输出是概率生成结果；数据库和规则引擎才负责确定事实、事务和可解释规则。LLM 可以解释事实、组织语言、提出候选操作，但事实源、权限判断、金额扣减、审批结论和状态变更必须由确定性系统给出。
+
 数据流是用户问题进入 Context Builder，系统拼接指令、证据和工具 observation。模型生成答案后，由 verifier 检查事实、格式和安全。
 
 ## 可画图
@@ -41,6 +45,8 @@ flowchart TD
 
 如果模型编造事实，先看上下文中有没有正确证据。如果没有，是检索或工具问题。如果有但没引用，是生成或 verifier 问题。指标包括 citation_precision、unsupported_claim_rate、latency_p95 和 cost_per_request。
 
+事故处理可以按四类根因拆。影响面先确认是事实缺失、上下文冲突、采样不稳定、schema 失败，还是 verifier 漏判；止血可以降温、强制引用、关闭自由生成、回退模型版本或只返回检索片段；根因要查 ContextPack、evidence_id、prompt_version、model_version、temperature、finish_reason、unsupported_claim 和 verifier verdict；回归要覆盖无证据、证据冲突、旧版本事实、格式约束和拒答边界。
+
 ## 面试官追问
 
 - context window 决定什么？
@@ -48,6 +54,17 @@ flowchart TD
 - embedding 相似为什么不等于正确？
 - 温度参数如何影响稳定性？
 - 事实型业务怎么降级？
+
+## 多轮追问模拟
+
+**追问 1：LLM 为什么不能当数据库？**  
+答题要点：参数不是可查询表，没有事务、权限过滤、版本号和来源证明；事实型问题要走 RAG、数据库或工具。考察点是系统边界。陷阱是说“模型知道很多知识所以可以查”。
+
+**追问 2：为什么 embedding 相似不等于答案正确？**  
+答题要点：语义相似可能忽略实体、时间版本、权限和问题意图；召回后还需要 rerank、citation check 和 claim verification。考察点是检索与生成边界。陷阱是把 top1 相似段落当真相。
+
+**追问 3：事实型业务如何降级？**  
+答题要点：无证据时返回“不确定”或引用片段；高风险动作转人工确认；关键事实走工具查询；保留 trace 方便回放。考察点是可靠性设计。陷阱是让模型补齐缺失事实。
 
 ## 项目化回答
 
@@ -80,7 +97,9 @@ flowchart TD
 - 追问 embedding：讲语义相似、实体精确匹配、时间版本和权限过滤之间的差异。
 - 追问降级：可以降级为检索摘要、结构化“不确定”、人工确认或只返回引用片段。
 
-## 参考资料
+## 来源与延伸阅读
 
-- [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)
-- [OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)
+- [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)：官方文档用于支持 LLM 是基于输入上下文和生成参数产生输出的模型服务。
+- [OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)：官方文档用于说明 embedding 适合语义表示和检索，但不等于事实验证。
+- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)：官方文档用于补充通过指令、示例和格式约束改善输出，但不能替代证据和 verifier。
+- [OpenAI Evals](https://platform.openai.com/docs/guides/evals)：官方文档用于说明事实性、格式和安全策略需要通过样例与指标回归验证。

@@ -29,6 +29,10 @@ flowchart TD
   E --> F
 ```
 
+图 1：Prompt、RAG、微调的失败归因决策树。图中不是从技术名词出发，而是从 failure case 出发：任务不清先改 prompt，缺外部事实先走 RAG 或工具，稳定行为问题再考虑 fine-tune，所有分支最后都进入 Eval 做回归。
+
+这张图的边界是：三种方案解决的问题不同。Prompt 改变本次上下文里的指令和格式；RAG 把可更新、可引用、可授权的事实放到上下文；微调改变模型在大量相似输入上的行为倾向。把业务知识塞进 prompt 会膨胀且难维护；把动态知识做进微调会固化旧事实；把行为稳定性全靠 RAG 也会导致输出契约不稳。
+
 数据流是从失败样本出发，先做根因分类，再选择方案并通过 eval 回归。
 
 ## 可画图
@@ -45,6 +49,8 @@ flowchart TD
 
 选型取舍可以按变更频率、证据要求、样本质量和上线成本拆开。知识每天变化、需要权限和引用时，RAG 通常优先；输出格式长期稳定且已有高质量标注样本时，微调才有性价比；只是表达不清、角色不稳或步骤缺失时，Prompt 和 schema 往往更快。落地时还要比较 p95 latency、token cost、维护人力和回滚路径。
 
+事故处理要先看影响面：是事实错误、引用错误、格式不稳、拒答过度、工具误用，还是新模型/新 prompt 灰度后回归。止血可以回滚 prompt_version、禁用新索引、回退微调模型、缩小流量或强制人工确认。根因要查 failure taxonomy、golden set 命中、retrieval candidates、citation verdict、training_data_version、model_version 和 safety verdict。回归要保留 prompt-only、RAG、RAG+rerank、fine-tune、fine-tune+RAG 的对照结果。
+
 ## 面试官追问
 
 - 微调和 RAG 可以一起用吗？
@@ -52,6 +58,17 @@ flowchart TD
 - RAG 的知识更新如何做？
 - 微调数据量不够怎么办？
 - 如何比较三种方案成本？
+
+## 多轮追问模拟
+
+**追问 1：什么时候 prompt 已经不够？**  
+答题要点：同类失败在高质量 prompt、schema 和 few-shot 后仍反复出现，且问题是稳定行为或格式边界，而不是缺事实。考察点是失败归因。陷阱是 prompt 变长就继续堆规则。
+
+**追问 2：RAG 和微调能不能一起用？**  
+答题要点：可以，RAG 提供事实和引用，微调稳定领域表达、分类边界或工具使用习惯；两者都要 eval 和回滚。考察点是组合架构。陷阱是把微调用成知识库。
+
+**追问 3：如何证明选型正确？**  
+答题要点：用同一 golden set 对比 answer_accuracy、citation_precision、format_pass_rate、latency_p95、cost_per_success 和 rollback complexity。考察点是方案评审。陷阱是只凭一次人工体验决定。
 
 ## 项目化回答
 
@@ -84,7 +101,9 @@ RAG 方案还要继续拆：ingest 是否正确、chunk 是否保留标题和层
 - 追问样本不足怎么办：先 prompt/schema/RAG，收集线上失败样本，人工审核后再训练。
 - 追问怎么证明选型正确：做 A/B 或离线 eval，对比 accuracy、citation_precision、latency_p95、cost_per_success。
 
-## 参考资料
+## 来源与延伸阅读
 
-- [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
-- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)
+- [OpenAI Fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)：官方文档用于支持微调适合稳定输出行为、格式和领域表达，而不是替代动态事实源。
+- [OpenAI Prompt engineering guide](https://platform.openai.com/docs/guides/prompt-engineering)：官方文档用于说明 prompt、示例和结构化指令适合先解决表达与任务约束问题。
+- [OpenAI Text generation guide](https://platform.openai.com/docs/guides/text)：官方文档用于补充模型输入、输出、采样和生成参数对结果稳定性的影响。
+- [OpenAI Evals](https://platform.openai.com/docs/guides/evals)：官方文档用于支撑 Prompt、RAG、微调方案都要以样例集和指标做回归验证。
