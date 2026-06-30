@@ -114,6 +114,14 @@ Trace Replay 需要存 artifact，而不是只存文字摘要。至少保存 DOM
 
 被问“如何评估恢复能力”，设计带弹窗、延迟、元素变化、空结果和权限拒绝的 fixtures，指标看 `recovery_success_rate`、`wrong_click_rate`、`modal_blocked_rate`、`timeout_rate` 和 `unsafe_action_block_rate`。
 
+## 公开阅读校验
+
+公开读者看 Web Agent Eval，需要先建立一个判断：浏览器动作成功不等于任务成功。click API 返回成功、URL 发生变化、页面出现提示，都只是局部信号；真正的 success assertion 应覆盖业务状态、页面断言、后端 mock 记录和禁止副作用。否则 eval 会奖励“看起来会操作页面”的 demo，而不是验证真实任务完成。
+
+好的 Web Eval 还应把失败拆到可修复层级。`bad_observation` 说明 observation builder 没暴露关键元素，`wrong_locator` 说明 selector/ranking 有问题，`modal_blocked` 说明等待与弹窗处理不足，`verifier_missing` 说明成功断言太弱，`unsafe_action` 说明权限规则漏拦。每个 failure label 都应能指向一个工程组件，而不是只给出“任务失败”。
+
+对于公开网站和企业内部工具，安全 fixture 要和成功 fixture 同等重要。评测集里应故意放入相似按钮、隐藏弹窗、慢加载、权限拒绝、确认页和高风险外部提交，验证 Agent 是否会停下来、请求确认或转人工。这样读者才能相信 Web Agent Eval 不是录屏验收，而是可回归的浏览器任务门禁。
+
 ## 来源与延伸阅读
 
 - [Playwright Writing Tests](https://playwright.dev/docs/writing-tests)：用于支持 Web Agent Eval 需要把动作和断言结合起来，而不是只检查动作 API 返回成功。

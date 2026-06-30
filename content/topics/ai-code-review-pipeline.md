@@ -122,11 +122,12 @@ AI Code Review 应是确定性规则、diff 分析、上下文检索、LLM revie
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `review_run_id` | Review run | 串联 diff、规则、LLM 评论和反馈 | 定位一次误报或漏报 |
+| `changed_range` | Diff context | 限定评论必须落在可定位代码行 | 避免泛泛建议 |
+| `evidence_ref` | Finding evidence | 指向规则结果、相关代码或测试失败 | 支持人工复核 |
+| `severity` | Finding | 区分 blocker/major/minor/nit | 控制噪声和门禁 |
+| `confidence` | Finding | 表达模型置信度 | 支持低置信过滤 |
+| `rule_id/model_version` | 来源版本 | 区分规则发现和模型发现 | 追踪质量退化 |
 
 ## 深问准备
 
@@ -149,6 +150,18 @@ AI Code Review 的趋势重点是“把 review 做成流水线”，而不是“
 - 发布前要用历史 PR 样本回放，分别统计误报、漏报、重复评论、无行号评论和被开发者采纳的比例。
 - 线上要支持按规则、模型版本、仓库、语言和目录关闭高噪声评论，并保留人工 override。
 - 不能让 LLM review 替代编译、测试、安全扫描和 code owner 审批，它更适合补语义风险与上下文解释。
+
+## 公开阅读校验
+
+公开文章讲 AI Code Review Pipeline，要把“模型看代码”转成“审查流水线”。读者应看到输入先被限制在 PR diff、changed ranges、依赖影响、测试证据和项目规则内；确定性规则先跑，LLM 只处理语义风险、上下文解释和修复建议。这样能减少整仓上下文污染，也能避免模型替代已有门禁。
+
+评论质量的验收不能只看“生成了多少条”。一条合格 finding 应有 file、line、severity、evidence、confidence、fix_hint 和来源版本，并且能被开发者复核。平台指标要看 false_positive_rate、false_negative_rate、duplicate_comment_rate、comment_action_rate 和 defect_escape_rate。评论多但采纳率低，说明系统在制造噪声。
+
+还要说明灰度与回滚。Review 规则或模型升级前，应在历史 PR golden set 上回放，比较误报、漏报、延迟和高噪声目录。上线后支持按仓库、语言、目录、rule_id 或 model_version 关闭评论。这样 AI Review 才像工程系统，而不是一次性代码建议工具。
+
+一个具体验收样例是：同一组历史 PR 先跑基线静态规则，再跑 AI review pipeline，最后由人工标注哪些评论有价值。报告要区分 blocking finding、actionable suggestion 和 style nit。只有 actionable suggestion 的采纳率提高、blocking finding 的漏报下降、重复评论减少，才说明 pipeline 带来收益。否则模型只是把 code review 变成更吵的通知流。
+
+排障时也要沿流水线定位。无行号评论多，检查 diff parser 和 changed_range；证据不足，检查 context retrieval；误报集中在某个框架，检查规则和示例；漏报安全问题，检查 deterministic scanner 是否缺失。这样读者能看到 AI Review 的质量来自 pipeline 设计，而不是来自模型一次性判断。
 
 ## 来源与延伸阅读
 

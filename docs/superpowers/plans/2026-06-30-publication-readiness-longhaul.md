@@ -276,6 +276,14 @@ Post-publish thin-depth deepening:
 - [x] `tool-permissions`
 - [x] `tool-registry`
 - [x] `tool-schema`
+- [x] `trace-replay`
+- [x] `trajectory-eval`
+- [x] `web-agent-eval`
+- [x] `web-agent-project`
+- [x] `workflow-vs-agent`
+- [x] `agent-state-file-verifier`
+- [x] `ai-code-review-pipeline`
+- [x] `codex-claude-context-workflow`
 
 For each question:
 
