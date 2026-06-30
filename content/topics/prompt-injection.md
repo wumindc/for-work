@@ -34,6 +34,10 @@ flowchart TD
   D --> L[Security trace and eval sample]
 ```
 
+图 1：Prompt Injection 防护管线，从外部内容进入系统开始，经过信任标注、攻击检测、隔离区、工具权限门禁和输出防护，最后沉淀为安全 trace 与回归样本。
+
+图中最容易被忽略的是两条边界：外部网页、PDF、邮件和检索片段只能进入 evidence 通道，不能越过 Trust Labeler 变成新的指令；模型产生 tool_call 后也不能直接执行，必须由 Tool Permission Gate 按 ACL、资源归属和外发风险重新判断。也就是说，安全性不依赖模型“自觉”，而依赖宿主系统把证据、指令和动作权限分开治理。
+
 | 防线 | 负责内容 | 不能依赖什么 |
 | --- | --- | --- |
 | Trust Labeler | 标记 system、user、trusted data、untrusted content | 不能让网页文本变成指令 |
@@ -47,6 +51,8 @@ flowchart TD
 instruction/data separation 要贯穿数据流。系统指令、开发者指令、用户请求、可信业务数据和外部证据必须分层进入 Context Builder。untrusted content 只能作为 evidence，不能修改工具权限、不能覆盖开发者约束，也不能要求模型泄露内部信息。
 
 Tool Permission Gate 是关键兜底。即使模型生成了“删除文件”或“发送邮件”的 tool_call，宿主程序仍要检查用户身份、scope、riskLevel、requiresConfirmation 和 exfiltration 风险。
+
+实现时可以把防护拆成 pre-model、during-tool、post-model 三段。pre-model 负责标注来源、裁剪危险片段和构造安全上下文；during-tool 负责动作授权、外发目标检查和人工确认；post-model 负责引用核对、敏感信息扫描和 unsupported claim 检查。三段都要写入同一个 security trace，否则线上事故只能看到最终回答，看不到攻击从哪里进入、在哪一层漏过。
 
 ## 运行机制
 
@@ -134,7 +140,7 @@ Prompt injection 的根因是指令和数据混在同一个上下文窗口里。
 
 ## 来源与延伸阅读
 
-- [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
-- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [Model Context Protocol 安全建议](https://modelcontextprotocol.io/docs/concepts/security)
+- [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)：安全风险清单，用于支持 prompt injection、数据外泄和越权动作的威胁建模。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：官方文档，用于说明 guardrail 如何在 Agent 输入、工具和输出边界上落地。
+- [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：官方工程文章，用于理解简单 workflow、工具调用和 Agent 复杂度的取舍。
+- [Model Context Protocol Security Best Practices](https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices)：协议官方文档，用于补充工具连接、权限边界和外部系统接入的安全要求。

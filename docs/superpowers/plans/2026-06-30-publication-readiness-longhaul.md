@@ -213,6 +213,11 @@ AI Agent / RAG topic backlog:
 - [x] `context-layers`
 - [x] `long-term-memory`
 - [x] `openai-agents-sdk`
+- [x] `prompt-injection`
+- [x] `short-term-memory`
+- [x] `state-management`
+- [x] `trace-replay`
+- [x] `trajectory-eval`
 
 For each question:
 
