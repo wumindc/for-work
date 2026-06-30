@@ -145,11 +145,19 @@ flowchart LR
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `instance_id` | 服务实例 | 标识注册实例、版本、区域和权重 | 定位异常流量是否来自某批实例 |
+| `endpoint_version` | 服务发现快照 | 标识客户端当前使用的实例列表版本 | 判断客户端是否长时间未更新 |
+| `config_version` | 配置发布 | 标识配置的版本、checksum 和发布时间 | 复盘灰度、回滚和配置漂移 |
+| `last_known_good` | 本地缓存 | 保存最近一次校验通过的服务列表或配置 | 控制面故障时维持基本可用 |
+| `change_audit_id` | 变更审计 | 绑定 operator、reason、审批和回滚目标 | 追踪高风险配置是谁、为何、何时发布 |
+
+## 公开阅读校验
+
+服务发现和配置中心都是控制面能力，公开文章要强调“控制面短暂不可用时，数据面不能立刻瘫痪”。服务实例注册、心跳、下线、draining、订阅和本地缓存是一条链；配置发布、schema 校验、灰度、审计和回滚是另一条链。两条链都要有版本号、校验和、默认值与 last-known-good。
+
+一个可信案例是限流阈值配置误发：配置中心先做类型、范围和依赖校验，再按租户或区域灰度；客户端收到 `config_version` 后校验 checksum，失败则继续使用 `last_known_good` 并告警。若新配置导致错误率上升，平台通过 `change_audit_id` 找到操作者、原因和 `rollback_to` 版本，一键回退而不是重新发版。
+
+排障要区分发现故障、配置故障和业务故障。重点看 `discovery_update_lag`、`stale_endpoint_age`、`healthy_endpoint_count`、`config_publish_success_rate`、`config_rollback_count`、`config_apply_error_count` 和使用 last-known-good 的实例比例。高分回答会主动说明配置中心本身也要多副本、审计、权限和灾备。
 
 ## 深问准备
 

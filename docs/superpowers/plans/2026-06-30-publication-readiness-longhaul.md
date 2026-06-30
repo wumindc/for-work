@@ -404,17 +404,28 @@ Work after the first AI Agent / RAG batch:
   - [x] `jvm-gc-troubleshooting`
   - [x] `q-java-thread-pool-governance`
   - [x] `q-jvm-gc-troubleshooting`
-- [ ] System-design blocked documents.
+- [x] System-design blocked documents.
   - [x] `distributed-idempotency-retry-timeout`
   - [x] `distributed-transaction-saga-outbox`
   - [x] `q-distributed-idempotency-retry-timeout`
   - [x] `q-distributed-transaction-saga-outbox`
   - [x] `system-capacity-planning-hotspot`
-- [ ] Web engineering low-score questions.
-  - [x] `web-api-contract-idempotency-security`
-  - [x] `web-http-cache-session-auth`
-  - [x] `q-web-api-contract-idempotency-security`
-  - [x] `q-web-http-cache-session-auth`
+  - [x] `system-consistency-consensus-leader-election`
+  - [x] `system-disaster-recovery-multi-region`
+  - [x] `system-load-balancing-routing`
+  - [x] `system-rate-limit-circuit-breaker-bulkhead`
+  - [x] `system-service-discovery-config`
+- [ ] Web engineering remaining thin-depth documents.
+  - [ ] `q-web-api-contract-idempotency-security`
+  - [ ] `q-web-http-cache-session-auth`
+  - [ ] `web-api-contract-idempotency-security`
+  - [ ] `web-auth-session-token-oauth`
+  - [ ] `web-browser-security-cors-csrf-xss`
+  - [ ] `web-cdn-cache-upload-download`
+  - [ ] `web-frontend-backend-contract-observability`
+  - [ ] `web-gateway-bff-api-versioning`
+  - [ ] `web-http-cache-session-auth`
+  - [ ] `web-websocket-sse-realtime`
 - [x] AI engineering trend documents.
   - [x] `agent-memory-layering-compression`
   - [x] `agent-state-file-verifier`

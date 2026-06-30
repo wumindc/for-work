@@ -145,11 +145,19 @@ flowchart LR
 
 | 字段 | 所属对象 | 作用 | 排障价值 |
 | :--- | :--- | :--- | :--- |
-| `request_id` | 请求 | 串联入口、缓存、DB 和下游调用 | 定位单次异常 |
-| `key_schema` | Redis/存储 | 固定业务域、实体和版本 | 排查误删、串租户和旧版本 |
-| `source_version` | value/event | 标识事实源版本 | 防止旧值覆盖新值 |
-| `ttl_policy` | 缓存策略 | 控制过期、抖动和刷新 | 排查击穿、雪崩和旧值窗口 |
-| `trace_id` | 观测链路 | 串联服务、存储和异步任务 | 复盘慢请求和失败分支 |
+| `term` | 共识轮次 | 标识 leader 任期，所有写入和日志复制都要携带 | 判断旧 leader 是否仍在写入 |
+| `log_index` | 复制日志 | 标识命令在日志中的顺序 | 定位 follower 落后、重复提交和回滚点 |
+| `commit_index` | 集群状态 | 标识已被多数派确认的最高日志位置 | 判断读请求能否看到已提交状态 |
+| `lease_expire_at` | leader 租约 | 控制 leader 对外服务的时间窗口 | 排查 GC pause、时钟漂移和租约重叠 |
+| `fencing_token` | 外部写入凭证 | 写 DB、对象存储或任务执行前校验新旧 leader | 拒绝旧 leader 的延迟写入 |
+
+## 公开阅读校验
+
+读者看这一篇时，要能区分三个层次：一致性模型回答“读写语义是什么”，共识协议回答“多个节点如何就顺序达成一致”，Leader 选举回答“谁暂时负责协调写入”。如果文章只说“用 Raft 保证一致”，还不够专业；公开文章应该说清楚 term、log index、commit index、quorum 和 fencing 如何共同阻止旧 leader 继续写入。
+
+项目表达可以落到一个任务调度或配置发布系统：调度器通过共识选出 leader，leader 给每次分片迁移生成递增 fencing token，worker 写业务表时必须带 token；如果 leader 在 GC pause 后恢复，虽然本地以为自己仍然有效，但下游存储会因为 token 过旧而拒绝写入。这样的例子比单纯背“脑裂”更容易被面试官认可。
+
+上线验证要观察 `leader_change_count`、`election_timeout_count`、`quorum_unavailable_count`、`fencing_reject_count`、`replication_lag` 和 `stale_read_count`。故障演练至少覆盖网络分区、leader 暂停、少数派写入、follower 追日志和旧 leader 恢复。结论要克制：强一致适合控制面、账务提交和全局配置，不适合所有高频数据面读写。
 
 ## 深问准备
 
