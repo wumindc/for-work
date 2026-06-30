@@ -2,7 +2,7 @@
 
 ## 面试定位
 
-这道题不是让你证明 Agent 永远更好，而是看你有没有取舍意识。高质量回答必须承认 workflow 是默认首选，然后说明什么条件下 Agent 的动态决策才有收益。
+这道题不是让你证明 Agent 总是更好，而是看你有没有取舍意识。高质量回答必须承认 workflow 是默认首选，然后说明什么条件下 Agent 的动态决策才有收益。
 
 ## 30 秒回答
 
@@ -36,6 +36,8 @@ flowchart LR
   Verify -->|risk| Human[Human Review]
 ```
 
+图 1：Workflow 与 Agent 的混合控制面。Router 先根据任务是否固定、风险等级和置信度分流；固定路径进入 Workflow，开放探索进入 Agent Loop；Agent 只输出 proposal，最终仍由 Verifier、Workflow 和 Human Review 接住高风险动作。图中要强调的数据流边界是：Agent 可以产生候选方案，但权限、预算、审批、幂等和最终提交不应该从宿主系统手里移走。
+
 ## 系统设计案例
 
 旅行规划里，搜索航班、比较酒店、根据用户反馈调整方案适合 Agent。支付下单、取消订单、改签提交必须 workflow。这样既利用 Agent 的开放探索能力，又避免模型直接执行高风险交易。
@@ -59,6 +61,20 @@ flowchart LR
 ### 追问 3：如何上线验证？
 
 先做 shadow/eval，再灰度，对比 workflow baseline 的成功率、延迟、成本和人工接管率。
+
+## 多轮追问模拟
+
+### 追问 1：为什么 workflow 是默认首选？
+
+回答要点：workflow 的路径、状态、失败处理和审计都更可控，适合规则明确、风险边界清晰的业务动作。考察点是你是否会为了“高级感”滥用 Agent。容易踩坑的是把接入 LLM 等同于需要 Agent，而不比较 baseline。
+
+### 追问 2：什么信号说明需要 Agent？
+
+回答要点：路径无法提前枚举、中间 observation 会改变下一步、需要探索或恢复、任务目标可以被 verifier 检查，且失败代价可控。考察点是动态控制流判断。容易踩坑的是只说“任务复杂”，但说不出复杂来自搜索空间、状态变化还是工具反馈。
+
+### 追问 3：如何证明 Agent 值得上线？
+
+回答要点：先做 workflow baseline 和 shadow run，再比较成功率、恢复率、人工接管率、成本、延迟和 unsafe block；只有收益覆盖风险才灰度。考察点是生产评估。容易踩坑的是只展示几个成功 demo，没有任务集、失败集和灰度回滚。
 
 ## 项目化回答
 
@@ -91,5 +107,5 @@ Coding Agent 可以说明：文件定位和修复尝试由 Agent 处理，代码
 
 ## 来源与延伸阅读
 
-- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
-- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
+- [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow 与 agent 的定义差异，以及 orchestrator-worker、evaluator-optimizer 等工程模式。
+- [OpenAI A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)：用于说明 agent 上线要围绕 tools、guardrails、handoff 和 eval 设计，而不是只靠模型自由规划。

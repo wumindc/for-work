@@ -74,10 +74,11 @@ For each article:
 The first report shows most low-score items are AI Agent / RAG generated interview answers. Work in five-document batches:
 
 - [x] `q-planning-methods-core`
-- [ ] `q-ai-llm-training-core`
-- [ ] `q-react-loop-core`
-- [ ] `q-playwright-actions-deep`
-- [ ] `q-agent-definition-deep`
+- [x] `q-ai-llm-training-core`
+- [x] `q-react-loop-core`
+- [x] `q-playwright-actions-deep`
+- [x] `q-agent-definition-deep`
+- [x] `q-agent-failure-modes-core`
 
 For each question:
 
@@ -93,6 +94,8 @@ Work after the first AI Agent / RAG batch:
 
 - [ ] Elasticsearch low-score questions.
 - [ ] MQ transaction and ordering questions.
+  - [x] `q-mq-transaction-message`
+  - [ ] `q-mq-ordering`
 - [ ] Redis questions with missing sources.
 - [ ] Java/JVM blocked documents.
 - [ ] System-design blocked documents.
