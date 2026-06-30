@@ -79,6 +79,11 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-playwright-actions-deep`
 - [x] `q-agent-definition-deep`
 - [x] `q-agent-failure-modes-core`
+- [x] `q-agent-failure-modes-deep`
+- [x] `q-langgraph-core`
+- [x] `q-langgraph-deep`
+- [x] `q-planning-methods-deep`
+- [x] `q-react-loop-deep`
 
 For each question:
 
