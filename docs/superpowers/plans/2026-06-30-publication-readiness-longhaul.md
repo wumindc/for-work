@@ -168,6 +168,7 @@ The first report shows most low-score items are AI Agent / RAG generated intervi
 - [x] `q-skills-deep`
 - [x] `q-tool-error-recovery-core`
 - [x] `q-tool-error-recovery-deep`
+- [x] `q-function-calling-core`
 - [x] `q-tool-registry-core`
 - [x] `q-tool-registry-deep`
 - [x] `q-tool-schema-core`
@@ -262,6 +263,8 @@ Work after the first AI Agent / RAG batch:
   - [x] `db-mvcc-transaction-isolation`
 - [ ] Redis questions with missing sources.
   - [x] `redis-data-types-encoding`
+  - [x] `redis-hotkey-breakdown-avalanche`
+  - [x] `redis-replication-sentinel-cluster`
   - [x] `q-redis-cache-consistency`
   - [x] `q-redis-hotkey-breakdown-avalanche`
   - [x] `redis-cache-consistency`
@@ -288,6 +291,7 @@ Work after the first AI Agent / RAG batch:
   - [x] `q-web-api-contract-idempotency-security`
   - [x] `q-web-http-cache-session-auth`
 - [ ] AI engineering trend documents.
+  - [x] `agent-memory-layering-compression`
   - [x] `local-ai-inference-stack`
   - [x] `q-local-ai-inference-stack-core`
   - [x] `q-local-ai-inference-stack-deep`
