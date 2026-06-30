@@ -31,7 +31,11 @@ flowchart TD
   E --> F[Metrics and error buckets]
 ```
 
+图 1：Paper Agent 的 claim-level 引用评测链路。生成摘要先被拆成 claim，再映射到 citation 和 evidence span，最后由 verifier 或人工标注给出 supported、partial、unsupported、contradicted 等 verdict。
+
 数据流要保存 paper_id、page、section、claim_id、citation_id、verdict 和 reason。这样才能追踪是哪一层导致幻觉。
+
+这张图的关键边界是：评测对象不是“有没有引用”，而是“每个 claim 是否被具体证据支持”。论文首页、摘要或同一篇论文的相关段落都不天然构成支持；数值、实验条件、数据集、比较对象和限制范围必须与 claim 对齐，才能算 supported。
 
 ## 可画图
 
@@ -49,6 +53,8 @@ flowchart TD
 
 指标包括 citation_precision、claim_support_rate、hallucination_rate、coverage@k、annotation_agreement 和 table_claim_error_rate。
 
+事故复盘要先定影响面：是某类论文结构出错、表格数值错、还是所有 citation 都漂移。止血可以临时降低自动发布等级，把高风险 numeric claim 和 comparison claim 切到人工复核。根因通常在 parser 丢表、retrieval 没召回、rerank 选了相关但不可回答的段落、generator 过度泛化或 citation mapper 指错 span。回归样本要保留原论文、claim、evidence span、verdict、错误层级和修复后输出，避免同类数值幻觉再次进入答案。
+
 ## 面试官追问
 
 - 人工 annotation 成本怎么控制？
@@ -56,6 +62,17 @@ flowchart TD
 - partial support 怎么处理？
 - verifier 错判怎么办？
 - 如何评估综述覆盖度？
+
+## 多轮追问模拟
+
+追问 1：citation precision 和 hallucination rate 是否互为反面？
+答：不是。citation precision 衡量引用是否支持被引用 claim；hallucination rate 衡量 unsupported 或 contradicted claim 的比例。一个答案可能引用很准，但遗漏关键 claim；也可能大部分 claim 有引用，但少数关键数值错得很严重。考察点是指标边界；陷阱是用单一分数概括所有引用质量。
+
+追问 2：表格 claim 为什么更难评测？
+答：表格 claim 需要对齐 table_id、row、column、unit、数据集和指标方向。普通文本相似度容易把“同一个实验表”当成支持，但数值、单位或比较对象稍有偏差就可能 contradicted。考察点是结构化证据；陷阱是只引用整张表或整篇论文。
+
+追问 3：verifier 本身错判怎么办？
+答：要有人工抽样、双人标注或仲裁集，计算 annotation agreement；对低置信、数值、对比结论和高影响输出优先人工复核。Verifier 输出也要记录 reason，便于回放和修正 rubric。考察点是评测可靠性；陷阱是把 LLM judge 当成无需复核的最终裁判。
 
 ## 项目化回答
 
@@ -92,6 +109,6 @@ Paper Agent 引用评测要做到 claim-level。每个答案先拆成 `claim_id`
 
 ## 来源与延伸阅读
 
-- [Anthropic Claude Citations](https://docs.anthropic.com/en/docs/build-with-claude/citations)
-- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)
-- [LangChain Retrieval](https://docs.langchain.com/oss/python/langchain/retrieval)
+- [Anthropic Claude Citations](https://docs.anthropic.com/en/docs/build-with-claude/citations)：官方文档用于支持把答案片段和来源证据绑定，而不是只在末尾堆链接。
+- [LangSmith Evaluation](https://docs.smith.langchain.com/evaluation)：用于支持把 citation verdict、错误分桶和回归样本纳入持续评测。
+- [LangChain Retrieval](https://docs.langchain.com/oss/python/langchain/retrieval)：用于支持 parser、retrieval、rerank、generation 各层都可能影响最终引用质量的链路拆解。

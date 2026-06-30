@@ -35,7 +35,11 @@ flowchart TD
   E --> J[Audit log]
 ```
 
+图 1：本地 Coding Agent 的最小权限执行链路。真实仓库只作为受控输入，patch 或 command request 先经过路径白名单和风险分类，再进入临时工作区、sandbox runner 和 verifier，最后才决定 apply diff 或 rollback。
+
 这个架构把真实仓库保护起来。Agent 只能提出变更，sandbox 负责验证，最终 apply 是受控动作。
+
+这张图的关键是“真实工作区不直接承受模型试错”。模型可以读授权文件、提出 patch 和命令，但写入、测试、依赖访问、secret 注入都应该在最小权限环境中发生。只有 verifier 通过、路径合法、diff 可审计时，真实仓库才接受最终变更。
 
 ## 可画图
 
@@ -60,6 +64,17 @@ flowchart TD
 - 如何避免 secret 出现在日志？
 - 临时工作区和真实工作区如何同步？
 - 什么情况下需要 microVM 而不是 container？
+
+## 多轮追问模拟
+
+追问 1：为什么不能直接让 Agent 在真实 repo 改文件？
+答：真实 repo 里可能有用户未保存的工作、敏感文件、生成产物和不可回滚副作用。让 Agent 先在临时工作区应用 patch，可以获得 diff preview、before hash、测试结果和 rollback_ref。考察点是变更治理；陷阱是把本地 agent 当普通脚本运行器。
+
+追问 2：路径 allowlist 如何防符号链接逃逸？
+答：不能只检查字符串前缀，要对目标路径、父目录和最终写入路径做 realpath，处理 `..`、symlink、mount 和 inode，再确认 resolved path 仍在 workspace root 内。考察点是文件系统安全细节；陷阱是 `path.startsWith(workspace)`。
+
+追问 3：依赖安装失败时能不能临时全开网络？
+答：不应该。先用 lockfile 和只读缓存；确实需要联网时，只开放包源域名、指定命令、时间窗口和日志审计。安装脚本还要限制环境变量和写入路径。考察点是供应链风险；陷阱是为了让测试过，牺牲网络边界。
 
 ## 项目化回答
 
@@ -96,6 +111,6 @@ flowchart TD
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm06-excessive-agency/)
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：官方文档用于支持工具执行是 Agent 能力边界的一部分，需要清晰输入输出契约。
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)：用于支持把命令、工具调用、状态变化和错误归因记录为可审计 trace。
+- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)：用于支持限制 Agent 的权限、工具和外部副作用，避免本地执行环境过度授权。

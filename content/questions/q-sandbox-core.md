@@ -35,7 +35,11 @@ flowchart TD
   I --> K[Apply or rollback]
 ```
 
+图 1：Agent 动作进入 sandbox 前后的策略裁决与审计链路。Policy Engine 先按风险等级决定动作进入读沙箱、临时工作区或网络白名单；执行结果和 verifier 结论再决定 apply、rollback 或继续拦截。
+
 sandbox 的关键是把模型意图变成宿主策略。模型可以建议动作，但最终是否执行由 Policy Engine 决定。
+
+这张图的边界是：sandbox 不负责“理解用户想要什么”，它负责把副作用限制在可审计、可回滚的范围内。读、写、网络、进程和凭据是不同风险面，不能用一个 Docker 容器概括；真实安全来自 policy verdict、资源边界、credential broker、diff preview、audit log 和 rollback 的组合。
 
 ## 可画图
 
@@ -60,6 +64,17 @@ sandbox 的关键是把模型意图变成宿主策略。模型可以建议动作
 - 网络要完全禁用吗？
 - secret 如何按需注入？
 - Docker 是否足够安全？
+
+## 多轮追问模拟
+
+追问 1：Tool Permission Gate 和 sandbox 有什么不同？
+答：Permission Gate 决定“这个动作是否允许”，sandbox 决定“动作在哪里、用什么资源、能影响什么”。例如发送邮件可能需要 gate 确认；执行测试脚本即使允许，也要在 sandbox 中限制路径、网络、时间和输出。考察点是授权和隔离分层；陷阱是把二者都归结为权限开关。
+
+追问 2：为什么网络默认关闭？
+答：网络是数据外传和供应链风险通道。Agent 执行依赖脚本、抓网页或调用 API 时，可能泄露文件、token 或内部信息。默认禁网，再按域名、端口、命令和时长开 allowlist，能让风险可审计。考察点是 egress 风险；陷阱是为了方便安装依赖打开全网。
+
+追问 3：rollback 为什么不能只靠 git？
+答：git 只能覆盖版本库文件，不能覆盖外部副作用，比如数据库写入、缓存删除、网络请求、临时文件和用户未保存改动。sandbox 要记录 rollback_ref、diff preview、外部操作和补偿动作。考察点是副作用模型；陷阱是把所有失败都当成代码回滚。
 
 ## 项目化回答
 
@@ -96,6 +111,6 @@ Audit 不是只记最终 pass/fail，而要记录命令、参数 hash、stdout/s
 
 ## 来源与延伸阅读
 
-- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)
-- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)
-- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm06-excessive-agency/)
+- [OpenAI Agents SDK Tools](https://openai.github.io/openai-agents-python/tools/)：官方文档用于支持 Agent 通过工具产生外部动作，因此工具边界必须被宿主系统治理。
+- [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/)：用于支持在动作前后加入 guardrail，而不是完全依赖模型自觉。
+- [OWASP LLM06: Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)：用于支持把过度代理能力视为安全风险，需要限制权限、工具和副作用范围。

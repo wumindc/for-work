@@ -30,7 +30,11 @@ flowchart TD
   F --> G[Grounded answer]
 ```
 
+图 1：RAG 从粗召回到 rerank 再到 grounded answer 的漏斗。Retriever 负责把可能相关的候选尽量召回，dedup/filter 先清掉重复、越权和明显无效内容，reranker 再把最可回答的 evidence 放进上下文。
+
 数据流里，rerank 不替代检索。候选集中没有正确证据时，rerank 无法凭空创造答案，只能暴露召回失败。
+
+这张图的边界是“相关”不等于“可回答”。Rerank 的目标不是把语义最像的问题排第一，而是把能支持最终答案、可引用、权限正确、版本合适的证据排进 context_k。若正确证据没有进入 candidate set，reranker 只能在错误材料里选一个看起来最像的答案来源。
 
 ## 可画图
 
@@ -48,6 +52,8 @@ flowchart TD
 
 指标包括 precision@k、nDCG、answerability_rate、citation_precision、latency_p95 和 cost_per_success。
 
+事故复盘按影响面、止血、根因、回归四步看。影响面先区分是某类 query、某个知识库、还是所有长文档问答下降；止血可以扩大 candidate_k、降低自动回答置信度、回退到旧 reranker 或要求引用更多来源；根因常见于 hard negative 不足、旧版本文档未过滤、权限 metadata 丢失、rerank 目标只学了相似度；回归要固定“相关但不可回答”的样本，观察 answerability_rate、citation_precision 和 latency_p95 是否同时满足。
+
 ## 面试官追问
 
 - candidate set 多大合适？
@@ -55,6 +61,17 @@ flowchart TD
 - rerank 带来的延迟如何控制？
 - 如何构造 hard negative？
 - rerank 是否会降低 recall？
+
+## 多轮追问模拟
+
+追问 1：为什么 rerank 后答案反而变差？
+答：可能是 candidate set 太小，正确证据没进来；也可能 reranker 学的是语义相似而不是 answerability；还可能过滤或权限 metadata 把正确证据删掉。排查顺序是 recall@candidate_k、正确证据 rank、rerank reason、context_k 覆盖。考察点是分层归因；陷阱是直接换生成 prompt。
+
+追问 2：RRF 和 cross-encoder rerank 如何组合？
+答：可以先用 BM25 与向量检索做 RRF，得到覆盖更好的候选，再用 cross-encoder 或专用 reranker 做精排。RRF 解决多路召回融合，cross-encoder 更擅长 query-candidate 细粒度判断。考察点是多阶段检索；陷阱是把轻量融合和精排模型混为一谈。
+
+追问 3：如何控制 rerank 延迟？
+答：先控制 candidate_k，做 dedup/filter，缓存高频 query 的 rerank 结果，低风险问题跳过 rerank，高价值或引用敏感问题才启用更贵模型。还要把 p95_rerank_latency 和 cost_per_success 放进上线门槛。考察点是生产取舍；陷阱是只追求离线排序指标。
 
 ## 项目化回答
 
@@ -91,6 +108,6 @@ Rerank 的输入不是全量语料，而是 retriever 召回的 candidate set。
 
 ## 来源与延伸阅读
 
-- [Elasticsearch Reciprocal Rank Fusion](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)
-- [Cohere Rerank](https://docs.cohere.com/docs/reranking-with-cohere)
-- [LangChain Contextual compression](https://python.langchain.com/docs/how_to/contextual_compression/)
+- [Elasticsearch Reciprocal Rank Fusion](https://www.elastic.co/guide/en/elasticsearch/reference/current/rrf.html)：官方文档用于支持 BM25 与向量检索等多路召回结果可以先做轻量融合。
+- [Cohere Rerank](https://docs.cohere.com/docs/reranking-with-cohere)：用于支持 reranker 对 query-candidate 对进行更细粒度相关性排序的工程实践。
+- [LangChain Contextual compression](https://python.langchain.com/docs/how_to/contextual_compression/)：用于支持在进入上下文前对检索结果做压缩、过滤和精排，减少无效证据污染。
