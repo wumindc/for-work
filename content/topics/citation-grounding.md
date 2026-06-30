@@ -137,6 +137,14 @@ Grounding 的核心不是“回答末尾有链接”，而是每个关键 claim 
 
 被问“工具结果和文档证据如何统一”时，可以把 tool observation 也包装成 evidence：带 `tool_call_id`、参数摘要、时间、结果状态和权限。这样数据库查询、浏览器截图、测试输出和文档 chunk 都能进入同一套 grounding trace。
 
+## 公开阅读校验
+
+Grounding 文章要把“有引用”与“引用支持结论”分开讲。公开读者很容易被答案末尾的一排链接误导，但真正的质量控制发生在 claim-to-evidence 层：每个事实、数值、比较、因果和建议都要能指向具体 span，并标出 supported、partially_supported、contradicted 或 not_enough_evidence。
+
+生产验收可以按抽样和全量两种模式做。抽样模式适合日常监控，从每批回答中抽 claim，人工或 judge 检查 citation 是否直接支持。全量模式适合高风险输出，对所有关键 claim 运行 verifier，并把 hard negative 加入评测集。hard negative 很重要：它们是“相关但不支持”的证据，能防止 verifier 把主题相似误判成结论成立。
+
+权限和时效也要进入 grounding。引用本身可能暴露文档标题、租户、项目路径或内部页码；证据也可能过期。Evidence pack 需要携带 `permission_scope`、`doc_version`、`retrieved_at` 和 `allowed_usage`，最终答案只展示当前用户可见、当前版本仍有效的 citation。证据不足时，可靠系统应输出“不足以支持该结论”，而不是补一个看似合理的链接。
+
 ## 来源与延伸阅读
 
 - [OpenAI Cookbook](https://cookbook.openai.com/)：用于支持 RAG、向量检索和工具化应用的工程示例，说明引用不是装饰，而是生成链路的一部分。

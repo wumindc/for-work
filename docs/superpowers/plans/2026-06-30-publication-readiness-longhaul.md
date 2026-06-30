@@ -226,6 +226,17 @@ AI Agent / RAG topic backlog:
 - [x] `trajectory-eval`
 - [x] `workflow-vs-agent`
 
+Post-publish thin-depth deepening:
+
+- [x] `agent-core-modules`
+- [x] `agent-failure-modes`
+- [x] `agentic-rag`
+- [x] `browser-observation`
+- [x] `citation-grounding`
+- [x] `coding-harness`
+- [x] `context-compaction`
+- [x] `context-compression`
+
 For each question:
 
 - [ ] Make the 30-second answer precise and bounded.

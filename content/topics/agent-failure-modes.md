@@ -130,6 +130,18 @@ Coding Agent 可以讲测试失败和 patch rollback。Paper Agent 可以讲 uns
 
 如果追问“怎么发现失败模式恶化”，看分层指标：`context_pollution_rate`、`loop_timeout_rate`、`tool_misuse_rate`、`state_rollback_count`、`unsafe_action_block_rate`、`regression_reopen_rate`。这些比单一 `task_success_rate` 更能定位工程问题。
 
+## 公开阅读校验
+
+失败模式文章要避免只罗列“可能出错”。公开读者更关心的是：发生问题时，系统怎样把事故变成可复现、可回归、可治理的样本。一个成熟的 Agent 失败治理流程，应该要求每个失败样本至少包含用户目标、成功标准、首个异常 step、上下文引用、工具参数、observation 摘要、state diff、guardrail verdict、最终影响和修复后的 regression verdict。
+
+实践中可以把失败分成三层处理。第一层是即时止血：冻结 run、停止高风险工具、保存 trace、必要时回滚 state version。第二层是归因：判断首个偏离来自 Goal、Context、Tool、State、Guardrails、Loop 还是 Eval。第三层是沉淀：把输入、轨迹、禁止动作和期望行为写入 regression suite。只有走完第三层，才算真的修复了失败模式；否则只是把一次事故手工抹平。
+
+还要强调“可重试”不是万能答案。读操作失败、网络抖动和临时限流可以受控重试；权限越界、状态污染、错误写入和循环失控应优先停止、回滚或人工接管。文章中把这些边界讲清楚，读者才会知道 Agent 工程不是盲目提升自治度，而是把可恢复性、可解释性和安全阈值前置。
+
+一个可以写进方案评审的例子是：Web Agent 在设置页误点“删除”按钮。好的复盘不是说模型点错，而是还原为什么真实按钮和危险按钮都进入了候选集、ranker 为什么把危险按钮排前、policy gate 为什么没有识别高风险动作、verifier 为什么没有要求二次确认状态。这个例子能把失败模式从抽象标签落到工程责任链。
+
+验收结论也应明确写出责任归属、下一次阻断点和复测样本编号。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支撑“简单、可组合 workflow 往往比过早自治更可靠”的失败治理原则。

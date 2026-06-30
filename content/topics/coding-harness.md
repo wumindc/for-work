@@ -111,6 +111,16 @@ Harness 的关键是把“模型想改代码”变成一组可审计事务。Pat
 
 如果追问“如何防止 Agent 改无关文件”，我会用检索约束、plan scope、patch size limit、changed_files allowlist 和 diff verifier。指标看 `irrelevant_diff_rate`、`review_findings_per_patch`、`rollback_success_rate` 和 `regression_escape_rate`。
 
+## 公开阅读校验
+
+Coding Agent Harness 的文章要避免把重点放在“模型会不会写代码”，而要放在“系统能不能控制代码修改”。公开读者最需要看到的是可执行边界：哪些文件能读，哪些文件能写，哪些命令可运行，哪些操作需要 approval，验证失败时如何继续，出现副作用时如何回滚。
+
+生产验收建议至少准备五类任务样本：小范围 bugfix、跨文件重构、测试失败修复、依赖或环境异常、以及带敏感文件或危险命令的拒绝样本。前四类证明 harness 能完成真实开发任务，第五类证明系统不会因为模型建议而越权。每个样本都要保存 changed_files、patch diff、test command、exit code、review verdict 和 rollback result。只展示成功 patch 不够，必须展示系统如何拒绝不该做的事。
+
+文章还可以强调一个关键工程原则：Verifier 不能只读模型总结，必须读真实命令输出和 diff。比如测试通过但 diff 修改了无关文件，仍然不应通过；测试失败但日志指向明确，应该作为下一轮 observation，而不是直接宣布任务失败。把这些状态区分清楚，Coding Agent 才从“会生成代码的聊天机器人”变成可信的开发运行时。
+
+实际落地时，还需要对“提交前状态”做快照。Harness 至少要保存 baseline commit、工作区 dirty 状态、依赖锁文件状态和验证命令版本。否则同一个 patch 在不同机器或不同依赖版本下可能得到不同 verdict。公开文章把这个点写出来，会让读者意识到 Harness 不是单个模型功能，而是贯穿代码、环境、权限和审计的运行时系统。
+
 ## 来源与延伸阅读
 
 - [SWE-bench GitHub](https://github.com/swe-bench/SWE-bench)：用于支持 issue-to-patch 评测形式，说明 Coding Agent 需要在真实仓库里完成可验证修改。
