@@ -139,6 +139,14 @@ Paper Agent 的证据最小单元不是整篇论文，而是带位置的 evidenc
 
 被问“如何评测 Paper Agent”，看 `citation_precision`、`claim_support_rate`、`hallucination_rate`、`coverage@k`、`parse_failure_rate`、`annotation_agreement`。如果引用很多但 claim support 低，说明 grounding 失败，不是摘要风格问题。
 
+## 公开阅读校验
+
+Paper Agent 面向公开读者时，最重要的是证明“每个结论都能回到证据”。上线前应把论文处理拆成解析质量、检索覆盖、claim 抽取、citation verifier 和发布策略五段验收。摘要流畅不能作为通过标准，尤其是方法比较、实验指标、数据集名称、表格数值和局限性描述，都必须绑定到 page/section/evidence span。
+
+评测集应同时包含容易和困难样本：结构清晰的 arXiv 论文、双栏 PDF、含表格和公式的论文、扫描质量差的 PDF、相近论文互相引用的综述任务。每条样本都要有人标注 required evidence 和 unsupported claim。若 parser 把表格行列错位，citation verifier 应阻止发布，而不是让模型用自然语言补圆。
+
+线上 trace 要保存 `parse_version`、`retrieval_query`、`candidate_papers`、`evidence_span_ids`、`claim_table`、`citation_verdict` 和 `unsupported_claims`。推荐指标包括 `parse_confidence_distribution`、`claim_support_rate`、`table_value_error_count`、`citation_precision`、`unsupported_publish_block_count` 和 `reviewer_override_rate`。这些指标能让读者理解 Paper Agent 是证据系统，不是论文摘要玩具。
+
 ## 来源与延伸阅读
 
 - [OpenAI Cookbook](https://cookbook.openai.com/)：用于支持 RAG、检索增强生成和引用验证的工程示例，说明 Paper Agent 应以证据管线组织答案。

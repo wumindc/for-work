@@ -108,6 +108,16 @@ Playwright 封装要把动作拆成 intent、resolution、execution、verificati
 
 被问“固定 sleep 为什么不好”时，可以回答：sleep 增加延迟且不稳定，页面快时浪费，页面慢时仍失败。应该等待明确状态或 locator 条件，并把 timeout 分类写入 trace。
 
+## 公开阅读校验
+
+Playwright Actions 面向公开读者时，要把“能点击页面”与“能可靠完成业务动作”分开。auto-wait、locator 和截图只能证明浏览器层动作更稳定，不能证明任务目标达成。生产级 Browser Agent 应为每个动作定义 expected state，并在执行后用 URL、DOM、toast、下载文件、网络响应或后端状态做 verifier。
+
+验收用例应覆盖 selector drift、弹窗遮挡、页面局部刷新、重复点击、文件下载、表单校验失败和敏感提交。高风险动作必须先生成 preview snapshot，并把用户确认的目标、参数和页面状态 hash 绑定到 execution gate。若确认后 DOM 或参数变化，执行层应拒绝继续，不能让模型凭“看起来差不多”提交。
+
+线上 trace 至少记录 `observation_id`、`locator_candidates`、`locator_used`、`actionability_result`、`before_snapshot`、`after_snapshot`、`expected_state_verdict`、`retry_count` 和 `recovery_path`。指标包括 `action_success_rate`、`verifier_failure_after_click_rate`、`selector_drift_rate`、`no_state_change_retry_count`、`sensitive_action_confirmation_rate` 和 `manual_handoff_rate`。这些指标能证明浏览器动作层是可恢复的工具系统。
+
+另一个公开阅读重点是权限范围。Browser Agent 可以读页面、填表、点击按钮，但不应默认拥有付款、删除、群发、提交代码或修改账号设置等能力。动作 schema 要把副作用和可逆性写清楚，让执行层能在风险升级时暂停，而不是让模型自己判断“这个按钮是否危险”。
+
 ## 来源与延伸阅读
 
 - [Playwright Auto-waiting](https://playwright.dev/docs/actionability)：用于支持 actionability checks 只能证明元素可操作，不能替代业务 expected_state verifier。

@@ -127,6 +127,20 @@ Coding Agent 可以讲先定位、再改动、再测试的计划；Travel Agent 
 
 如果追问“计划和事实冲突怎么办”，答案不是继续说服模型，而是以 observation 为准。先验证工具返回是否可信，再判断计划假设是否失效；如果失效就重规划，如果风险过高就停止或人工接管。这个回答能体现 Agent 工程里的核心原则：计划是候选路线，trace 和 verifier 才是事实边界。
 
+## 公开阅读校验
+
+规划方法的公开稿不能停留在 CoT、ToT、ReAct 名词比较，而要证明“计划可执行、可验证、可回滚”。生产系统里的 plan 应该是结构化对象，不是模型的一段自然语言。每一步都要有 dependency、expected observation、done condition、预算、风险标记和失败恢复策略，否则计划无法被 executor、verifier 或人类审核稳定消费。
+
+验收可以构造四类反例：工具返回与预期不一致、关键证据缺失、预算耗尽、用户约束中途变化。理想行为不是模型硬走旧计划，而是 Verifier 触发 replan，并保留旧 plan version、abandoned steps 和 replan reason。对于高风险动作，Planner 最多提出候选步骤，真正执行前仍要经过权限、preview 和人工确认。
+
+指标要把“计划漂亮”转换成运行事实：`plan_step_completion_rate`、`verifier_reject_rate`、`replan_precision`、`abandoned_step_cost`、`budget_overrun_count`、`unsafe_step_block_count` 和 `objective_satisfied_rate`。如果 replan 很频繁但成功率不升，说明 planner 在猜路线；如果 verifier 很少拒绝，可能是 done condition 写得太弱。
+
+还要区分规划粒度。太粗的计划无法定位失败，太细的计划会把每个小动作都变成模型决策，增加成本和漂移。生产上通常把“需要外部证据或副作用的动作”作为 step 边界，例如检索、读取文件、调用工具、生成补丁、运行测试、等待审批；纯内部思考不必全部拆成可执行步骤。
+
+评测 planner 时也要包含“拒绝规划”的能力。用户目标不清、权限不足、缺少关键输入、风险过高或预算明显不够时，好的 Planner 应该返回 clarification、unsupported 或 human handoff，而不是编一个看似完整的计划。这一点能区分真实工程系统和只会生成待办列表的演示。
+
+因此规划模块的目标不是产出最长计划，而是在证据、预算和风险边界内选择下一步。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于支持 workflow、agent、tool use、eval 与人工反馈应按任务复杂度组合，而不是无条件追求复杂规划。

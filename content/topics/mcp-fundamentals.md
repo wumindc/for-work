@@ -137,6 +137,20 @@ Server capability 还要有版本和缓存失效策略。Host 不能永久相信
 
 被问“本地 Server 风险”时，重点讲文件系统、shell、Git 凭证和环境变量；默认只读、路径白名单、写操作确认、敏感文件排除和审计是必需的。
 
+## 公开阅读校验
+
+公开读者最需要分清的是：MCP 解决的是能力接入标准化，不自动解决权限、安全和可观测性。一个可信的 MCP 方案应能展示 Host 如何 discovery、如何按用户与任务裁剪 capabilities、如何把 tool schema 放入模型上下文、如何在调用前后记录审计。只说“接了 MCP Server”没有工程说服力，因为真正的边界在 Host 的治理层。
+
+上线验收建议做四类 fixture：Server 离线、capability schema 变更、用户权限收紧、高风险写工具误暴露。每类都要检查 Host 是否重新 discovery、是否拒绝过期 schema、是否把无权限 tool/resource 从上下文中移除、是否把拒绝原因写入 trace。尤其是本地文件系统、shell、Git、浏览器会话这类 Server，要验证路径白名单、敏感文件排除、写操作确认和环境变量隔离。
+
+指标上可以看 `capability_refresh_latency`、`stale_schema_call_count`、`unauthorized_capability_exposure_count`、`tool_policy_denial_rate`、`mcp_error_taxonomy_coverage` 和 `audit_trace_completeness`。这些指标能说明 MCP 接入是可治理的外部能力层，而不是把本机或企业系统裸露给模型。
+
+还要给读者一个选型边界：如果只是单应用内的少量固定工具，普通 Function Calling 加内部 dispatcher 可能更简单；当工具来自多个进程、团队或外部系统，且需要统一 discovery、资源访问和 prompt 模板时，MCP 的协议化价值才会显现。把这个边界说清，文章会更像工程判断，而不是把 MCP 当成所有工具接入的默认答案。
+
+故障复盘时也要按层切分。连接失败看 transport 和 auth；能力缺失看 discovery 与缓存；模型不会用工具看 schema 描述和示例；越权调用看 Host policy；业务失败看 Server 返回的结构化错误。这样读者能把 MCP 问题拆成可排查链路，而不是笼统归因给“Agent 不稳定”。
+
+这也是 MCP 文章最该强调的工程价值：把外部能力变成可发现、可裁剪、可审计的接口。
+
 ## 来源与延伸阅读
 
 - [MCP Architecture](https://modelcontextprotocol.io/docs/learn/architecture)：用于 Host、Client、Server 和协议层边界。

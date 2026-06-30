@@ -140,6 +140,14 @@ flowchart LR
 
 被问“如何评估污染下降”，看 `stale_memory_rate`、`conflict_rate`、`correction_latency`、`repeated_error_rate`、`quarantine_precision` 和 `memory_caused_failure_rate`。只看记忆命中率会鼓励召回更多噪声。
 
+## 公开阅读校验
+
+Memory Decay 的公开稿要避免写成“定期清理记忆”。真正的生产问题是错误记忆会持续污染后续任务，而且污染经常不是过期这么简单，还包括跨项目误用、用户纠错未生效、embedding 索引残留、来源不可信和新旧版本冲突。读者需要看到写入、检索、使用、纠错、删除和隔离是一条闭环链路。
+
+验收可以准备一组污染回归样本：用户偏好变更、事实更新、项目切换、恶意网页写入、跨租户相似内容、旧记忆被 supersede。每个样本都要验证文本库、向量索引、context manifest 和 trace 一致更新。若旧记录在文本库里标记失效，但 embedding 仍被召回，或者 conflict event 没有进入用户确认流程，说明衰退策略没有真正落地。
+
+线上不应只奖励命中率。更可靠的看板应包含 `memory_precision_at_k`、`stale_memory_escape_count`、`superseded_hit_rate`、`quarantine_false_positive_rate`、`correction_to_effective_latency` 和 `memory_caused_task_failure_count`。这样团队能判断是 TTL 太长、scope 太宽、freshness scorer 太弱，还是用户纠错链路没有同步到检索层。
+
 ## 来源与延伸阅读
 
 - [OpenAI Agents SDK Sessions](https://openai.github.io/openai-agents-python/sessions/)：官方文档用于支持 session memory 会把会话历史持久化，因此需要显式生命周期和清理策略。
