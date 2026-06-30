@@ -102,6 +102,14 @@ Planner 不能脱离 verifier。每个 step 执行后都要检查 expected_obser
 - 问：计划如何变成工程对象？答：每步有工具、预期结果、done condition、风险和 fallback。
 - 问：计划失败怎么定位？答：看 step_executable、verifier verdict、tool error 和 replan reason。
 
+## 公开阅读校验
+
+这篇文章对公开读者最有价值的地方，是把“规划能力”从 prompt 技巧提升到运行时设计。一个计划如果不能被执行、验证、恢复和审计，就只是模型写出来的步骤清单。工程上要看计划对象是否有 `step_id`、依赖关系、工具需求、预期 observation、done condition、风险等级和 fallback，这些字段决定了计划能否进入真实系统。
+
+读者可以用三条线判断是否需要复杂规划：任务是否跨多个外部状态源，工具结果是否会推翻后续步骤，失败是否需要局部恢复。三条都弱时，简单 workflow 或一次性生成更划算；三条都强时，Planner-Executor、Replanner 或搜索式规划才有投入价值。这个判断能避免把所有复杂问题都交给 ToT，最后只得到成本膨胀。
+
+还要补一个上线门槛：规划不是越长越好，而是越能缩短不确定性越好。有效计划应该减少无效工具调用，降低人工接管，提升恢复率，并在预算内完成。评审时最好把 `plan_validity_rate`、`step_executable_rate`、`replan_rate`、`cost_per_success` 和 baseline 放在一起看，否则“看起来很会规划”不等于系统真的更强。
+
 ## 来源与延伸阅读
 
 - [Anthropic Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)：用于说明 workflow、agent、orchestrator-worker 和 evaluator-optimizer 等模式的工程边界。
