@@ -1,0 +1,165 @@
+# Cross-encoder、LLM Judge 与两阶段 Rerank
+
+## 面试定位
+
+Cross-encoder、LLM Judge 与两阶段 Rerank 属于 生产级 RAG 数据工程 / Rerank 与两阶段排序。面试里它不是背概念题，而是用来判断你是否能把知识落到架构、数据流、指标和取舍上。
+一句话定位：Rerank 要控制 candidate size、模型类型、延迟、成本和 judge bias，并用 hard negative 校准是否真的提高证据质量。
+
+**必须讲清楚**
+- Cross-encoder、LLM Judge 与两阶段 Rerank 是 AI 工程生产化能力的一部分，关注 cross-encoder rerank、LLM rerank、hard negative、candidate pruning and latency budget。
+- rerank config、hard negative set、rerank ablation report 是团队复盘、验收和面试表达的核心证据。
+- rerank 提升少但延迟和成本大幅上升 是这个主题最容易被追问的生产风险。
+- Rerank 要控制 candidate size、模型类型、延迟、成本和 judge bias，并用 hard negative 校准是否真的提高证据质量。
+- cross-encoder rerank、LLM rerank、hard negative、candidate pruning and latency budget 要服务生产问题
+- rerank config、hard negative set、rerank ablation report 必须可版本化和可复盘
+- rerank 提升少但延迟和成本大幅上升 要有门禁和降级
+
+**常见追问方向**
+- 面试官会追问这个能力在 demo 和 production 之间差在哪里。
+- 高质量回答要能给出核心对象、关键字段、指标、失败路径和回归办法。
+- 如果被问是否亲自做过，可以用 one-pager、eval report、trace、README 和事故复盘证据支撑。
+- 如果这个点落到 Coding Agent：代码库任务 Harness，架构如何设计？
+- 线上失败时看哪些 trace、日志、指标，怎么回滚或补偿？
+
+## 架构与运行机制
+
+### 核心机制
+
+- 生产 AI 系统要先定义可验证边界，再谈模型效果。
+- 所有关键配置、数据、prompt、模型、工具和评测结果都要可追溯。
+- 质量、延迟、成本、安全和用户体验要一起权衡，不能只优化单一指标。
+- 失败样本要进入回归集，避免同类问题重复发生。
+- Cross-encoder、LLM Judge 与两阶段 Rerank 的面试重点是把 cross-encoder rerank、LLM rerank、hard negative、candidate pruning and latency budget 拆成输入、处理、状态、输出、指标和失败路径。
+- 生产落地时要保留 rerank config、hard negative set、rerank ablation report，并能解释它如何支持排障、回归和团队协作。
+- Versioned artifact registry。
+- Trace and eval pipeline。
+- Canary release with rollback。
+- Human review for high-risk cases。
+- 关键字段至少包含 id、version、owner、tenant、input_hash、output_hash、status、error_code、trace_id 和 created_at。
+- 指标看 rerank_precision、rerank_latency、hard_negative_accuracy、candidate_drop_error、cost_per_query，并按场景、租户、模型版本和发布版本分桶。
+- 排障时先定位 rerank config、hard negative set、rerank ablation report 的版本，再回放 trace、对比 eval、检查最近数据或配置变更。
+
+
+### 通用数据流
+
+可以按文档接入、PDF/Word/HTML/表格解析、OCR、layout-aware chunking、metadata/ACL、embedding、向量索引、过滤下推、BM25+vector hybrid search、rerank、增量索引、拒答策略、检索观测和权限测试来讲。数据流通常是文档经过解析和权限绑定后分块，embedding 写入向量库，查询时先做租户和 ACL 过滤，再召回、重排、生成和引用校验。
+
+
+### 工程落点
+
+- 先定义目标、输入、输出、风险和成功指标，再选模型、工具或框架。
+- 把 prompt、model、config、data、eval、trace 和 release 都版本化。
+- 上线前准备 golden cases、回归门禁、成本预算、降级策略和人工接管路径。
+- 设计时先定义 owner、version、tenant scope、timeout、retry、fallback 和 audit 字段。
+- 上线前用 golden cases、trace replay、灰度和 rollback plan 验证 rerank 提升少但延迟和成本大幅上升 不会扩散成生产事故。
+- 把每个关键步骤都映射到可观测指标，避免只描述功能。
+- 回答时主动说明哪些信息是强一致状态，哪些只是上下文或缓存视图。
+
+## 可画图
+
+```mermaid
+flowchart LR
+  Input[业务请求 / 面试场景] --> Contract[边界与数据结构]
+  Contract --> Mechanism[核心机制]
+  Mechanism --> Failure[失败模式]
+  Failure --> Metrics[指标与 Trace]
+  Metrics --> Decision[取舍与项目表达]
+```
+
+图 1：Cross-encoder、LLM Judge 与两阶段 Rerank 的回答要从业务入口进入，先讲边界和数据结构，再讲机制、失败模式、指标和取舍。
+
+## 系统设计案例
+
+### Cross-encoder、LLM Judge 与两阶段 Rerank 的面试级设计题
+
+典型设计题是企业知识库、客服 RAG、研发文档问答或合规文档检索。架构上要包含解析沙箱、chunk version、document lineage、embedding model、HNSW/IVF/PQ 选型、hybrid search、reranker、index freshness、no-answer、ablation 和 permission leak test。
+
+**可画架构**
+- 摄入解析层：连接器、PDF/Word/HTML/表格解析、OCR、解析沙箱和失败隔离。
+- 切分建模层：chunk、parent-child、semantic window、document lineage、metadata、ACL 和版本。
+- 索引层：embedding model、向量维度、HNSW/IVF/PQ、BM25、过滤字段和增量构建。
+- 检索层：query rewrite、filter pushdown、hybrid search、rerank、citation 和 no-answer 策略。
+- 治理层：index freshness、recall@k、groundedness、permission leak test、ablation 和成本延迟看板。
+
+**数据流**
+- 文档进入摄入队列后先做权限绑定、解析、OCR、表格/公式保留和解析质量检查。
+- 内容按语义和版面切分成 chunk，绑定 document_id、tenant_id、acl、version、source_range 和 lineage。
+- embedding 和 BM25 索引按版本写入，删除、更新和 reindex 通过 tombstone 与索引版本保证可追溯。
+- 查询时先做租户/ACL/filter 下推，再执行 hybrid search、rerank、证据裁剪、生成、引用和拒答判定。
+
+## 真实问题与排障
+
+真实线上问题一般从文档解析丢表格、OCR 错字、chunk 断裂、metadata 缺失、ACL 泄漏、embedding 维度不一致、索引构建慢、过滤后召回为空、rerank 过慢、删除未生效、引用不可信和 no-answer 误判看起。回答时要沿摄入、切分、索引、检索、重排、生成、权限和观测逐层定位。
+
+**排查顺序**
+- 先确认是解析质量、chunk 质量、metadata/ACL、embedding、索引、filter、rerank、生成引用还是权限问题。
+- 抽取失败 query，查看召回列表、分数、过滤条件、rerank 前后变化和最终引用。
+- 检查 document version、chunk lineage、index freshness、delete/reindex 状态和权限快照。
+- 用 ablation 对比 BM25、vector、hybrid、rerank 和 query rewrite 对结果的影响。
+- 止血可以禁用问题数据源、回滚索引版本、提高 no-answer 阈值或临时关闭高风险回答。
+
+**重点指标**
+- rerank_precision
+- rerank_latency
+- hard_negative_accuracy
+- candidate_drop_error
+- cost_per_query
+
+**常见误区**
+- top_k 越大越好
+- LLM rerank 没校准
+- 不看 rerank 前后正确证据位置
+
+## 业界方案与技术取舍
+
+生产 RAG 数据工程的取舍是可追溯事实和权限安全换来了数据管道、索引维护、召回质量、延迟成本和隐私治理复杂度。面试追问通常会围绕 chunking、metadata filter、向量索引参数、hybrid search、rerank、增量 reindex、引用 groundedness、no-answer 和权限泄漏展开。
+
+**方案对比**
+- Versioned artifact registry。
+- Trace and eval pipeline。
+- Canary release with rollback。
+- Human review for high-risk cases。
+- 更强模型通常提升质量但增加成本、延迟和供应商依赖。
+- 更严格门禁降低事故概率但会放慢发布节奏。
+- 更完整观测提升可诊断性但增加存储、隐私和基数治理成本。
+- AI 求职补强的核心不是再背一个框架名，而是能把模型、数据、服务、评测、安全、成本和项目表达串成可上线系统。
+- 回答时先说明这个能力解决哪类生产问题，再讲数据流、失败模式、指标和取舍。
+- 用户的 Java 架构经验应被迁移到 AI 系统：接口契约、异步任务、观测、灰度、回滚和事故复盘都是 AI 工程的底座。
+- 可以把既有 Java 架构经验迁移到 AI 系统的契约、异步、观测、发布和事故治理。
+- 面试表达时用业务目标、架构图、指标、失败案例和改进闭环证明不是停留在 demo。
+
+**复习时要能讲出的细节**
+- 这个知识点解决什么问题，不解决什么问题。
+- 关键数据结构、状态变化、失败边界和可观测指标是什么。
+- 面试官继续追问时，能从架构图、数据流、线上排障和项目证据四个角度展开。
+- 能说明为什么这个取舍适合当前业务，而不是只背业界名词。
+
+## 深入技术细节
+
+Rerank 要控制 candidate size、模型类型、延迟、成本和 judge bias，并用 hard negative 校准是否真的提高证据质量。 Cross-encoder、LLM Judge 与两阶段 Rerank 是 AI 工程生产化能力的一部分，关注 cross-encoder rerank、LLM rerank、hard negative、candidate pruning and latency budget。 rerank config、hard negative set、rerank ablation report 是团队复盘、验收和面试表达的核心证据。 rerank 提升少但延迟和成本大幅上升 是这个主题最容易被追问的生产风险。 生产 AI 系统要先定义可验证边界，再谈模型效果。 所有关键配置、数据、prompt、模型、工具和评测结果都要可追溯。 质量、延迟、成本、安全和用户体验要一起权衡，不能只优化单一指标。 失败样本要进入回归集，避免同类问题重复发生。
+
+面试深挖时要把 RAG 讲成数据工程和权限工程，不是把文档塞进向量库。解析、切分、索引、过滤、重排、引用、拒答和观测每层都要有证据。
+
+## 关键数据结构与协议
+
+| 字段 | 所属对象 | 作用 | 排障价值 |
+| :--- | :--- | :--- | :--- |
+| `document_id` | 原始文档 | 标识知识来源 | 排查来源和权限 |
+| `chunk_id` | 检索单元 | 绑定文本片段和位置 | 排查引用和召回 |
+| `acl_snapshot` | 权限 | 固定可见范围 | 排查越权泄漏 |
+| `embedding_model` | 向量 | 标识维度和语义空间 | 排查索引兼容性 |
+| `index_version` | 索引 | 标识可回滚版本 | 排查 freshness 和删除生效 |
+| `retrieval_trace` | 检索链路 | 记录召回、过滤、重排和引用 | 复盘错答与漏答 |
+
+## 深问准备
+
+被追问边界时，先说这个方案适合什么、不适合什么，再给反例。被追问线上故障时，按影响面、止血、根因、修复、回归五段回答。被追问项目时，把回答落到你做过的接口、缓存、队列、数据库、监控或 Agent 工程链路。
+
+- 反例要明确，例如强事务事实源不能交给缓存或搜索读模型。
+- 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
+- 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
+
+## 来源与延伸阅读
+
+- [LlamaIndex Documentation: Production RAG](https://developers.llamaindex.ai/python/framework/optimizing/production_rag/)：用于确认官方语义边界、命令行为和工程约束。
+- [OpenAI API Docs: Evals](https://platform.openai.com/docs/guides/evals)：用于确认官方语义边界、命令行为和工程约束。

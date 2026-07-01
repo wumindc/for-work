@@ -19,8 +19,11 @@
     "audit:publication-readiness": "tsx scripts/audit-publication-readiness.mjs --write-report",
     "audit:publication-readiness:strict": "tsx scripts/audit-publication-readiness.mjs --write-report --strict",
     "audit:coverage-map": "tsx scripts/audit-coverage-map.mjs",
+    "audit:learning-ladders": "tsx scripts/audit-learning-ladders.mjs",
+    "audit:career-ladders": "tsx scripts/audit-career-ladders.mjs",
+    "audit:ai-career-coverage": "tsx scripts/audit-ai-career-coverage.mjs",
     "validate:interview-ui": "tsx scripts/validate-interview-ui-contract.mjs",
-    "validate:all": "npm run validate:data && npm run validate:graph && npm run validate:content-depth && npm run validate:markdown-content && npm run validate:content-quality && npm run validate:interview-ui"
+    "validate:all": "npm run validate:data && npm run audit:learning-ladders && npm run audit:career-ladders && npm run audit:ai-career-coverage && npm run validate:graph && npm run validate:content-depth && npm run validate:markdown-content && npm run validate:content-quality && npm run validate:interview-ui"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

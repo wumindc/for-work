@@ -1,8 +1,8 @@
 // @author codex
 import { CheckCircle2, ChevronDown, Circle } from "lucide-react";
 import { useMemo, useState } from "react";
-import { categories, domains, topics } from "../../data";
-import type { Mastery, Topic } from "../../types/knowledge";
+import { categories, domains, learningPaths, topics } from "../../data";
+import type { LearningPath, Mastery, Topic } from "../../types/knowledge";
 import { TopicDetail } from "../knowledge/TopicDetail";
 
 type KnowledgeSystemProps = {
@@ -15,6 +15,14 @@ type KnowledgeSystemProps = {
 };
 
 const categoryById = new Map(categories.map((category) => [category.id, category]));
+const topicById = new Map(topics.map((topic) => [topic.id, topic]));
+
+const learningPathModeLabels: Record<LearningPath["mode"], string> = {
+  foundation: "基础",
+  intensive: "强化",
+  interview: "面试",
+  project: "项目",
+};
 
 const domainOf = (topic: Topic) =>
   topic.domainId ?? categoryById.get(topic.categoryId)?.domainId;
@@ -49,6 +57,44 @@ const isTopicLearned = (
   return Boolean(mastery && mastery !== "new");
 };
 
+const learningPathViewsForDomain = (
+  domainId: string,
+  domainTopics: Topic[],
+  topicMastery: Record<string, Mastery>,
+) => {
+  const domainTopicIds = new Set(domainTopics.map((topic) => topic.id));
+
+  return learningPaths
+    .map((path) => {
+      const pathTopics = path.nodeIds
+        .map((topicId) => topicById.get(topicId))
+        .filter((topic): topic is Topic => Boolean(topic));
+      const firstTopic = pathTopics[0];
+      const domainTopicCount = pathTopics.filter((topic) =>
+        domainTopicIds.has(topic.id),
+      ).length;
+
+      if (!firstTopic || domainOf(firstTopic) !== domainId || domainTopicCount === 0) {
+        return null;
+      }
+
+      const completed = pathTopics.filter((topic) =>
+        isTopicLearned(topicMastery, topic.id),
+      ).length;
+      const nextTopic =
+        pathTopics.find((topic) => !isTopicLearned(topicMastery, topic.id)) ??
+        pathTopics[pathTopics.length - 1];
+
+      return {
+        completed,
+        nextTopic,
+        path,
+        total: pathTopics.length,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+};
+
 export function GraphLearning({
   selectedDomainId,
   selectedTopicId,
@@ -67,6 +113,10 @@ export function GraphLearning({
     isTopicLearned(topicMastery, topic.id),
   ).length;
   const unlearnedCount = domainTopics.length - learnedCount;
+  const domainPathViews = useMemo(
+    () => learningPathViewsForDomain(selectedDomainId, domainTopics, topicMastery),
+    [domainTopics, selectedDomainId, topicMastery],
+  );
   const filteredTopics = useMemo(
     () =>
       domainTopics.filter((topic) => {
@@ -147,6 +197,45 @@ export function GraphLearning({
             {domainTopics.length} 个知识点 · 已学习 {learnedCount} · 未学习 {unlearnedCount}
           </p>
         </section>
+
+        {domainPathViews.length > 0 ? (
+          <section className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-bold text-slate-950">复习路径</h3>
+              <span className="shrink-0 text-xs font-semibold text-slate-500">
+                {domainPathViews.length} 条
+              </span>
+            </div>
+            <div className="mt-3 divide-y divide-slate-100">
+              {domainPathViews.map(({ completed, nextTopic, path, total }) => (
+                <button
+                  className="w-full py-3 text-left transition first:pt-0 last:pb-0 hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
+                  key={path.id}
+                  onClick={() => onOpenTopic(nextTopic.id)}
+                  type="button"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                      {path.focusWindow ?? learningPathModeLabels[path.mode]}
+                    </span>
+                    <span className="shrink-0 text-[11px] font-semibold text-slate-500">
+                      {completed}/{total}
+                    </span>
+                  </div>
+                  <p className="mt-2 break-words text-sm font-bold leading-5 text-slate-900">
+                    {path.title}
+                  </p>
+                  <p className="mt-1 break-words text-xs leading-5 text-slate-600">
+                    {path.description}
+                  </p>
+                  <p className="mt-2 break-words text-xs font-semibold leading-5 text-slate-700">
+                    当前：{nextTopic.title}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <nav className="rounded-lg border border-slate-200 bg-white p-3">
           <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">

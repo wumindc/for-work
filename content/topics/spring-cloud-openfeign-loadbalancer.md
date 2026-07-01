@@ -1,0 +1,171 @@
+# OpenFeign、负载均衡、超时重试与远程调用治理
+
+## 面试定位
+
+OpenFeign、负载均衡、超时重试与远程调用治理 属于 Spring Java 后端体系 / OpenFeign、Gateway 与服务调用。面试里它不是背概念题，而是用来判断你是否能把知识落到架构、数据流、指标和取舍上。
+一句话定位：OpenFeign 将远程 HTTP 调用声明为 Java 接口，但生产治理重点是超时、重试、负载均衡、错误码、幂等和降级。
+
+**必须讲清楚**
+- OpenFeign 是声明式 HTTP 客户端。
+- 负载均衡是在多个服务实例间选择请求目标。
+- 远程调用治理包括超时、重试、熔断、降级和观测。
+- OpenFeign 将远程 HTTP 调用声明为 Java 接口，但生产治理重点是超时、重试、负载均衡、错误码、幂等和降级。
+- Feign 是远程调用代理
+- 超时重试必须受控
+- 远程调用不能假装本地方法
+
+**常见追问方向**
+- Spring 核心题先讲 IoC、Bean 生命周期、代理和 AOP，再落到事务、MVC 或 Security 的实现。
+- Spring Boot 题先讲自动配置、条件装配和配置绑定，再讲启动、部署、Actuator 和生产排障。
+- Spring Cloud 题要把注册发现、配置、调用、网关、熔断、限流、链路追踪和灰度发布串成一条线。
+- 如果这个点落到 Coding Agent：代码库任务 Harness，架构如何设计？
+- 线上失败时看哪些 trace、日志、指标，怎么回滚或补偿？
+
+## 架构与运行机制
+
+### 核心机制
+
+- 远程调用一定会失败。
+- 超时预算要端到端拆分。
+- 重试要退避、有上限且只用于可重试错误。
+- 降级要区分可接受的兜底和不可伪造的业务结果。
+- Feign 接口通过代理生成 HTTP 请求，结合服务发现和 LoadBalancer 选择目标实例。
+- 远程调用链路需要连接池、编解码、拦截器、超时、重试、熔断、日志和 trace 透传。
+- Feign interceptor。
+- Spring Cloud LoadBalancer。
+- Timeout budget。
+- Retry with backoff。
+- Trace context propagation。
+- 每个 client 配置 connect/read timeout、最大并发、重试次数和错误码映射。
+- 请求头透传 traceparent、request_id、tenant 和 auth context。
+- 依赖错误进入 dependency_error_rate、timeout_rate 和 fallback_rate 指标。
+
+
+### 通用数据流
+
+可以按 HTTP 入口、DispatcherServlet、Controller、Service、事务代理、Mapper、数据库、缓存、下游服务、网关、安全和 Actuator 指标来讲。数据流通常是请求经过网关和鉴权进入 Spring MVC，参数绑定和校验后进入业务层；AOP 代理控制事务、鉴权、日志或重试，MyBatis/Repository 访问事实源，Spring Cloud 负责发现、负载均衡、熔断、配置和网关路由，观测层用 metrics、trace、log 和健康检查证明系统可运行。
+
+
+### 工程落点
+
+- 为服务定义 Controller、Service、Mapper、事务边界、错误码、日志、指标、配置和测试策略。
+- 明确哪些逻辑属于业务事务，哪些属于远程调用、异步事件、缓存或最终一致性补偿。
+- 上线后跟踪 HTTP p95、错误率、线程池、连接池、慢 SQL、事务回滚、依赖超时和配置变更。
+- 默认超时和重试策略必须显式配置，避免故障时放大流量。
+- 写接口重试必须有幂等键，读接口也要注意缓存、降级和一致性。
+- 把每个关键步骤都映射到可观测指标，避免只描述功能。
+- 回答时主动说明哪些信息是强一致状态，哪些只是上下文或缓存视图。
+
+## 可画图
+
+```mermaid
+flowchart LR
+  Input[业务请求 / 面试场景] --> Contract[边界与数据结构]
+  Contract --> Mechanism[核心机制]
+  Mechanism --> Failure[失败模式]
+  Failure --> Metrics[指标与 Trace]
+  Metrics --> Decision[取舍与项目表达]
+```
+
+图 1：OpenFeign、负载均衡、超时重试与远程调用治理 的回答要从业务入口进入，先讲边界和数据结构，再讲机制、失败模式、指标和取舍。
+
+## 系统设计案例
+
+### OpenFeign、负载均衡、超时重试与远程调用治理 的面试级设计题
+
+典型设计题是把一个订单、审批、内容平台或 Agent 后端服务做成 Spring Boot/Spring Cloud 生产系统。架构上要包含 Controller/DTO/Service/Mapper 分层、事务边界、错误码、幂等键、MyBatis SQL、配置治理、服务发现、Gateway、OpenFeign、Resilience4j、Spring Security、Actuator、日志 Trace 和灰度发布。
+
+**可画架构**
+- 入口层：Gateway/Filter/Security 处理路由、认证、限流、trace_id、租户和基础安全策略。
+- Web 层：DispatcherServlet、HandlerMapping、参数绑定、Bean Validation、ControllerAdvice 和消息转换形成 REST 契约。
+- 业务层：Service 定义事务边界、领域状态变更、幂等校验、事件发布和下游调用策略。
+- 数据层：MyBatis Mapper、动态 SQL、ResultMap、分页、批处理、连接池和数据库事务共同决定数据访问质量。
+- 治理层：服务发现、配置、OpenFeign、LoadBalancer、Resilience4j、Actuator、日志、Trace 和指标支撑生产运行。
+
+**数据流**
+- 请求进入 Gateway 后完成路由、鉴权、限流和 trace 上下文传播。
+- Spring MVC 完成参数解析、校验、Controller 调用、返回值处理和统一异常映射。
+- Service 通过 AOP 代理进入事务边界，执行幂等校验、状态变更、Mapper SQL 和必要的 outbox 记录。
+- 远程依赖通过 OpenFeign/LoadBalancer/Resilience4j 执行超时、重试、熔断、降级和指标上报。
+- Actuator、Micrometer、日志和 Trace 把错误码、慢 SQL、事务耗时、下游延迟和健康状态串成排障证据。
+
+## 真实问题与排障
+
+真实线上问题一般从接口 p95/p99、错误码分布、Spring Bean 创建失败、自动配置不生效、事务失效、连接池耗尽、慢 SQL、Mapper 参数错误、Feign 超时、Gateway 5xx、熔断打开、鉴权失败、Actuator health 和最近配置/发布变更看起。回答时要先确认影响面和止血动作，再沿入口、代理、事务、SQL、下游、配置和观测逐层定位。
+
+**排查顺序**
+- 先确认影响面：哪个接口、租户、版本、错误码、p95/p99、下游和数据库指标异常。
+- 检查最近发布、配置、Profile、自动配置条件、Bean 创建日志和 Actuator health。
+- 沿请求链路排查 Controller 参数、校验、异常映射、AOP 代理、事务边界和安全过滤链。
+- 沿数据链路排查 SQL、索引、ResultMap、分页、连接池、锁等待、死锁和慢查询。
+- 沿微服务链路排查服务发现、Gateway 路由、Feign timeout、retry、circuit breaker、fallback 和限流配置。
+- 止血可以回滚配置/版本、摘流、限流、扩大连接池短期容量、关闭问题开关或降级非核心接口。
+
+**重点指标**
+- dependency_p95
+- timeout_rate
+- retry_rate
+- fallback_rate
+- load_balancer_error_count
+
+**常见误区**
+- 把 Feign 当本地方法无超时
+- 重试写接口造成重复扣款
+- 降级返回假成功污染业务
+
+## 业界方案与技术取舍
+
+Spring 体系的取舍是成熟生态、约定配置和生产治理能力换来了抽象层多、代理边界隐蔽、自动配置调试成本和微服务治理复杂度。面试追问通常会围绕 Bean 生命周期、AOP 自调用、@Transactional 失效、自动配置条件、REST 契约、MyBatis 缓存、N+1、OpenFeign 超时、Gateway Filter 顺序、熔断限流和 Security 鉴权链展开。
+
+**方案对比**
+- Feign interceptor。
+- Spring Cloud LoadBalancer。
+- Timeout budget。
+- Retry with backoff。
+- Trace context propagation。
+- Feign 提升开发效率但容易隐藏网络边界。
+- 重试提升瞬时成功率但会放大故障。
+- 降级保护主链路但可能牺牲结果完整性。
+- 先把 Spring Java 后端看成容器、Web 层、数据访问、事务、微服务治理和生产观测组合起来的工程体系。
+- 面试回答不能只背注解，要解释注解背后的 Bean、代理、拦截器、连接、线程、事务和调用链。
+- 架构师级回答要能从单体服务推进到微服务、权限、配置、发布、观测和故障恢复。
+- 可以把 Feign 题和分布式重试、幂等、熔断、链路追踪一起讲。
+- 架构师回答要强调依赖治理而不是接口声明。
+
+**复习时要能讲出的细节**
+- 这个知识点解决什么问题，不解决什么问题。
+- 关键数据结构、状态变化、失败边界和可观测指标是什么。
+- 面试官继续追问时，能从架构图、数据流、线上排障和项目证据四个角度展开。
+- 能说明为什么这个取舍适合当前业务，而不是只背业界名词。
+
+## 深入技术细节
+
+OpenFeign 将远程 HTTP 调用声明为 Java 接口，但生产治理重点是超时、重试、负载均衡、错误码、幂等和降级。 OpenFeign 是声明式 HTTP 客户端。 负载均衡是在多个服务实例间选择请求目标。 远程调用治理包括超时、重试、熔断、降级和观测。 远程调用一定会失败。 超时预算要端到端拆分。 重试要退避、有上限且只用于可重试错误。 降级要区分可接受的兜底和不可伪造的业务结果。
+
+面试深挖时要把 Spring 容器、代理、Web 请求链路、事务、SQL、微服务治理和生产观测串起来。不要只背注解用法，要说明注解背后的生效条件、失败边界和排障证据。
+
+## 关键数据结构与协议
+
+| 字段 | 所属对象 | 作用 | 排障价值 |
+| :--- | :--- | :--- | :--- |
+| `bean_name` | Spring Bean | 标识容器对象和依赖关系 | 排查循环依赖、条件装配和覆盖问题 |
+| `proxy_target` | AOP 代理 | 标识事务、安全、缓存等增强目标 | 排查自调用和事务失效 |
+| `request_id` | HTTP 请求 | 串联 Gateway、Controller、Service、SQL 和下游 | 定位单次失败链路 |
+| `transaction_id` | 事务边界 | 标识连接绑定、传播行为和回滚状态 | 排查长事务、死锁和错误提交 |
+| `mapper_id` | MyBatis 语句 | 标识 namespace + statement | 排查慢 SQL、参数绑定和 ResultMap 问题 |
+| `route_id` | Gateway 路由 | 标识入口路由、断言和过滤器链 | 排查错路由、5xx 和限流策略 |
+| `error_code` | REST 契约 | 标识可行动错误语义 | 排查前后端联调、告警聚合和客服定位 |
+
+## 深问准备
+
+被追问边界时，先说这个方案适合什么、不适合什么，再给反例。被追问线上故障时，按影响面、止血、根因、修复、回归五段回答。被追问项目时，把回答落到你做过的接口、缓存、队列、数据库、监控或 Agent 工程链路。
+
+- 反例要明确，例如强事务事实源不能交给缓存或搜索读模型。
+- 指标要可执行，例如 p95、error_rate、retry_rate、lag、miss_rate、stale_rate。
+- 回归要可复现，例如固定输入、故障注入、压测脚本或 golden case。
+
+## 来源与延伸阅读
+
+- [Spring Cloud OpenFeign Reference Documentation](https://docs.spring.io/spring-cloud-openfeign/reference/)：用于确认官方语义边界、命令行为和工程约束。
+- [Spring Cloud Reference Documentation](https://docs.spring.io/spring-cloud/docs/current/reference/html/)：用于确认官方语义边界、命令行为和工程约束。
+- [Microservices.io: Saga pattern](https://microservices.io/patterns/data/saga.html)：用于确认官方语义边界、命令行为和工程约束。

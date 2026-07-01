@@ -3,14 +3,23 @@ import type { Frequency, Priority, RoleTag, Topic } from "../types/knowledge";
 import { topicDeepDives } from "./deepDives";
 import {
   aiFoundationTopics,
+  aiCareerPortfolioTopics,
+  algorithmInterviewTopics,
   databaseTopics,
+  devopsTopics,
   distributedTopics,
   deepTopicPatches,
   esTopics,
   javaJvmTopics,
+  llmFoundationLadderTopics,
+  llmopsEvalQualityTopics,
   mqTopics,
   observabilityTopics,
+  productionRagDataInfraTopics,
+  prometheusMechanismTopics,
+  pythonAiEngineeringTopics,
   redisTopics,
+  springJavaBackendTopics,
   webTopics,
 } from "./deepSamples";
 
@@ -1148,6 +1157,7 @@ export const topicSeeds = [
 
 export const topics: Topic[] = [
   ...aiFoundationTopics,
+  ...llmFoundationLadderTopics,
   ...topicSeeds.map((topic) => ({
     ...topic,
     ...(deepTopicPatches[topic.id] ?? {}),
@@ -1159,7 +1169,15 @@ export const topics: Topic[] = [
     ...redisTopics,
     ...databaseTopics,
     ...javaJvmTopics,
+    ...springJavaBackendTopics,
+    ...algorithmInterviewTopics,
+    ...pythonAiEngineeringTopics,
+    ...llmopsEvalQualityTopics,
+    ...productionRagDataInfraTopics,
+    ...aiCareerPortfolioTopics,
+    ...prometheusMechanismTopics,
     ...observabilityTopics,
     ...distributedTopics,
     ...webTopics,
+    ...devopsTopics,
   ];

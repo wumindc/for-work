@@ -73,6 +73,62 @@ export const domains = [
     priority: "core",
   },
   {
+    id: "devops-docker-kubernetes",
+    title: "Docker / Kubernetes / DevOps",
+    description:
+      "容器、镜像、运行时隔离、Compose、本地开发、Kubernetes 工作负载、服务网络、配置、发布和可观测性。",
+    status: "sample_ready",
+    priority: "important",
+  },
+  {
+    id: "spring-java-backend",
+    title: "Spring Java 后端体系",
+    description:
+      "Spring、Spring Boot、MyBatis、MyBatis Plus、Spring Cloud、REST、权限、事务和生产排障。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
+    id: "coding-algorithms-interview",
+    title: "算法题与编码面试",
+    description:
+      "复杂度、Java 解题模板、数组字符串、哈希栈队列、链表、二分、回溯、树、堆、贪心、DP、图和面试复盘。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
+    id: "python-ai-engineering",
+    title: "Python AI 工程与 API 服务",
+    description:
+      "Python 环境、FastAPI、Pydantic、异步服务、AI Provider SDK、测试、观测、部署和 Java 集成。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
+    id: "llmops-eval-quality",
+    title: "LLMOps、Eval 与 AI 质量工程",
+    description:
+      "Golden set、LLM-as-judge、RAG/Agent eval、线上影子评测、Trace 归因、发布门禁和事故回归。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
+    id: "production-rag-data-infra",
+    title: "生产级 RAG 数据工程",
+    description:
+      "文档解析、OCR、Chunk、Metadata、ACL、Embedding、向量索引、重排、增量索引和检索观测。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
+    id: "ai-career-portfolio",
+    title: "AI 求职作品集与项目表达",
+    description:
+      "AI 功能发现、Human-in-the-loop、质量指标、失败体验、项目 one-pager、简历 bullet 和面试讲述。",
+    status: "sample_ready",
+    priority: "core",
+  },
+  {
     id: "engineering-quality",
     title: "工程质量与故障治理",
     description: "发布、回滚、压测、可观测性、故障复盘、质量门禁和工程效率。",
